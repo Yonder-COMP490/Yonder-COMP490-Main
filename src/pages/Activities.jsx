@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ActivityCard from "../components/ActivityCard";
+import AddActivity from "../components/AddActivity";
 import "./Activities.css";
 
-function Page1() {
+function Activity() {
   const [activities, setActivities] = useState([
     {
       id: 1,
@@ -19,6 +20,16 @@ function Page1() {
     },
   ]);
 
+  function addActivity(activity) {
+    setActivities([
+      ...activities,
+      {
+        id: crypto.randomUUID(),
+        ...activity,
+      },
+    ]);
+  }
+
   return (
     <div>
       <h1>Activities</h1>
@@ -30,6 +41,8 @@ function Page1() {
             activity={activity}
           />
         ))}
+
+        <AddActivity onAdd={addActivity} />
       </div>
       <Link to="/">
         <button>Home</button>
@@ -38,4 +51,4 @@ function Page1() {
   );
 }
 
-export default Page1;
+export default Activity;

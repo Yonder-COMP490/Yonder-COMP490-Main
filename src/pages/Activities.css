@@ -5,7 +5,8 @@
   padding: 30px;
 }
 
-.activity-card {
+.activity-card,
+.add-activity {
   min-height: 180px;
   padding: 20px;
   border: 1px solid #ccc;
@@ -14,10 +15,33 @@
   box-sizing: border-box;
 }
 
-.activity-card h2 {
+.activity-card h2,
+.add-activity h2 {
   margin-top: 0;
 }
 
 .activity-card p {
   margin: 8px 0;
+}
+
+.add-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.add-activity input,
+.add-activity textarea {
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.add-activity textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.add-activity button {
+  margin-top: auto;
 }
