@@ -1,0 +1,23 @@
+.activities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+.activity-card {
+  min-height: 180px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.activity-card h2 {
+  margin-top: 0;
+}
+
+.activity-card p {
+  margin: 8px 0;
+}
