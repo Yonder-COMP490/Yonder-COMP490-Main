@@ -4,8 +4,8 @@ function Home() {
   return (
     <div>
       <h1>Yonder</h1>
-      <Link to="/page1">
-        <button>Page 1</button>
+      <Link to="/activities">
+        <button>Activities</button>
       </Link>
 
       <Link to="/page2">

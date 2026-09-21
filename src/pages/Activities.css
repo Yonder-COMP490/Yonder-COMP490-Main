@@ -1,0 +1,57 @@
+.activities {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+.activity-card,
+.activity-form {
+  min-height: 180px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.activity-card h2,
+.activity-form h2 {
+  margin-top: 0;
+}
+
+.activity-card p {
+  margin: 8px 0;
+}
+
+.activity-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity-form input,
+.activity-form textarea {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.activity-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.activity-form button {
+  margin-top: auto;
+}
+
+.activity-form img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.activity-notes {
+  white-space: pre-line;
+}
