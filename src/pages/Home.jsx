@@ -8,8 +8,8 @@ function Home() {
         <button>Activities</button>
       </Link>
 
-      <Link to="/page2">
-        <button>Page 2</button>
+      <Link to="/Calendar">
+        <button>Calendar</button>
       </Link>
 
       <Link to="/page3">
