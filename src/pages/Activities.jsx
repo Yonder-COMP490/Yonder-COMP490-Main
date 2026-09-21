@@ -1,33 +1,22 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import ActivityCard from "../components/ActivityCard";
-import AddActivity from "../components/AddActivity";
+import ActivityForm from "../components/ActivityForm";
+import { useActivities } from "../components/ActivityContext";
 import "./Activities.css";
 
-function Activity() {
-  const [activities, setActivities] = useState([
-    {
-      id: 1,
-      name: "Visit Fushimi Inari",
-      date: "October 12",
-      description: "Walk through the torii gates.",
-    },
-    {
-      id: 2,
-      name: "Arashiyama Bamboo Grove",
-      date: "October 13",
-      description: "Explore the bamboo forest and surrounding area.",
-    },
-  ]);
+function Activities() {
+  const { activities, addActivity, updateActivity } = useActivities();
 
-  function addActivity(activity) {
-    setActivities([
-      ...activities,
-      {
-        id: crypto.randomUUID(),
-        ...activity,
-      },
-    ]);
+  const [editingActivityId, setEditingActivityId] = useState(null);
+
+  function handleSave(activity) {
+    if (editingActivityId !== null) {
+      updateActivity(activity);
+      setEditingActivityId(null);
+    } else {
+      addActivity(activity);
+    }
   }
 
   return (
@@ -35,15 +24,26 @@ function Activity() {
       <h1>Activities</h1>
 
       <div className="activities">
-        {activities.map((activity) => (
-          <ActivityCard
-            key={activity.id}
-            activity={activity}
-          />
-        ))}
+        {activities.map((activity) =>
+          editingActivityId === activity.id ? (
+            <ActivityForm
+              key={activity.id}
+              activity={activity}
+              onSave={handleSave}
+              onCancel={() => setEditingActivityId(null)}
+            />
+          ) : (
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
+              onEdit={() => setEditingActivityId(activity.id)}
+            />
+          )
+        )}
 
-        <AddActivity onAdd={addActivity} />
+        <ActivityForm onSave={handleSave} />
       </div>
+
       <Link to="/">
         <button>Home</button>
       </Link>
@@ -51,4 +51,4 @@ function Activity() {
   );
 }
 
-export default Activity;
+export default Activities;

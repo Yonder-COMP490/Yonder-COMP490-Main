@@ -6,7 +6,7 @@
 }
 
 .activity-card,
-.add-activity {
+.activity-form {
   min-height: 180px;
   padding: 20px;
   border: 1px solid #ccc;
@@ -16,7 +16,7 @@
 }
 
 .activity-card h2,
-.add-activity h2 {
+.activity-form h2 {
   margin-top: 0;
 }
 
@@ -24,24 +24,34 @@
   margin: 8px 0;
 }
 
-.add-activity {
+.activity-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.add-activity input,
-.add-activity textarea {
+.activity-form input,
+.activity-form textarea {
+  width: 100%;
   padding: 8px;
   font-size: 14px;
   box-sizing: border-box;
 }
 
-.add-activity textarea {
+.activity-form textarea {
   resize: vertical;
-  min-height: 60px;
+  min-height: 80px;
 }
 
-.add-activity button {
+.activity-form button {
   margin-top: auto;
+}
+
+.activity-form img {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.activity-notes {
+  white-space: pre-line;
 }
