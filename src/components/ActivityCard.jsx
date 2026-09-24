@@ -18,7 +18,7 @@ function ActivityCard({ activity, onEdit }) {
         {activity.endTime}
       </p>
 
-      <p>{activity.cost}</p>
+      <p>{activity.cost?.toString()}</p>
 
       <p className="activity-notes">
         {activity.notes}

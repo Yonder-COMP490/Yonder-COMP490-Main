@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Cost from "../components/Cost";
 
 function ActivityForm({ activity, onSave, onCancel }) {
   const [name, setName] = useState(activity?.name || "");
@@ -6,11 +7,29 @@ function ActivityForm({ activity, onSave, onCancel }) {
   const [date, setDate] = useState(activity?.date || "");
   const [startTime, setStartTime] = useState(activity?.startTime || "");
   const [endTime, setEndTime] = useState(activity?.endTime || "");
-  const [cost, setCost] = useState(activity?.cost || "");
+
+  const [lowerEnd, setLowerEnd] = useState(
+    activity?.cost?.lowerEnd ?? 0
+  );
+
+  const [upperEnd, setUpperEnd] = useState(
+    activity?.cost?.upperEnd ?? 0
+  );
+
+  const [currency, setCurrency] = useState(
+    activity?.cost?.currency || "USD"
+  );
+
   const [notes, setNotes] = useState(activity?.notes || "");
 
   function handleSubmit(event) {
     event.preventDefault();
+
+    const cost = new Cost(
+      Number(lowerEnd) || 0,
+      Number(upperEnd) || 0,
+      currency
+    );
 
     onSave({
       ...(activity || {}),
@@ -61,11 +80,28 @@ function ActivityForm({ activity, onSave, onCancel }) {
       />
 
       <input
-        type="text"
-        placeholder="Cost"
-        value={cost}
-        onChange={(event) => setCost(event.target.value)}
+        type="number"
+        placeholder="Minimum cost"
+        value={lowerEnd}
+        onChange={(event) => setLowerEnd(event.target.value)}
       />
+
+      <input
+        type="number"
+        placeholder="Maximum cost"
+        value={upperEnd}
+        onChange={(event) => setUpperEnd(event.target.value)}
+      />
+
+      <select
+        value={currency}
+        onChange={(event) => setCurrency(event.target.value)}
+      >
+        <option value="USD">USD</option>
+        <option value="JPY">JPY</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+      </select>
 
       <textarea
         placeholder="Notes"

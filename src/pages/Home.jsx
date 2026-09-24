@@ -4,7 +4,7 @@ function Home() {
   return (
     <div>
       <h1>Yonder</h1>
-      <Link to="/activities">
+      <Link to="/Activities">
         <button>Activities</button>
       </Link>
 
@@ -14,6 +14,9 @@ function Home() {
 
       <Link to="/page3">
         <button>Page 3</button>
+      </Link>
+      <Link to="/Budget">
+        <button>Budget</button>
       </Link>
     </div>
   );
