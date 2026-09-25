@@ -1,0 +1,36 @@
+.controls {
+  padding: 10px;
+  text-align: center;
+}
+
+.controls button {
+  margin: 5px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 20px;
+  background: #e3e3e3;
+  cursor: pointer;
+}
+
+.container {
+  display: flex;
+  height: 80vh;
+}
+
+.map {
+  width: 60%;
+  height: 100%;
+}
+
+.sidebar {
+  box-sizing: border-box;
+  width: 40%;
+  height: 100%;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.place {
+  padding: 8px;
+  border-bottom: 1px solid #ccc;
+}

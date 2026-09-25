@@ -15,6 +15,10 @@ function Home() {
       <Link to="/page3">
         <button>Page 3</button>
       </Link>
+
+      <Link to="/maps">
+        <button>Maps</button>
+      </Link>
     </div>
   );
 }
