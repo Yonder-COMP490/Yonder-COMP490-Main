@@ -3,6 +3,7 @@ import Home from "./pages/Home";
 import Activities from "./pages/Activities";
 import Calendar from "./pages/Calendar";
 import Page3 from "./pages/Page3";
+import Maps from "./pages/Maps";
 import Budget from "./pages/Budget";
 import { ActivityProvider } from "./components/ActivityContext";
 
@@ -15,6 +16,7 @@ function App() {
           <Route path="/Activities" element={<Activities />} />
           <Route path="/Calendar" element={<Calendar />} />
           <Route path="/page3" element={<Page3 />} />
+          <Route path="/maps" element={<Maps />} />
           <Route path="/Budget" element={<Budget />} />
         </Routes>
       </BrowserRouter>

@@ -18,6 +18,9 @@ function Home() {
       <Link to="/Budget">
         <button>Budget</button>
       </Link>
+      <Link to="/maps">
+        <button>Maps</button>
+      </Link>
     </div>
   );
 }
