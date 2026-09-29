@@ -1,0 +1,93 @@
+.budget-page {
+    padding: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.budget-title {
+    font-size: 32px;
+    margin-bottom: 25px;
+}
+
+.budget-section {
+    margin-bottom: 15px;
+}
+
+.budget-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px 20px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.budget-section-header:hover {
+    background-color: #e8e8e8;
+}
+
+.budget-section-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.budget-arrow {
+    font-size: 14px;
+    width: 18px;
+}
+
+.budget-section-cost {
+    font-weight: bold;
+}
+
+.budget-items {
+    padding: 5px 20px 5px 50px;
+}
+
+.budget-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+    font-size: 16px;
+}
+
+.budget-item:last-child {
+    border-bottom: none;
+}
+
+.budget-item-clickable {
+    cursor: pointer;
+}
+
+.budget-item-clickable:hover {
+    background-color: #f5f5f5;
+}
+
+.budget-item-name {
+    font-weight: 500;
+}
+
+.budget-item-cost {
+    white-space: nowrap;
+}
+
+.budget-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding: 20px;
+    border-top: 2px solid #333;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.budget-daily {
+    margin-top: 10px;
+}
