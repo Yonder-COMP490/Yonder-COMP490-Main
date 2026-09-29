@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
+import { useHousing } from "../components/HousingContext";
 import "./Calendar.css";
 
 function Calendar() {
   const { activities } = useActivities();
+  const { housing } = useHousing();
 
   const today = new Date();
 
@@ -47,7 +49,6 @@ function Calendar() {
 
     setSelectedDate(newDate);
 
-    // If moving into another month, update the calendar too.
     setCurrentMonth(date.getMonth());
     setCurrentYear(date.getFullYear());
   }
@@ -72,6 +73,22 @@ function Calendar() {
     return activities.some((activity) => activity.date === date);
   }
 
+  function hasHousing(date) {
+    return housing.some(
+      (housingItem) =>
+        date >= housingItem.checkInDate &&
+        date <= housingItem.checkOutDate
+    );
+  }
+
+  function getHousingForDate(date) {
+    return housing.filter(
+      (housingItem) =>
+        date >= housingItem.checkInDate &&
+        date <= housingItem.checkOutDate
+    );
+  }
+
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const firstDay = getFirstDayOfMonth(currentYear, currentMonth);
 
@@ -80,7 +97,10 @@ function Calendar() {
   // Empty spaces before the first day of the month
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
-      <div key={`empty-${i}`} className="calendar-day empty"></div>
+      <div
+        key={`empty-${i}`}
+        className="calendar-day empty"
+      ></div>
     );
   }
 
@@ -88,15 +108,26 @@ function Calendar() {
   for (let day = 1; day <= daysInMonth; day++) {
     const dateString = getDateString(day);
 
+    const dayHasActivity = hasActivity(dateString);
+    const dayHasHousing = hasHousing(dateString);
+
     calendarDays.push(
       <button
         key={day}
         className={`calendar-day ${
-          hasActivity(dateString) ? "has-activity" : ""
-        } ${selectedDate === dateString ? "selected" : ""}`}
+          dayHasActivity ? "has-activity" : ""
+        } ${dayHasHousing ? "has-housing" : ""} ${
+          selectedDate === dateString ? "selected" : ""
+        }`}
         onClick={() => setSelectedDate(dateString)}
       >
-        {day}
+        <span className="calendar-day-number">
+          {day}
+        </span>
+
+        {dayHasHousing && (
+          <div className="housing-line"></div>
+        )}
       </button>
     );
   }
@@ -107,30 +138,47 @@ function Calendar() {
       return (a.startTime || "").localeCompare(b.startTime || "");
     });
 
-  const selectedDateObject = new Date(selectedDate + "T00:00:00");
+  const selectedHousing = getHousingForDate(selectedDate);
 
-  const selectedDayName = selectedDateObject.toLocaleDateString("en-US", {
-    weekday: "long",
-  });
+  const selectedDateObject = new Date(
+    selectedDate + "T00:00:00"
+  );
 
-  const selectedMonthName = selectedDateObject.toLocaleDateString("en-US", {
-    month: "long",
-  });
+  const selectedDayName = selectedDateObject.toLocaleDateString(
+    "en-US",
+    {
+      weekday: "long",
+    }
+  );
+
+  const selectedMonthName = selectedDateObject.toLocaleDateString(
+    "en-US",
+    {
+      month: "long",
+    }
+  );
 
   return (
     <div className="calendar-page">
       <div className="calendar-section">
         <div className="month-header">
-          <button onClick={() => changeMonth(-1)}>←</button>
+          <button onClick={() => changeMonth(-1)}>
+            ←
+          </button>
 
           <h1>
-            {new Date(currentYear, currentMonth).toLocaleDateString("en-US", {
+            {new Date(
+              currentYear,
+              currentMonth
+            ).toLocaleDateString("en-US", {
               month: "long",
               year: "numeric",
             })}
           </h1>
 
-          <button onClick={() => changeMonth(1)}>→</button>
+          <button onClick={() => changeMonth(1)}>
+            →
+          </button>
         </div>
 
         <div className="weekday-header">
@@ -150,29 +198,96 @@ function Calendar() {
 
       <div className="itinerary">
         <div className="itinerary-header">
-          <button onClick={() => changeDay(-1)}>←</button>
+          <button onClick={() => changeDay(-1)}>
+            ←
+          </button>
 
           <div>
             <h2>{selectedDayName}</h2>
+
             <p>
-              {selectedMonthName} {selectedDateObject.getDate()}
+              {selectedMonthName}{" "}
+              {selectedDateObject.getDate()}
             </p>
           </div>
 
-          <button onClick={() => changeDay(1)}>→</button>
+          <button onClick={() => changeDay(1)}>
+            →
+          </button>
         </div>
 
         <div className="itinerary-body">
-          {selectedActivities.length === 0 ? (
-            <p className="no-activities">No activities planned.</p>
+
+          {/* Housing */}
+          {selectedHousing.map((housingItem) => {
+            const isCheckIn =
+              selectedDate === housingItem.checkInDate;
+
+            const isCheckOut =
+              selectedDate === housingItem.checkOutDate;
+
+            return (
+              <div
+                className="itinerary-housing"
+                key={housingItem.id}
+              >
+                <div className="housing-time">
+                  {isCheckIn && (
+                    <>
+                      <strong>Check-in</strong>
+
+                      <span>
+                        {housingItem.checkInTime || "--:--"}
+                      </span>
+                    </>
+                  )}
+
+                  {isCheckOut && (
+                    <>
+                      <strong>Check-out</strong>
+
+                      <span>
+                        {housingItem.checkOutTime || "--:--"}
+                      </span>
+                    </>
+                  )}
+
+                  {!isCheckIn && !isCheckOut && (
+                    <span>Staying</span>
+                  )}
+                </div>
+
+                <div className="housing-block">
+                  <strong>{housingItem.name}</strong>
+
+                  {!isCheckIn && !isCheckOut && (
+                    <span>Staying here</span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Activities */}
+          {selectedActivities.length === 0 &&
+          selectedHousing.length === 0 ? (
+            <p className="no-activities">
+              No activities planned.
+            </p>
           ) : (
             selectedActivities.map((activity) => (
-              <div className="itinerary-activity" key={activity.id}>
+              <div
+                className="itinerary-activity"
+                key={activity.id}
+              >
                 <div className="activity-time">
                   {activity.startTime || "--:--"}
 
                   {activity.endTime && (
-                    <span> - {activity.endTime}</span>
+                    <span>
+                      {" "}
+                      - {activity.endTime}
+                    </span>
                   )}
                 </div>
 

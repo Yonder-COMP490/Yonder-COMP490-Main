@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import Cost from "../components/Cost";
 
 const ActivityContext = createContext();
 
@@ -11,7 +12,7 @@ export function ActivityProvider({ children }) {
       date: "2026-10-12",
       startTime: "",
       endTime: "",
-      cost: "",
+      cost: new Cost(5, 10, "USD"),
       notes: "Walk through the torii gates.\nBring comfortable shoes.",
     },
     {
@@ -21,7 +22,7 @@ export function ActivityProvider({ children }) {
       date: "2026-10-13",
       startTime: "",
       endTime: "",
-      cost: "",
+      cost: new Cost(0, 0, "USD"),
       notes: "Explore the bamboo forest.",
     },
   ]);

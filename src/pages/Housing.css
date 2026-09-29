@@ -1,0 +1,49 @@
+.housing {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  padding: 30px;
+}
+
+.housing-card,
+.housing-form {
+  min-height: 180px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.housing-card h2,
+.housing-form h2 {
+  margin-top: 0;
+}
+
+.housing-card p {
+  margin: 8px 0;
+}
+
+.housing-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.housing-form input {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.housing-form select {
+  width: 100%;
+  padding: 8px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.housing-form button {
+  margin-top: auto;
+}
