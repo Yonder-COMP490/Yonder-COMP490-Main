@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useActivities } from "../components/ActivityContext";
 import { useHousing } from "../components/HousingContext";
+import { useBudget } from "../components/BudgetContext";
 import Cost from "../components/Cost";
 import "./Budget.css";
 
@@ -23,6 +24,7 @@ function getNumberOfNights(checkInDate, checkOutDate) {
 function Budget() {
   const { activities } = useActivities();
   const { housing } = useHousing();
+  const { budgetItems, addBudgetItem } = useBudget();
 
   const [expandedSections, setExpandedSections] = useState({
     activities: true,
@@ -31,8 +33,15 @@ function Budget() {
     daily: false,
   });
 
+  const [addingDailyItem, setAddingDailyItem] = useState(false);
+
+  const [dailyName, setDailyName] = useState("");
+  const [dailyCost, setDailyCost] = useState("");
+  const [dailyDays, setDailyDays] = useState("");
+
   const activityTotal = new Cost();
   const housingTotal = new Cost();
+  const dailyTotal = new Cost();
 
   activities.forEach((activity) => {
     activityTotal.addCost(activity.cost);
@@ -55,15 +64,57 @@ function Budget() {
     }
   });
 
+  budgetItems.forEach((item) => {
+    const itemTotal = new Cost(
+      item.cost.lowerEnd * item.days,
+      item.cost.upperEnd * item.days,
+      item.cost.currency
+    );
+
+    dailyTotal.addCost(itemTotal);
+  });
+
   const total = new Cost();
+
   total.addCost(activityTotal);
   total.addCost(housingTotal);
+  total.addCost(dailyTotal);
 
   function toggleSection(section) {
     setExpandedSections((previous) => ({
       ...previous,
       [section]: !previous[section],
     }));
+  }
+
+  function handleAddDailyItem() {
+    if (!dailyName || !dailyCost || !dailyDays) {
+      return;
+    }
+
+    const cost = new Cost(
+      Number(dailyCost),
+      Number(dailyCost),
+      "USD"
+    );
+
+    addBudgetItem(
+      dailyName,
+      cost,
+      Number(dailyDays)
+    );
+
+    setDailyName("");
+    setDailyCost("");
+    setDailyDays("");
+    setAddingDailyItem(false);
+  }
+
+  function cancelAddDailyItem() {
+    setDailyName("");
+    setDailyCost("");
+    setDailyDays("");
+    setAddingDailyItem(false);
   }
 
   return (
@@ -205,7 +256,7 @@ function Budget() {
       </div>
 
       {/* Daily */}
-      <div className="budget-section budget-daily">
+      <div className="budget-section">
         <div
           className="budget-section-header"
           onClick={() => toggleSection("daily")}
@@ -219,13 +270,80 @@ function Budget() {
           </div>
 
           <span className="budget-section-cost">
-            $0
+            {dailyTotal.toString()}
           </span>
         </div>
 
         {expandedSections.daily && (
           <div className="budget-items">
-            {/* Daily budget items will go here */}
+            {budgetItems.map((item) => {
+              const totalCost = new Cost(
+                item.cost.lowerEnd * item.days,
+                item.cost.upperEnd * item.days,
+                item.cost.currency
+              );
+
+              return (
+                <div
+                  className="budget-item"
+                  key={item.id}
+                >
+                  <span className="budget-item-name">
+                    {item.name}
+                  </span>
+
+                  <span className="budget-item-cost">
+                    {totalCost.toString()}
+                    {" "}
+                    ({item.days} days × {item.cost.toString()})
+                  </span>
+                </div>
+              );
+            })}
+
+            {!addingDailyItem && (
+              <button
+                className="budget-add-button"
+                onClick={() => setAddingDailyItem(true)}
+              >
+                + Add Daily Item
+              </button>
+            )}
+
+            {addingDailyItem && (
+              <div className="budget-add-form">
+                <input
+                  type="text"
+                  placeholder="Name"
+                  value={dailyName}
+                  onChange={(e) => setDailyName(e.target.value)}
+                />
+
+                <input
+                  type="number"
+                  placeholder="Cost"
+                  min="0"
+                  value={dailyCost}
+                  onChange={(e) => setDailyCost(e.target.value)}
+                />
+
+                <input
+                  type="number"
+                  placeholder="Days"
+                  min="1"
+                  value={dailyDays}
+                  onChange={(e) => setDailyDays(e.target.value)}
+                />
+
+                <button onClick={handleAddDailyItem}>
+                  Add
+                </button>
+
+                <button onClick={cancelAddDailyItem}>
+                  Cancel
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -233,7 +351,10 @@ function Budget() {
       {/* Total */}
       <div className="budget-total">
         <span>Total</span>
-        <span>{total.toString()}</span>
+
+        <span>
+          {total.toString()}
+        </span>
       </div>
     </div>
   );
