@@ -7,7 +7,9 @@ function Home() {
       <Link to="/Activities">
         <button>Activities</button>
       </Link>
-
+      <Link to="/Housing">
+        <button>Housing</button>
+      </Link>
       <Link to="/Calendar">
         <button>Calendar</button>
       </Link>

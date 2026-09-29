@@ -52,6 +52,8 @@
   cursor: pointer;
   text-align: left;
   padding: 10px;
+  position: relative;
+  box-sizing: border-box;
 }
 
 .calendar-day:hover {
@@ -72,6 +74,25 @@
   border: none;
   cursor: default;
 }
+
+.calendar-day-number {
+  position: relative;
+  z-index: 2;
+}
+
+/* Housing line */
+
+.housing-line {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  height: 5px;
+  background: #777;
+  border-radius: 3px;
+}
+
+/* Itinerary */
 
 .itinerary {
   border: 1px solid #ccc;
@@ -101,6 +122,46 @@
 .itinerary-body {
   padding: 20px;
 }
+
+/* Housing itinerary item */
+
+.itinerary-housing {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: stretch;
+}
+
+.housing-time {
+  font-size: 13px;
+  padding-top: 10px;
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.housing-time strong {
+  font-size: 12px;
+}
+
+.housing-block {
+  background: #e5e5e5;
+  border-radius: 6px;
+  padding: 10px;
+  min-height: 35px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.housing-block span {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Activity itinerary item */
 
 .itinerary-activity {
   display: grid;
