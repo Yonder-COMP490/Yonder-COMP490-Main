@@ -92,13 +92,14 @@
   border-radius: 3px;
 }
 
-/* Itinerary */
+/* Normal Itinerary */
 
 .itinerary {
   border: 1px solid #ccc;
   border-radius: 10px;
   overflow: hidden;
   background: white;
+  min-width: 0;
 }
 
 .itinerary-header {
@@ -117,6 +118,14 @@
 .itinerary-header p {
   margin: 5px 0 0;
   text-align: center;
+}
+
+.expand-itinerary-button {
+  width: calc(100% - 30px);
+  margin: 15px;
+  padding: 10px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .itinerary-body {
@@ -188,6 +197,90 @@
   text-align: center;
   color: #777;
 }
+
+/* =========================================================
+   Expanded Itinerary
+   ========================================================= */
+
+.calendar-page.itinerary-expanded {
+  display: block;
+  padding: 30px;
+  min-height: 80vh;
+}
+
+.expanded-itinerary {
+  width: 100%;
+  min-width: 0;
+}
+
+.expanded-itinerary-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.expanded-itinerary-header h1 {
+  margin: 0;
+}
+
+.expanded-itinerary-header button {
+  padding: 10px 15px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/*
+ * The individual day "pages" sit next to each other.
+ * Horizontal scrolling lets the user move through the trip.
+ */
+
+.expanded-itinerary-pages {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 10px 5px 25px;
+  align-items: flex-start;
+}
+
+/* Individual day */
+
+.itinerary-page {
+  flex: 0 0 360px;
+  min-height: 550px;
+
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: white;
+  overflow: hidden;
+}
+
+/* Highlight the date that was selected before expanding */
+
+.itinerary-page.current-itinerary-page {
+  border: 2px solid #333;
+}
+
+.itinerary-page-header {
+  padding: 20px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
+  background: #f7f7f7;
+}
+
+.itinerary-page-header h2 {
+  margin: 0;
+}
+
+.itinerary-page-header p {
+  margin: 5px 0 0;
+}
+
+.itinerary-page-body {
+  padding: 20px;
+}
+
+/* Home */
 
 .home-button {
   grid-column: 1 / -1;
