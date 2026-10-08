@@ -1,6 +1,6 @@
 import pandas as pd
 
-# Loading Data
+# loading Data
 data = pd.read_csv("ai/google_review_ratings_data.csv")
 
 # removing empty column
@@ -34,20 +34,63 @@ data = data.rename(columns={
 	"Category 24" : "gardens"
 })
 
-# print("Data shape: ", data.shape)
-# print("\nColumns:")
-# print(data.columns.tolist())
-# print("\nFirst user: ")
-# print(data.iloc[0])
-
+# splitting data into two sets (training data and test data)
 ratings = data.drop(columns=["user_id"])
-zero_counts = (ratings == 0).sum()
-print("\nZero values in each category: ")
-print(zero_counts)
 
-total_zeros = (ratings == 0).sum().sum()
-total_values = ratings.size
+# converting all ratings to numeric values
+ratings = ratings.apply(pd.to_numeric, errors="coerce")
 
-print("\nTotal zero values: ", total_zeros)
-print("Total rating values: ", total_values)
-print("Percentage of zeros: ", total_zeros/total_values * 100)
+# keeping only valid ratings (1-5)
+valid_ratings = ratings.where(
+	(ratings >=1) & (ratings <=5)
+)
+
+# Users with all ratings completed
+complete_mask = valid_ratings.notna().all(axis=1)
+
+# reference group
+reference_users = valid_ratings.loc[~complete_mask].copy()
+
+# test group
+test_users = valid_ratings.loc[complete_mask].copy()
+
+def calculate_distance(user_a, user_b):
+	# finding categories rated by both users
+	common = user_a.notna() & user_b.notna()
+	if common.sum() <3:
+	   return None 
+
+	difference = (user_a[common] - user_b[common]).abs().mean()
+
+	return difference
+
+user_a = reference_users.iloc[0]
+user_b = reference_users.iloc[1]
+
+distance = calculate_distance(user_a, user_b)
+
+# finding 5 simular users
+test_user = test_users.iloc[0].copy()
+actual_rating = test_user["cafes"]
+test_user["cafes"] = float("nan")
+print("Actual cafes rating (hidden): ", actual_rating)
+
+distances = []
+
+# comparing test user & reference user
+for index, user in reference_users.iterrows():
+
+	distance = calculate_distance(test_user, user)
+	if distance is not None:
+		distances.append((index, distance))
+
+# sort - smallest first
+distances.sort(key=lambda x: x[1])
+
+# top closest users
+top_five = distances[:5]
+
+print("\nTop 5 simular Users: ")
+for user_index, distance in top_five:
+	print("User: ", user_index, "Distance: ", distance)
+# print("Total Users: ", len(reference_users) - len(test_users))
