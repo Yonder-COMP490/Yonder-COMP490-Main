@@ -14,12 +14,14 @@ public class Trip {
 
     private List<Activity> activities;
     private List<HousingBooking> housingBookings;
+    private List<BudgetItem> budgetItems;
     private Budget budget;
 
     public Trip() {
         this.preferredCurrency = "USD";
         this.activities = new ArrayList<>();
         this.housingBookings = new ArrayList<>();
+        this.budgetItems = new ArrayList<>();
         this.budget = new Budget();
     }
 
@@ -127,8 +129,24 @@ public class Trip {
     public void removeHousingBooking(int housingId) {
         housingBookings.removeIf(housing -> housing.getId() == housingId);
     }
-    
+
     public Cost getHousingTotal() {
         return budget.getHousingTotal(this);
+    }
+    
+    public List<BudgetItem> getBudgetItems() {
+        return budgetItems;
+    }
+
+    public void setBudgetItems(List<BudgetItem> budgetItems) {
+        this.budgetItems = budgetItems;
+    }
+
+    public void addBudgetItem(BudgetItem item) {
+        budgetItems.add(item);
+    }
+
+    public void removeBudgetItem(int budgetItemId) {
+        budgetItems.removeIf(item -> item.getId() == budgetItemId);
     }
 }
