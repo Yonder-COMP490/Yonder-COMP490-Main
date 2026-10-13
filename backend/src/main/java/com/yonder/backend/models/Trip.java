@@ -103,12 +103,21 @@ public class Trip {
         this.budget = budget;
     }
 
+    public Cost getBudgetTotal() {
+        return budget.getTotalCost(this);
+    }
+
+
     public void addActivity(Activity activity) {
         activities.add(activity);
     }
 
     public void removeActivity(int activityId) {
         activities.removeIf(activity -> activity.getId() == activityId);
+    }
+    
+    public Cost getActivityTotal() {
+        return budget.getActivityTotal(this);
     }
 
     public void addHousingBooking(HousingBooking housing) {
@@ -117,5 +126,9 @@ public class Trip {
 
     public void removeHousingBooking(int housingId) {
         housingBookings.removeIf(housing -> housing.getId() == housingId);
+    }
+    
+    public Cost getHousingTotal() {
+        return budget.getHousingTotal(this);
     }
 }
