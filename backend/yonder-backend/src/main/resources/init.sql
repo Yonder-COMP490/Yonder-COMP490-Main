@@ -1,4 +1,9 @@
-/*This is intended to bea  scrip to run one time to create the tables for the database. Should the database be lost, this could be used to set it up again */
+/*This is intended to bea  scrip to run one time to create the tables for the database. Should the database be lost, this could be used to set it up again(tables, not contents.) */
+
+/*Open pgAdmin and connect to the PostgreSQL server. (if still locallly hosted)
+Select the database Yonder(create if you dont have it). 
+Right click on the database and select "Open Query Tool".
+Open init.sql in the Query Tool and execute it (usually with F5.)*/
 
 -- 1. Create Users Table
 CREATE TABLE IF NOT EXISTS users ( -- if not exists prevents that running the set up overwrites the current table if it already exists.
