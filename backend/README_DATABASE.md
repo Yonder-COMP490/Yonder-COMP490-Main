@@ -22,31 +22,47 @@ Extentions installed:
 
 The PostgreSQL installer installs the database server and related tools. The JDBC driver is a separate Java dependency; it must be on the Java project's classpath for Java code to connect to PostgreSQL. pgJDBC 42.7.13 supports Java 8 and newer and PostgreSQL 8.4 and newer. Driver testing is currently limited to PostgreSQL 9.1 and newer.
 
-The Java Maven project is in `yonder-backend/`. There is no need to generate it again; after cloning the repository and setting up Java plus Maven tooling (the VS Code extension or a standalone Maven install), run Maven commands from that directory.
+The Spring Boot Maven project is the `backend/` folder containing this README and `pom.xml`. There is no need to generate another project. Open this folder as the Maven project, or run commands from it.
 
 ## JDBC driver dependency
 
-The pgJDBC 42.7.13 dependency is declared in `yonder-backend/pom.xml`. Maven downloads the driver and adds it to the project's classpath when the project is built; no need to download the JAR manually or configure it in VS Code. ( Bartle: I first tried the JAR directly, let the build in mavel do it instead)
+The pgJDBC 42.7.13 dependency is declared in `pom.xml`. Maven downloads the driver and adds it to the project's classpath when the project is built; do not download the JAR manually.
+
+## Database credentials
+
+Create a `backend/.env` file with your local database credentials. This file is ignored by Git; do not commit it.
+
+```dotenv
+DB_URL=jdbc:postgresql://localhost:5432/yonder
+DB_USER=postgres
+DB_PASSWORD=your_local_password
+```
+
+The backend loads these values at startup and configures Spring's datasource. You can also supply `DB_URL`, `DB_USER`, and `DB_PASSWORD` as environment variables instead of using a `.env` file.
+
+## Initialize the database
+
+Create the `yonder` database first, then run `src/main/resources/init.sql` once against it using pgAdmin's Query Tool or `psql`. The script creates the tables; it does not create the database and is not run automatically when the backend starts.
 
 ## Build and test
 
-With Apache Maven installed and available on PATH, open a terminal in `backend/yonder-backend/` and run:
+From the `backend/` directory, run the included Maven wrapper:
 
 ```powershell
-mvn test
+./mvnw.cmd test
 ```
 
-Alternatively, use the Maven for Java extension in VS Code to run the `test` goal. Maven reads the project configuration from `pom.xml` and downloads declared dependencies. It does not recreate the project structure. Build output is generated in `target/` and does not need to be committed.
+Alternatively, use the Maven for Java extension in VS Code to run the `test` goal. The wrapper and VS Code extension avoid the need to install Maven separately. Maven reads `pom.xml` and downloads declared dependencies; it does not recreate the project structure. Build output is generated in `target/` and does not need to be committed.
 
 ## Connection details
 
-The default PostgreSQL port is `5432`. A JDBC URL has this format:
+The default PostgreSQL port is `5432`. The local JDBC URL is configured in `.env` using this format:
 
 ```text
 jdbc:postgresql://localhost:5432/DATABASE_NAME
 ```
 
-Replace `DATABASE_NAME` with the database you created. Supply the database username and password through your application's configuration; do not commit real credentials to the repository. The PostgreSQL server must be running and accept connections before the Java application can connect.
+Replace `yonder` with the database name you created if it differs. The PostgreSQL server must be running and accept connections before the Java application can start.
 
 The driver is discovered automatically when its JAR is on the classpath; modern Java applications do not need to call `Class.forName("org.postgresql.Driver")`.
 
