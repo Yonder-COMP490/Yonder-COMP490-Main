@@ -86,3 +86,8 @@ Replace `yonder` with the database name you created if it differs. The PostgreSQ
 
 The driver is discovered automatically when its JAR is on the classpath; modern Java applications do not need to call `Class.forName("org.postgresql.Driver")`.
 
+
+Added swagger UI to see the endpoints in the web, yet to upload the readme about it. http://localhost:8080/swagger-ui/index.html 
+
+"email": "test@example.com",
+  "password": "secret123"
