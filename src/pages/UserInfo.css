@@ -1,0 +1,61 @@
+.user-info-page {
+  min-height: 100%;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.user-info-container {
+  width: 100%;
+  max-width: 440px;
+  margin: 0 auto;
+  padding: 28px;
+  box-sizing: border-box;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: white;
+}
+
+.user-info-container h1 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+.user-info-container > p {
+  margin-bottom: 24px;
+  color: #555;
+}
+
+.user-info-container .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.user-info-container input {
+  width: 100%;
+  padding: 10px;
+  box-sizing: border-box;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font: inherit;
+}
+
+.user-info-container button {
+  width: 100%;
+  padding: 11px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.user-info-container button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.user-info-result {
+  margin-top: 20px;
+  overflow-wrap: anywhere;
+}
