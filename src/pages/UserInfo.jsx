@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import UserInfoAPI from "../api/UserInfoAPI";
+
 import "./UserInfo.css";
 
 function UserInfo() {
   const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
@@ -17,6 +19,7 @@ function UserInfo() {
 
     const userInfo = {
       username,
+      email,
       password,
     };
 
@@ -45,7 +48,7 @@ function UserInfo() {
 
         <h1>User Information</h1>
 
-        <p>Enter a username and password to submit to the backend.</p>
+        <p>Enter a username, email, and password to submit to the backend.</p>
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -57,6 +60,19 @@ function UserInfo() {
               value={username}
               onChange={(event) => setUsername(event.target.value)}
               autoComplete="username"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
               required
             />
           </div>

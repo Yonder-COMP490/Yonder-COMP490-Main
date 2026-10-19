@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/userinfo")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserInfoController {
-
     private UserInfo latestUserInfo;
 
     @PostMapping
@@ -20,6 +19,7 @@ public class UserInfoController {
         latestUserInfo = userInfo;
 
         System.out.println("Received username: " + userInfo.getUsername());
+        System.out.println("Received email: " + userInfo.getEmail());
 
         return userInfo;
     }

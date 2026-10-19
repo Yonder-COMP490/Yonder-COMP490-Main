@@ -1,5 +1,22 @@
 
 const API_URL = "http://localhost:8080/api/trip";
+function serializeActivity(activity) {
+  return {
+    name: activity.name,
+    picture: activity.picture,
+    date: activity.date,
+    startTime: activity.startTime,
+    endTime: activity.endTime,
+    cost: {
+      lowerEnd: activity.cost?.lowerEnd ?? 0,
+      upperEnd: activity.cost?.upperEnd ?? activity.cost?.lowerEnd ?? 0,
+      currency: activity.cost?.currency ?? "USD",
+    },
+    notes: activity.notes,
+    latitude: activity.latitude ?? null,
+    longitude: activity.longitude ?? null,
+  };
+}
 
 class ActivityAPI {
   async getAll() {
@@ -14,24 +31,13 @@ class ActivityAPI {
   }
 
   async add(activity) {
-    const activityData = {
-        name: activity.name,
-        picture: activity.picture,
-        date: activity.date,
-        startTime: activity.startTime,
-        endTime: activity.endTime,
-        cost: activity.cost,
-        notes: activity.notes,
-        latitude: activity.latitude ?? null,
-        longitude: activity.longitude ?? null,
-    };
 
     const response = await fetch(`${API_URL}/activities`, {
         method: "POST",
         headers: {
         "Content-Type": "application/json",
         },
-        body: JSON.stringify(activityData),
+        body: JSON.stringify(serializeActivity(activity)),
     });
 
     if (!response.ok) {
@@ -50,7 +56,10 @@ class ActivityAPI {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(activity),
+      body: JSON.stringify({
+        ...serializeActivity(activity),
+        id: id,
+      }),
     });
 
     if (!response.ok) {

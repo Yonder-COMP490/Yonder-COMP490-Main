@@ -12,10 +12,19 @@ class UserInfoAPI {
 
     if (!response.ok) {
       const details = await response.text();
-
       throw new Error(
         `Failed to submit user information (${response.status}): ${details}`
       );
+    }
+
+    return await response.json();
+  }
+
+  async get() {
+    const response = await fetch(API_URL);
+
+    if (!response.ok) {
+      throw new Error("Failed to retrieve user information.");
     }
 
     return await response.json();
