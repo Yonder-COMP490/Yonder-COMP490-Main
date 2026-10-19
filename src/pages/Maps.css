@@ -1,36 +1,55 @@
-.controls {
-  padding: 10px;
-  text-align: center;
-}
-
-.controls button {
-  margin: 5px;
-  padding: 10px 18px;
-  border: none;
-  border-radius: 20px;
-  background: #e3e3e3;
-  cursor: pointer;
-}
-
-.container {
+/* list on the left, map on the right */
+.maps-page {
   display: flex;
-  height: 80vh;
+  gap: 16px;
+  height: 85vh;
+  padding: 16px;
+}
+
+.place-list {
+  width: 40%;
+  overflow-y: auto; /* so only the list scrolls */
 }
 
 .map {
   width: 60%;
   height: 100%;
+  border-radius: 12px;
 }
 
-.sidebar {
-  box-sizing: border-box;
-  width: 40%;
-  height: 100%;
-  padding: 10px;
-  overflow-y: auto;
+.place-card {
+  display: flex; /* picture next to the text */
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
 }
 
-.place {
-  padding: 8px;
-  border-bottom: 1px solid #ccc;
+.place-card img {
+  width: 140px;
+  height: 110px;
+  object-fit: cover; /* keeps pics from getting stretched */
+  border-radius: 8px;
+}
+
+.place-card h3 {
+  margin: 0 0 8px;
+}
+
+.place-card p {
+  margin: 4px 0;
+}
+
+.rating {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #2e7d32;
+  color: white;
+  font-weight: bold;
+}
+
+.price {
+  font-size: 1.3em;
+  font-weight: bold;
 }
