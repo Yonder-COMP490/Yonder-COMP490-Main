@@ -7,11 +7,16 @@ import java.time.LocalTime;
 public class Activity {
     private int id;
     private String name;
+    private String picture;
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private Cost cost;
     private String notes;
+
+    // Optional geographic coordinates for map markers
+    private Double latitude;
+    private Double longitude;
 
     public Activity() {
         this.cost = new Cost();
@@ -49,6 +54,14 @@ public class Activity {
 
     public void setName(String name) {
         this.name = name;
+    }
+    
+    public String getPicture() {
+        return picture;
+    }
+
+    public void setPicture(String picture) {
+        this.picture = picture;
     }
 
     public LocalDate getDate() {
@@ -89,5 +102,21 @@ public class Activity {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 }

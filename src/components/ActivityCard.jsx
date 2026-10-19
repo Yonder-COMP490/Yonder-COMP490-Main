@@ -1,13 +1,24 @@
 function ActivityCard({ activity, onEdit }) {
+  const cost = activity.cost;
+
+  function formatCost() {
+    if (!cost) return "";
+
+    const lower = Number(cost.lowerEnd ?? 0);
+    const upper = Number(cost.upperEnd ?? lower);
+
+    const amount =
+      lower === upper ? `${lower}` : `${lower}-${upper}`;
+
+    return `${amount} ${cost.currency || "USD"}`;
+  }
+
   return (
     <div className="activity-card">
       <h2>{activity.name}</h2>
 
       {activity.picture && (
-        <img
-          src={activity.picture}
-          alt={activity.name}
-        />
+        <img src={activity.picture} alt={activity.name} />
       )}
 
       <p>{activity.date}</p>
@@ -18,15 +29,11 @@ function ActivityCard({ activity, onEdit }) {
         {activity.endTime}
       </p>
 
-      <p>{activity.cost?.toString()}</p>
+      <p>{formatCost()}</p>
 
-      <p className="activity-notes">
-        {activity.notes}
-      </p>
+      <p className="activity-notes">{activity.notes}</p>
 
-      <button onClick={onEdit}>
-        Edit
-      </button>
+      <button onClick={onEdit}>Edit</button>
     </div>
   );
 }

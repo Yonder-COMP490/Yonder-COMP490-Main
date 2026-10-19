@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Cost from "../components/Cost";
 
 function ActivityForm({ activity, onSave, onCancel }) {
   const [name, setName] = useState(activity?.name || "");
@@ -25,11 +24,14 @@ function ActivityForm({ activity, onSave, onCancel }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const cost = new Cost(
-      Number(lowerEnd) || 0,
-      Number(upperEnd) || 0,
-      currency
-    );
+    const cost = {
+      lowerEnd: Number(lowerEnd) || 0,
+      upperEnd: Math.max(
+        Number(lowerEnd) || 0,
+        Number(upperEnd) || 0
+      ),
+      currency,
+    };
 
     onSave({
       ...(activity || {}),
@@ -52,6 +54,7 @@ function ActivityForm({ activity, onSave, onCancel }) {
         placeholder="Activity name"
         value={name}
         onChange={(event) => setName(event.target.value)}
+        required
       />
 
       <input
@@ -65,32 +68,39 @@ function ActivityForm({ activity, onSave, onCancel }) {
         type="date"
         value={date}
         onChange={(event) => setDate(event.target.value)}
+        required
       />
 
       <input
         type="time"
         value={startTime}
         onChange={(event) => setStartTime(event.target.value)}
+        required
       />
 
       <input
         type="time"
         value={endTime}
         onChange={(event) => setEndTime(event.target.value)}
+        required
       />
 
       <input
         type="number"
         placeholder="Minimum cost"
+        min="0"
         value={lowerEnd}
         onChange={(event) => setLowerEnd(event.target.value)}
+        required
       />
 
       <input
         type="number"
         placeholder="Maximum cost"
+        min="0"
         value={upperEnd}
         onChange={(event) => setUpperEnd(event.target.value)}
+        required
       />
 
       <select
@@ -110,9 +120,7 @@ function ActivityForm({ activity, onSave, onCancel }) {
       />
 
       <div>
-        <button type="submit">
-          Save
-        </button>
+        <button type="submit">Save</button>
 
         {onCancel && (
           <button type="button" onClick={onCancel}>
