@@ -24,6 +24,26 @@ The PostgreSQL installer installs the database server and related tools. The JDB
 
 The Spring Boot Maven project is the `backend/` folder containing this README and `pom.xml`. There is no need to generate another project. Open this folder as the Maven project, or run commands from it.
 
+## Java 25 setup for local terminal use
+
+When running Maven from PowerShell, make sure the shell is using Java 25 instead of an older JDK. The project targets Java 21+ and the installed local JDK is Eclipse Temurin 25. If `JAVA_HOME` still points to an older Java installation, Maven can fail with a release-version mismatch.
+
+Set the environment for the current terminal session before running any `mvn` or `./mvnw.cmd` commands:
+
+```powershell
+$env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-25.0.4.101-hotspot"
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+```
+
+Then verify:
+
+```powershell
+java -version
+mvn -version
+```
+
+If the Java version still appears incorrect, close and reopen the terminal and run the commands again. VS Code may also need a restart after the JDK change so the editor and terminal both pick up the new installation.s
+
 ## JDBC driver dependency
 
 The pgJDBC 42.7.13 dependency is declared in `pom.xml`. Maven downloads the driver and adds it to the project's classpath when the project is built; do not download the JAR manually.
