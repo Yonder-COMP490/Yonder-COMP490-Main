@@ -1,6 +1,8 @@
 package com.yonder.backend;
 
 import com.yonder.backend.models.UserInfo;
+import com.yonder.backend.models.User;
+
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -8,24 +10,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+
 @RestController
 @RequestMapping("/api/userinfo")
 @CrossOrigin(origins = "http://localhost:5173")
 public class UserInfoController {
-    private UserInfo latestUserInfo;
+    private User latestUser;
 
     @PostMapping
-    public UserInfo receiveUserInfo(@RequestBody UserInfo userInfo) {
-        latestUserInfo = userInfo;
+    public User receiveUserInfo(@RequestBody User user) {
+        latestUser = user;
 
-        System.out.println("Received username: " + userInfo.getUsername());
-        System.out.println("Received email: " + userInfo.getEmail());
+        System.out.println("Received Email: " + user.getEmail());
 
-        return userInfo;
+        return user;
     }
 
     @GetMapping
-    public UserInfo getUserInfo() {
-        return latestUserInfo;
+    public User getUserInfo() {
+        return latestUser;
     }
 }

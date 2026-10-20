@@ -5,7 +5,6 @@ import UserInfoAPI from "../api/UserInfoAPI";
 import "./UserInfo.css";
 
 function UserInfo() {
-  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [result, setResult] = useState("");
@@ -18,7 +17,6 @@ function UserInfo() {
     setResult("");
 
     const userInfo = {
-      username,
       email,
       password,
     };
@@ -27,7 +25,7 @@ function UserInfo() {
       const response = await UserInfoAPI.submit(userInfo);
 
       setResult(
-        `Success! The backend received username: ${response.username}`
+        `Success! The backend received email: ${response.email}`
       );
 
       console.log("Received from Java:", response);
@@ -48,21 +46,9 @@ function UserInfo() {
 
         <h1>User Information</h1>
 
-        <p>Enter a username, email, and password to submit to the backend.</p>
+        <p>Enter an email and password to submit to the backend.</p>
 
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              autoComplete="username"
-              required
-            />
-          </div>
 
           <div className="form-group">
             <label htmlFor="email">Email</label>

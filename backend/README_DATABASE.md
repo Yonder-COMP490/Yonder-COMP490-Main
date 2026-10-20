@@ -91,3 +91,8 @@ Added swagger UI to see the endpoints in the web, yet to upload the readme about
 
 "email": "test@example.com",
   "password": "secret123"
+
+
+In a new terminal in backend run : .\mvnw.cmd spring-boot:run
+
+In another terminal run: npm.cmd run dev
