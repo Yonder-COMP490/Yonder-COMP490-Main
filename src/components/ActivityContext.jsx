@@ -1,58 +1,92 @@
-import { createContext, useContext, useState } from "react";
-import Cost from "../components/Cost";
+import { createContext, useContext, useEffect, useState } from "react";
+import ActivityAPI from "../api/ActivityAPI";
 
 const ActivityContext = createContext();
 
 export function ActivityProvider({ children }) {
-  const [activities, setActivities] = useState([
-    {
-      id: 1,
-      name: "Visit Fushimi Inari",
-      picture: "",
-      date: "2026-10-12",
-      startTime: "",
-      endTime: "",
-      cost: new Cost(5, 10, "USD"),
-      notes: "Walk through the torii gates.\nBring comfortable shoes.",
-    },
-    {
-      id: 2,
-      name: "Arashiyama Bamboo Grove",
-      picture: "",
-      date: "2026-10-13",
-      startTime: "",
-      endTime: "",
-      cost: new Cost(0, 0, "USD"),
-      notes: "Explore the bamboo forest.",
-    },
-  ]);
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  function addActivity(activity) {
-    setActivities([
-      ...activities,
-      {
-        id: crypto.randomUUID(),
-        ...activity,
-      },
-    ]);
+  useEffect(() => {
+    async function loadActivities() {
+      try {
+        setError("");
+        const data = await ActivityAPI.getAll();
+        setActivities(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadActivities();
+  }, []);
+
+  async function addActivity(activity) {
+    try {
+      const created = await ActivityAPI.add(activity);
+      setActivities((current) => [...current, created]);
+      return created;
+    } catch (err) {
+      throw err;
+    }
   }
 
-  function updateActivity(updatedActivity) {
-    setActivities(
-      activities.map((activity) =>
-        activity.id === updatedActivity.id
-          ? updatedActivity
-          : activity
-      )
+  async function updateActivity(updatedActivity) {
+    try {
+      const updated = await ActivityAPI.update(
+        updatedActivity.id,
+        updatedActivity
+      );
+
+      setActivities((current) =>
+        current.map((activity) =>
+          activity.id === updated.id ? updated : activity
+        )
+      );
+
+      return updated;
+    } catch (err) {
+      throw err;
+    }
+  }
+
+  async function removeActivity(id) {
+    await ActivityAPI.remove(id);
+
+    setActivities((current) =>
+      current.filter((activity) => activity.id !== id)
     );
+  }
+
+  function getMapMarkers() {
+    return activities
+      .filter(
+        (activity) =>
+          activity.latitude != null &&
+          activity.longitude != null
+      )
+      .map((activity) => ({
+        id: activity.id,
+        type: "activity",
+        name: activity.name,
+        latitude: Number(activity.latitude),
+        longitude: Number(activity.longitude),
+      }));
   }
 
   return (
     <ActivityContext.Provider
       value={{
         activities,
+        loading,
+        error,
         addActivity,
         updateActivity,
+        removeActivity,
+        getMapMarkers,
       }}
     >
       {children}

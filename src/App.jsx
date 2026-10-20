@@ -1,3 +1,4 @@
+
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -7,6 +8,8 @@ import Calendar from "./pages/Calendar";
 import Page3 from "./pages/Page3";
 import Maps from "./pages/Maps";
 import Budget from "./pages/Budget";
+import UserInfo from "./pages/UserInfo";
+import BackendTest from "./components/BackendTest";
 
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
@@ -26,6 +29,8 @@ function App() {
               <Route path="/page3" element={<Page3 />} />
               <Route path="/maps" element={<Maps />} />
               <Route path="/Budget" element={<Budget />} />
+              <Route path="/userinfo" element={<UserInfo />} />
+              <Route path="/backend-test" element={<BackendTest />} />
             </Routes>
           </BrowserRouter>
         </BudgetProvider>

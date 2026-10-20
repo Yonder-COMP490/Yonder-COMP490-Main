@@ -1,27 +1,51 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
+
 import ActivityCard from "../components/ActivityCard";
 import ActivityForm from "../components/ActivityForm";
 import { useActivities } from "../components/ActivityContext";
+
 import "./Activities.css";
 
 function Activities() {
-  const { activities, addActivity, updateActivity } = useActivities();
+  const {
+    activities,
+    loading,
+    error,
+    addActivity,
+    updateActivity,
+  } = useActivities();
 
   const [editingActivityId, setEditingActivityId] = useState(null);
+  const [saveError, setSaveError] = useState("");
 
-  function handleSave(activity) {
-    if (editingActivityId !== null) {
-      updateActivity(activity);
-      setEditingActivityId(null);
-    } else {
-      addActivity(activity);
+  async function handleSave(activity) {
+    setSaveError("");
+
+    try {
+      if (editingActivityId !== null) {
+        await updateActivity(activity);
+        setEditingActivityId(null);
+      } else {
+        await addActivity(activity);
+      }
+    } catch (err) {
+      setSaveError(err.message);
     }
+  }
+
+  if (loading) {
+    return <p>Loading activities...</p>;
   }
 
   return (
     <div>
       <h1>Activities</h1>
+
+      {error && <p role="alert">Failed to load activities: {error}</p>}
+
+      {saveError && <p role="alert">Failed to save activity: {saveError}</p>}
 
       <div className="activities">
         {activities.map((activity) =>
@@ -36,7 +60,10 @@ function Activities() {
             <ActivityCard
               key={activity.id}
               activity={activity}
-              onEdit={() => setEditingActivityId(activity.id)}
+              onEdit={() => {
+                setSaveError("");
+                setEditingActivityId(activity.id);
+              }}
             />
           )
         )}
