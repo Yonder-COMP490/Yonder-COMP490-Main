@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class Activity {
-    private Integer id = 0;
+    private int id;
     private String name;
     private String picture;
     private LocalDate date;
