@@ -2,6 +2,7 @@
 const API_URL = "http://localhost:8080/api/trip";
 function serializeActivity(activity) {
   return {
+    id: 0,
     name: activity.name,
     picture: activity.picture,
     date: activity.date,

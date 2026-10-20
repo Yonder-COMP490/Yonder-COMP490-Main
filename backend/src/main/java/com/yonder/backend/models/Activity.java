@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 
 public class Activity {
-    private int id;
+    private Integer id = 0;
     private String name;
     private String picture;
     private LocalDate date;
@@ -40,12 +40,12 @@ public class Activity {
         this.notes = notes;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setId(Integer id) {
+        this.id = (id == null) ? 0 : id;
     }
 
     public String getName() {
