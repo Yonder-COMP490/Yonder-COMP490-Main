@@ -42,9 +42,9 @@ function UserInfo() {
           <button type="button">← Home</button>
         </Link>
 
-        <h1>User Information</h1>
+        <h1>User Registration</h1>
 
-        <p>Enter an email and password to register an account.</p>
+        <p>Enter an email and password to register an account(email must be not on use already).</p>
 
         <form onSubmit={handleSubmit}>
 

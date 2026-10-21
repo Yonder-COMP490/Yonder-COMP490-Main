@@ -16,7 +16,7 @@ function Home() {
 
       <nav>
         <Link to="/userinfo">
-          <button>User Info</button>
+          <button>User Registration</button>
         </Link>
 
         <Link to="/Activities">
