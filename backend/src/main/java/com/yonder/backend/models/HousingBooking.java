@@ -112,6 +112,10 @@ public class HousingBooking {
     }
 
     public Cost getTotalCost() {
+        if (costPerDay == null) {
+            return new Cost(0.0, "USD");
+        }
+
         return costPerDay.multiply(getNumberOfNights());
     }
 }

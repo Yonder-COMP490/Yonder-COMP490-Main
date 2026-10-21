@@ -1,4 +1,3 @@
-
 package com.yonder.backend.models;
 
 import java.time.LocalDate;
@@ -15,14 +14,12 @@ public class Trip {
     private List<Activity> activities;
     private List<HousingBooking> housingBookings;
     private List<BudgetItem> budgetItems;
-    private Budget budget;
 
     public Trip() {
         this.preferredCurrency = "USD";
         this.activities = new ArrayList<>();
         this.housingBookings = new ArrayList<>();
         this.budgetItems = new ArrayList<>();
-        this.budget = new Budget();
     }
 
     public Trip(
@@ -41,6 +38,8 @@ public class Trip {
         this.preferredCurrency = preferredCurrency;
     }
 
+    // ID
+
     public int getId() {
         return id;
     }
@@ -49,6 +48,8 @@ public class Trip {
         this.id = id;
     }
 
+    // Name
+
     public String getName() {
         return name;
     }
@@ -56,6 +57,8 @@ public class Trip {
     public void setName(String name) {
         this.name = name;
     }
+
+    // Trip dates
 
     public LocalDate getStartDate() {
         return startDate;
@@ -73,6 +76,8 @@ public class Trip {
         this.endDate = endDate;
     }
 
+    // Preferred currency
+
     public String getPreferredCurrency() {
         return preferredCurrency;
     }
@@ -80,6 +85,8 @@ public class Trip {
     public void setPreferredCurrency(String preferredCurrency) {
         this.preferredCurrency = preferredCurrency;
     }
+
+    // Activities
 
     public List<Activity> getActivities() {
         return activities;
@@ -89,27 +96,6 @@ public class Trip {
         this.activities = activities;
     }
 
-    public List<HousingBooking> getHousingBookings() {
-        return housingBookings;
-    }
-
-    public void setHousingBookings(List<HousingBooking> housingBookings) {
-        this.housingBookings = housingBookings;
-    }
-
-    public Budget getBudget() {
-        return budget;
-    }
-
-    public void setBudget(Budget budget) {
-        this.budget = budget;
-    }
-
-    public Cost getBudgetTotal() {
-        return budget.getTotalCost(this);
-    }
-
-
     public void addActivity(Activity activity) {
         activities.add(activity);
     }
@@ -117,9 +103,15 @@ public class Trip {
     public void removeActivity(int activityId) {
         activities.removeIf(activity -> activity.getId() == activityId);
     }
-    
-    public Cost getActivityTotal() {
-        return budget.getActivityTotal(this);
+
+    // Housing bookings
+
+    public List<HousingBooking> getHousingBookings() {
+        return housingBookings;
+    }
+
+    public void setHousingBookings(List<HousingBooking> housingBookings) {
+        this.housingBookings = housingBookings;
     }
 
     public void addHousingBooking(HousingBooking housing) {
@@ -130,10 +122,9 @@ public class Trip {
         housingBookings.removeIf(housing -> housing.getId() == housingId);
     }
 
-    public Cost getHousingTotal() {
-        return budget.getHousingTotal(this);
-    }
-    
+    // Budget items
+    // These are created, edited, and deleted through the Budget page.
+
     public List<BudgetItem> getBudgetItems() {
         return budgetItems;
     }
