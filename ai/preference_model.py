@@ -34,7 +34,7 @@ data = data.rename(columns={
 	"Category 24" : "gardens"
 })
 
-# splitting data into two sets (training data and test data)
+# prepeare rating data for reference and test groups
 ratings = data.drop(columns=["user_id"])
 
 # converting all ratings to numeric values
@@ -54,43 +54,109 @@ reference_users = valid_ratings.loc[~complete_mask].copy()
 # test group
 test_users = valid_ratings.loc[complete_mask].copy()
 
+# _______________
+# Baseline Model - average rating per category
+
+# calculate average for each category
+baseline_ratings = reference_users.mean()
+
+print("\nBaseline average ratings: ")
+print(baseline_ratings.round(2))
+# _______________
+
 def calculate_distance(user_a, user_b):
 	# finding categories rated by both users
 	common = user_a.notna() & user_b.notna()
-	if common.sum() <3:
+	if common.sum() < 3:
 	   return None 
 
 	difference = (user_a[common] - user_b[common]).abs().mean()
 
 	return difference
 
-user_a = reference_users.iloc[0]
-user_b = reference_users.iloc[1]
+def predict_rating(test_user, category, k=5):
+	user = test_user.copy()
+	# hide the actual rating
+	user[category] = float("nan")
 
-distance = calculate_distance(user_a, user_b)
+	distances = []
 
-# finding 5 simular users
-test_user = test_users.iloc[0].copy()
-actual_rating = test_user["cafes"]
-test_user["cafes"] = float("nan")
-print("Actual cafes rating (hidden): ", actual_rating)
+	# comparing test user & reference user
+	for index, reference_user in reference_users.iterrows():
+		# skip users who haven't rated this category
+		if pd.isna(reference_user[category]):
+			continue
 
-distances = []
+		distance = calculate_distance(user,reference_user)
+		if distance is not None:
+			distances.append((index, distance))
+		
+	# sort - smallest first
+	distances.sort(key=lambda x: x[1])
+	# top closest users
+	nearest_neighbors = distances[:k]
+	# predict hidden rating using similar users
+	neighbor_ratings = []
 
-# comparing test user & reference user
-for index, user in reference_users.iterrows():
+	for user_index, distance in nearest_neighbors:
+		#get the category rating from each neighbor
+		rating = reference_users.loc[user_index, category]
 
-	distance = calculate_distance(test_user, user)
-	if distance is not None:
-		distances.append((index, distance))
+		# ignore missing ratings
+		if pd.notna(rating):
+			neighbor_ratings.append(float(rating))
 
-# sort - smallest first
-distances.sort(key=lambda x: x[1])
+	# check if we found neighbors with ratings
+	if not neighbor_ratings:
+		return None
+	# calculate predicted rating
+	predicted_rating = sum(neighbor_ratings) / len(neighbor_ratings)
 
-# top closest users
-top_five = distances[:5]
+	return predicted_rating
+	
+# test our prediction function
+# errors = []
+# # test all 129 users
+# for user_index, test_user in test_users.iterrows():
+# # for user_index, test_user in test_users.head(3).iterrows():
+# # test all 24 categories for each user
+# 	for category in test_users.columns:
+# 		actual = test_user[category]
+# 		predicted = predict_rating(test_user, category)
 
-print("\nTop 5 simular Users: ")
-for user_index, distance in top_five:
-	print("User: ", user_index, "Distance: ", distance)
-# print("Total Users: ", len(reference_users) - len(test_users))
+# 		if predicted is not None:
+# 			error = abs(actual - predicted)
+# 			errors.append(error)
+# 			# print(category, "Error: ", round(error, 2))
+# 		# else:
+# 		# 	print(category, "Prediction unavailable")
+
+# if errors:
+# 	mae = sum(errors) / len(errors)
+# 	print("\nOverall MAE: ", round(mae, 2))
+# 	print("Total predictions:", len(errors))
+
+# _______
+# Evaluate baseline model
+
+baseline_errors=[]
+# compare baseline predictions with actual test ratings
+for user_index, test_user in test_users.iterrows():
+
+	for category in test_users.columns:
+		# actual rating from test user
+		actual = test_user[category]
+
+		# baseline prediction: avg category rating
+		predicted = baseline_ratings[category]
+
+		# calculate absolute error
+		error = abs(actual - predicted)
+		baseline_errors.append(error)
+
+baseline_mae = sum(baseline_errors) / len(baseline_errors)
+
+print("\nBaseline MAE: ", round(baseline_mae, 2))
+print("Total predictions: ", len(baseline_errors))
+# _______
+
