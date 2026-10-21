@@ -1,8 +1,8 @@
-const API_URL = "http://localhost:8080/api/userinfo";
+const API_URL = "http://localhost:8080/api/auth";
 
 class UserInfoAPI {
-  async submit(userInfo) {
-    const response = await fetch(API_URL, {
+  async register(userInfo) {
+    const response = await fetch(`${API_URL}/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -13,18 +13,8 @@ class UserInfoAPI {
     if (!response.ok) {
       const details = await response.text();
       throw new Error(
-        `Failed to submit user information (${response.status}): ${details}`
+        `Failed to register user (${response.status}): ${details}`
       );
-    }
-
-    return await response.json();
-  }
-
-  async get() {
-    const response = await fetch(API_URL);
-
-    if (!response.ok) {
-      throw new Error("Failed to retrieve user information.");
     }
 
     return await response.json();

@@ -1,6 +1,5 @@
 package com.yonder.backend;
 
-import com.yonder.backend.models.UserInfo;
 import com.yonder.backend.models.User;
 
 import org.springframework.web.bind.annotation.CrossOrigin;

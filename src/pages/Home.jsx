@@ -1,39 +1,6 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 function Home() {
-  const [username, setUsername] = useState("");
-
-  useEffect(() => {
-    async function loadUserInfo() {
-      try {
-        const response = await fetch(
-          "http://localhost:8080/api/userinfo"
-        );
-
-        if (!response.ok) {
-          return;
-        }
-
-        const text = await response.text();
-
-        if (!text.trim()) {
-          return;
-        }
-
-        const userInfo = JSON.parse(text);
-
-        if (userInfo?.username) {
-          setUsername(userInfo.username);
-        }
-      } catch (error) {
-        console.error("Could not load user information:", error);
-      }
-    }
-
-    loadUserInfo();
-  }, []);
-
   return (
     <div>
       <header
@@ -45,19 +12,6 @@ function Home() {
         }}
       >
         <h1>Yonder</h1>
-
-        {username && (
-          <div
-            style={{
-              fontSize: "16px",
-              padding: "8px 14px",
-              border: "1px solid #ddd",
-              borderRadius: "20px",
-            }}
-          >
-            {username}
-          </div>
-        )}
       </header>
 
       <nav>

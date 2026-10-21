@@ -22,11 +22,9 @@ function UserInfo() {
     };
 
     try {
-      const response = await UserInfoAPI.submit(userInfo);
+      const response = await UserInfoAPI.register(userInfo);
 
-      setResult(
-        `Success! The backend received email: ${response.email}`
-      );
+      setResult(response.message);
 
       console.log("Received from Java:", response);
     } catch (error) {
@@ -46,7 +44,7 @@ function UserInfo() {
 
         <h1>User Information</h1>
 
-        <p>Enter an email and password to submit to the backend.</p>
+        <p>Enter an email and password to register an account.</p>
 
         <form onSubmit={handleSubmit}>
 
