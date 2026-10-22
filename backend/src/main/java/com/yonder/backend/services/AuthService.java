@@ -34,10 +34,9 @@ public class AuthService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setPasswordHash(encryptPassword.encode(request.getPassword()));
+        user = userRepository.save(user);
 
-        userRepository.save(user);
-
-        return new AuthResponse("User Successfully registered", null);
+        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt());
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -46,7 +45,7 @@ public class AuthService {
         if(!encryptPassword.matches(request.getPassword(), user.getPasswordHash())){
             throw new IllegalArgumentException("Invalid password and/or username");
         }
-        return new AuthResponse("Login successfull", user.getUserId());
+        return new AuthResponse("Login successfull", user.getUserId(), user.getCreatedAt());
 
     }
 }

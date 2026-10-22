@@ -1,6 +1,7 @@
 package com.yonder.backend.repositories;
 
 import com.yonder.backend.models.User;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -22,16 +23,20 @@ public class UserRepository {
             user.setUserId(rs.getLong("user_id"));
             user.setEmail(rs.getString("email"));
             user.setPasswordHash(rs.getString("password_hash"));
-            user.setCreatedAt(rs.getString("created_at"));
+            user.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
             return user;
         }, email);
 
         return users.stream().findFirst();
     }
 
-    public void save(User user) {
-        String sql = "INSERT INTO users (email, password_hash, created_at) VALUES (?, ?, ?)";
-        jdbcTemplate.update(sql, user.getEmail(), user.getPasswordHash(), user.getCreatedAt());
+    public User save(User user) {
+        String sql = "INSERT INTO users (email, password_hash) VALUES (?, ?) RETURNING user_id, created_at";
+        return jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
+            user.setUserId(rs.getLong("user_id"));
+            user.setCreatedAt(rs.getObject("created_at", LocalDateTime.class));
+            return user;
+        }, user.getEmail(), user.getPasswordHash());
     }
 
 }
