@@ -25,6 +25,8 @@ public class HotelServer {
         HttpClient client = HttpClient.newHttpClient();
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
 
+        server.createContext("/api/health", new HealthHandler());
+
         // runs when react calls /api/hotels?q=...&check_in_date=...&check_out_date=...
         server.createContext("/api/hotels", exchange -> {
             // send the search to serpapi with our key
