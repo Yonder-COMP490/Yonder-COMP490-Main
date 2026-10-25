@@ -1,0 +1,38 @@
+.ai-assistant {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+}
+
+.ai-chat {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  width: 320px;
+  height: 400px;
+  padding: 20px;
+  background: white;
+  color: #222;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+}
+
+.ai-chat-input {
+  display: flex;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.ai-chat-input input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px;
+}
+
+.ai-chat-input button {
+  padding: 10px;
+  cursor: pointer;
+}

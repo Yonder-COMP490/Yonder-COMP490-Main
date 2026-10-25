@@ -10,6 +10,7 @@ import Maps from "./pages/Maps";
 import Budget from "./pages/Budget";
 import UserInfo from "./pages/UserInfo";
 import BackendTest from "./components/BackendTest";
+import AIAssistant from "./components/AIAssistant";
 
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
@@ -32,6 +33,7 @@ function App() {
               <Route path="/userinfo" element={<UserInfo />} />
               <Route path="/backend-test" element={<BackendTest />} />
             </Routes>
+				<AIAssistant/>
           </BrowserRouter>
         </BudgetProvider>
       </HousingProvider>
