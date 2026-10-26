@@ -1,6 +1,7 @@
 
 package com.yonder.backend.models;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
@@ -8,35 +9,20 @@ public class Activity {
     private int id;
     private String name;
     private String picture;
-    private LocalDate date;
+
+    private boolean active = true;
+    private Integer tripDay;
+    private LocalDate fixedDate;
+
     private LocalTime startTime;
     private LocalTime endTime;
     private Cost cost;
     private String notes;
-    
-    // Optional geographic coordinates for map markers
+    private String readableAddress;
     private Double latitude;
     private Double longitude;
-    
-    // private int id;
-    // private String name;
-    // private String picture;
-    // private GreaterLocation greaterLocation;
-    // private bool active; <- this means it is placed into the trip
-    // private int tripDay; <- relative to trip start date
-    // private LocalDate fixedDate; <- typically null rework to use day if null
-    // The above 2 should use the same getter
-    // public bool booked() => fixedDate != null;
-    // private LocalTime startTime;
-    // private LocalTime endTime;
-    // public time(?) duration() => endTime - StartTime;
-    // private Cost cost;
-    // private String notes;
 
-    // Optional geographic coordinates for map markers
-    // private String readableAddress;
-    // private Double latitude;
-    // private Double longitude;
+    private transient LocalDate tripStartDate;
 
     public Activity() {
         this.cost = new Cost();
@@ -51,21 +37,22 @@ public class Activity {
         Cost cost,
         String notes
     ) {
+        this();
         this.id = id;
         this.name = name;
-        this.date = date;
+        this.fixedDate = date;
         this.startTime = startTime;
         this.endTime = endTime;
-        this.cost = cost;
+        this.cost = cost != null ? cost : new Cost();
         this.notes = notes;
     }
 
-    public Integer getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Integer id) {
-        this.id = (id == null) ? 0 : id;
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -75,7 +62,7 @@ public class Activity {
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public String getPicture() {
         return picture;
     }
@@ -84,12 +71,58 @@ public class Activity {
         this.picture = picture;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public boolean isActive() {
+        return active;
     }
 
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Integer getTripDay() {
+        return tripDay;
+    }
+
+    public void setTripDay(Integer tripDay) {
+        this.tripDay = tripDay;
+
+        if (tripDay != null) {
+            this.fixedDate = null;
+        }
+    }
+
+    public LocalDate getFixedDate() {
+        return fixedDate;
+    }
+
+    public void setFixedDate(LocalDate fixedDate) {
+        this.fixedDate = fixedDate;
+
+        if (fixedDate != null) {
+            this.tripDay = null;
+        }
+    }
+
+    // Backwards-compatible date getter for React.
+    public LocalDate getDate() {
+        if (fixedDate != null) {
+            return fixedDate;
+        }
+
+        if (tripDay != null && tripStartDate != null) {
+            return tripStartDate.plusDays(tripDay - 1L);
+        }
+
+        return null;
+    }
+
+    // Setting a date selects fixed-date scheduling.
     public void setDate(LocalDate date) {
-        this.date = date;
+        setFixedDate(date);
+    }
+
+    public void attachToTrip(LocalDate tripStartDate) {
+        this.tripStartDate = tripStartDate;
     }
 
     public LocalTime getStartTime() {
@@ -108,6 +141,20 @@ public class Activity {
         this.endTime = endTime;
     }
 
+    public Duration getDuration() {
+        if (startTime == null || endTime == null) {
+            return null;
+        }
+
+        Duration duration = Duration.between(startTime, endTime);
+
+        if (duration.isNegative()) {
+            duration = duration.plusDays(1);
+        }
+
+        return duration;
+    }
+
     public Cost getCost() {
         return cost;
     }
@@ -122,6 +169,14 @@ public class Activity {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getReadableAddress() {
+        return readableAddress;
+    }
+
+    public void setReadableAddress(String readableAddress) {
+        this.readableAddress = readableAddress;
     }
 
     public Double getLatitude() {

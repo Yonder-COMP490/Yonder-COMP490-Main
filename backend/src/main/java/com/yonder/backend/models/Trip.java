@@ -1,3 +1,4 @@
+
 package com.yonder.backend.models;
 
 import java.time.LocalDate;
@@ -11,27 +12,18 @@ public class Trip {
     private LocalDate endDate;
     private String preferredCurrency;
 
+    //private List<Transportation> transportation; 
     private List<Activity> activities;
     private List<HousingBooking> housingBookings;
     private List<BudgetItem> budgetItems;
-
-    // private int id;
-    // private String name;
-    // private String description;
-    // private LocalDate startDate;
-    // public LocalDate endDate() => find latest item;
-    // private String preferredCurrency;
-
-    // private List<GreaterLocation> greaterLocations;
-    // private List<Activity> activities;
-    // private List<HousingBooking> housingBookings;
-    // private List<BudgetItem> budgetItems;
+    private List<PointOfInterest> pointsOfInterest;
 
     public Trip() {
-        this.preferredCurrency = "USD";
-        this.activities = new ArrayList<>();
-        this.housingBookings = new ArrayList<>();
-        this.budgetItems = new ArrayList<>();
+        preferredCurrency = "USD";
+        activities = new ArrayList<>();
+        housingBookings = new ArrayList<>();
+        budgetItems = new ArrayList<>();
+        pointsOfInterest = new ArrayList<>();
     }
 
     public Trip(
@@ -42,15 +34,15 @@ public class Trip {
         String preferredCurrency
     ) {
         this();
-
         this.id = id;
         this.name = name;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.preferredCurrency = preferredCurrency;
-    }
 
-    // ID
+        if (preferredCurrency != null) {
+            this.preferredCurrency = preferredCurrency;
+        }
+    }
 
     public int getId() {
         return id;
@@ -60,8 +52,6 @@ public class Trip {
         this.id = id;
     }
 
-    // Name
-
     public String getName() {
         return name;
     }
@@ -70,14 +60,13 @@ public class Trip {
         this.name = name;
     }
 
-    // Trip dates
-
     public LocalDate getStartDate() {
         return startDate;
     }
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
+        refreshScheduledDates();
     }
 
     public LocalDate getEndDate() {
@@ -88,8 +77,6 @@ public class Trip {
         this.endDate = endDate;
     }
 
-    // Preferred currency
-
     public String getPreferredCurrency() {
         return preferredCurrency;
     }
@@ -98,58 +85,97 @@ public class Trip {
         this.preferredCurrency = preferredCurrency;
     }
 
-    // Activities
-
     public List<Activity> getActivities() {
         return activities;
     }
 
     public void setActivities(List<Activity> activities) {
-        this.activities = activities;
+        this.activities = activities != null
+            ? activities : new ArrayList<>();
+        refreshScheduledDates();
     }
 
     public void addActivity(Activity activity) {
-        activities.add(activity);
+        if (activity != null) {
+            activities.add(activity);
+            activity.attachToTrip(startDate);
+        }
     }
 
     public void removeActivity(int activityId) {
         activities.removeIf(activity -> activity.getId() == activityId);
     }
 
-    // Housing bookings
-
     public List<HousingBooking> getHousingBookings() {
         return housingBookings;
     }
 
     public void setHousingBookings(List<HousingBooking> housingBookings) {
-        this.housingBookings = housingBookings;
+        this.housingBookings = housingBookings != null
+            ? housingBookings : new ArrayList<>();
+        refreshScheduledDates();
     }
 
     public void addHousingBooking(HousingBooking housing) {
-        housingBookings.add(housing);
+        if (housing != null) {
+            housingBookings.add(housing);
+            housing.attachToTrip(startDate);
+        }
     }
 
     public void removeHousingBooking(int housingId) {
         housingBookings.removeIf(housing -> housing.getId() == housingId);
     }
 
-    // Budget items
-    // These are created, edited, and deleted through the Budget page.
-
     public List<BudgetItem> getBudgetItems() {
         return budgetItems;
     }
 
     public void setBudgetItems(List<BudgetItem> budgetItems) {
-        this.budgetItems = budgetItems;
+        this.budgetItems = budgetItems != null
+            ? budgetItems : new ArrayList<>();
     }
 
     public void addBudgetItem(BudgetItem item) {
-        budgetItems.add(item);
+        if (item != null) {
+            budgetItems.add(item);
+        }
     }
 
     public void removeBudgetItem(int budgetItemId) {
         budgetItems.removeIf(item -> item.getId() == budgetItemId);
+    }
+
+    public List<PointOfInterest> getPointsOfInterest() {
+        return pointsOfInterest;
+    }
+
+    public void setPointsOfInterest(List<PointOfInterest> pointsOfInterest) {
+        this.pointsOfInterest = pointsOfInterest != null
+            ? pointsOfInterest : new ArrayList<>();
+    }
+
+    public void addPointOfInterest(PointOfInterest point) {
+        if (point != null) {
+            pointsOfInterest.add(point);
+        }
+    }
+
+    public void removePointOfInterest(int pointId) {
+        pointsOfInterest.removeIf(point -> point.getId() == pointId);
+    }
+
+    private void refreshScheduledDates() {
+        if (activities != null) {
+            activities.forEach(
+                activity -> activity.attachToTrip(startDate)
+            );
+        }
+
+        if (housingBookings != null) {
+            housingBookings.forEach(
+                housing -> housing.attachToTrip(startDate)
+            );
+        }
     }
 }

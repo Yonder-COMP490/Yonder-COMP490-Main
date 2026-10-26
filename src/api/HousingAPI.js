@@ -1,13 +1,33 @@
+
 const API_URL = "http://localhost:8080/api/trip";
 
 function serializeHousing(housing) {
+  const checkInDate = housing.checkInDate ?? null;
+  const checkOutDate = housing.checkOutDate ?? null;
+
+  const calculatedNights =
+    checkInDate && checkOutDate
+      ? Math.max(
+          0,
+          Math.round(
+            (Date.parse(`${checkOutDate}T00:00:00Z`) -
+              Date.parse(`${checkInDate}T00:00:00Z`)) /
+              86400000
+          )
+        )
+      : 0;
+
   return {
-    id: 0,
+    id: housing.id ?? 0,
     name: housing.name,
-    checkInDate: housing.checkInDate,
-    checkInTime: housing.checkInTime,
-    checkOutDate: housing.checkOutDate,
-    checkOutTime: housing.checkOutTime,
+    picture: housing.picture ?? null,
+    active: housing.active ?? true,
+    tripDay: housing.tripDay ?? null,
+    checkInDate,
+    checkInTime: housing.checkInTime ?? null,
+    checkOutDate,
+    checkOutTime: housing.checkOutTime ?? null,
+    nights: housing.nights ?? calculatedNights,
     costPerDay: {
       lowerEnd: housing.costPerDay?.lowerEnd ?? 0,
       upperEnd:
@@ -17,6 +37,9 @@ function serializeHousing(housing) {
       currency: housing.costPerDay?.currency ?? "USD",
     },
     notes: housing.notes ?? "",
+    readableAddress: housing.readableAddress ?? null,
+    latitude: housing.latitude ?? null,
+    longitude: housing.longitude ?? null,
   };
 }
 
@@ -35,9 +58,7 @@ class HousingAPI {
   async add(housing) {
     const response = await fetch(`${API_URL}/housing`, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(serializeHousing(housing)),
     });
 
@@ -54,9 +75,7 @@ class HousingAPI {
   async update(id, housing) {
     const response = await fetch(`${API_URL}/housing/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ...serializeHousing(housing),
         id,
@@ -79,10 +98,7 @@ class HousingAPI {
     });
 
     if (!response.ok) {
-      const details = await response.text();
-      throw new Error(
-        `Failed to remove housing (${response.status}): ${details}`
-      );
+      throw new Error("Failed to remove housing.");
     }
   }
 }

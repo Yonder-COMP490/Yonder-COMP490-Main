@@ -150,7 +150,7 @@ public class BudgetService {
                 unitCost = copyCost(unitCost);
             }
 
-            int nights = housing.getNumberOfNights();
+            int nights = housing.getNights();
 
             entries.add(new BudgetEntry(
                 "Housing",
