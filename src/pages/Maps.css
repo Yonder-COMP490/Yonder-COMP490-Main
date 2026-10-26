@@ -53,3 +53,23 @@
   font-size: 1.3em;
   font-weight: bold;
 }
+
+/* search bar */
+.city-search {
+  display: flex; /* side by side */
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.city-search input {
+  flex: 1; /* fill the space */
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.city-search button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+}
