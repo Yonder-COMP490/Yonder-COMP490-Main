@@ -2,12 +2,27 @@
     padding: 30px;
     max-width: 900px;
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .budget-title {
     font-size: 32px;
     margin-bottom: 25px;
 }
+
+/* Loading and error messages */
+
+.budget-error {
+    color: #c62828;
+    background-color: #ffebee;
+    border: 1px solid #ef9a9a;
+    border-radius: 6px;
+    padding: 12px 15px;
+    margin: 12px 0;
+    font-size: 15px;
+}
+
+/* Budget sections */
 
 .budget-section {
     margin-bottom: 15px;
@@ -17,12 +32,14 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 15px;
     padding: 15px 20px;
     background-color: #f2f2f2;
     border-radius: 8px;
     cursor: pointer;
     font-size: 20px;
     font-weight: bold;
+    transition: background-color 0.15s ease;
 }
 
 .budget-section-header:hover {
@@ -36,22 +53,34 @@
 }
 
 .budget-arrow {
+    display: inline-block;
     font-size: 14px;
     width: 18px;
+    flex-shrink: 0;
 }
 
 .budget-section-cost {
     font-weight: bold;
+    white-space: nowrap;
 }
+
+/* Items within sections */
 
 .budget-items {
     padding: 5px 20px 5px 50px;
+}
+
+.budget-items > p {
+    margin: 12px 0;
+    color: #777;
+    font-size: 14px;
 }
 
 .budget-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
     padding: 12px 15px;
     border-bottom: 1px solid #ddd;
     font-size: 16px;
@@ -71,11 +100,43 @@
 
 .budget-item-name {
     font-weight: 500;
+    overflow-wrap: anywhere;
 }
 
 .budget-item-cost {
     white-space: nowrap;
+    margin-left: auto;
+    text-align: right;
 }
+
+/* Daily budget item actions */
+
+.budget-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.budget-item-actions button {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: white;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.budget-item-actions button:hover:not(:disabled) {
+    background-color: #e8e8e8;
+}
+
+.budget-item-actions button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Add daily budget item */
 
 .budget-add-button {
     margin-top: 10px;
@@ -85,31 +146,48 @@
     background-color: white;
     cursor: pointer;
     font-size: 15px;
+    transition: background-color 0.15s ease;
 }
 
-.budget-add-button:hover {
+.budget-add-button:hover:not(:disabled) {
     background-color: #f2f2f2;
 }
 
+.budget-add-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Daily item form */
+
 .budget-add-form {
     display: flex;
+    flex-wrap: wrap;
     gap: 10px;
     align-items: center;
     padding: 15px;
     margin-top: 10px;
     background-color: #f7f7f7;
+    border: 1px solid #e5e5e5;
     border-radius: 6px;
 }
 
 .budget-add-form input {
+    min-width: 0;
     padding: 9px 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 15px;
+    box-sizing: border-box;
 }
 
 .budget-add-form input:first-child {
-    flex: 1;
+    flex: 1 1 180px;
+}
+
+.budget-add-form input[type="number"] {
+    flex: 0 1 120px;
+    width: 120px;
 }
 
 .budget-add-form button {
@@ -118,16 +196,25 @@
     border-radius: 5px;
     background-color: white;
     cursor: pointer;
+    font-size: 14px;
 }
 
-.budget-add-form button:hover {
+.budget-add-form button:hover:not(:disabled) {
     background-color: #e8e8e8;
 }
+
+.budget-add-form button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Total */
 
 .budget-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 15px;
     margin-top: 30px;
     padding: 20px;
     border-top: 2px solid #333;
@@ -135,6 +222,62 @@
     font-weight: bold;
 }
 
+.budget-total span:last-child {
+    white-space: nowrap;
+}
+
+/* Retained for compatibility with existing markup */
+
 .budget-daily {
     margin-top: 10px;
+}
+
+/* Smaller screens */
+
+@media (max-width: 600px) {
+    .budget-page {
+        padding: 15px;
+    }
+
+    .budget-title {
+        font-size: 28px;
+    }
+
+    .budget-section-header {
+        padding: 12px 15px;
+        font-size: 17px;
+    }
+
+    .budget-items {
+        padding: 5px 0 5px 15px;
+    }
+
+    .budget-item {
+        flex-wrap: wrap;
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .budget-item-actions {
+        width: 100%;
+        margin-top: 5px;
+    }
+
+    .budget-add-form {
+        align-items: stretch;
+    }
+
+    .budget-add-form input:first-child {
+        flex-basis: 100%;
+    }
+
+    .budget-add-form input[type="number"] {
+        flex: 1 1 100px;
+        width: auto;
+    }
+
+    .budget-total {
+        padding: 15px 5px;
+        font-size: 20px;
+    }
 }
