@@ -15,6 +15,27 @@ public class HousingBooking {
     private Cost costPerDay;
     private String notes;
 
+    // private int id;
+    // private String name;
+    // private String picture;
+    // private GreaterLocation greaterLocation;
+    // private bool active; <- this means it is placed into the trip
+    // private int tripDay; <- relative to trip start date. If not null checkInDate should be
+    // private LocalDate checkInDate; <- if not null tripDay should be
+    // The above 2 should use the same getter
+    // public bool booked() => checkInDate != null;
+    // private LocalTime checkInTime;
+    // private LocalTime checkOutTime;
+    // private int days; <- should store days and compute end date now
+    // public LocalDate checkOutDate() => checkInDate + days;
+    // private Cost costPerDay;
+    // private String notes;
+    
+    // Optional geographic coordinates for map markers
+    // private String readableAddress;
+    // private Double latitude;
+    // private Double longitude;
+
     public HousingBooking() {
         this.costPerDay = new Cost();
     }

@@ -1,5 +1,6 @@
 package com.yonder.backend.models;
 
+// Temporary Object. Built when needed to be displayed then discarded
 public class BudgetEntry {
     private String category;
 

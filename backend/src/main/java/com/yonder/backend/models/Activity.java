@@ -13,10 +13,30 @@ public class Activity {
     private LocalTime endTime;
     private Cost cost;
     private String notes;
-
+    
     // Optional geographic coordinates for map markers
     private Double latitude;
     private Double longitude;
+    
+    // private int id;
+    // private String name;
+    // private String picture;
+    // private GreaterLocation greaterLocation;
+    // private bool active; <- this means it is placed into the trip
+    // private int tripDay; <- relative to trip start date
+    // private LocalDate fixedDate; <- typically null rework to use day if null
+    // The above 2 should use the same getter
+    // public bool booked() => fixedDate != null;
+    // private LocalTime startTime;
+    // private LocalTime endTime;
+    // public time(?) duration() => endTime - StartTime;
+    // private Cost cost;
+    // private String notes;
+
+    // Optional geographic coordinates for map markers
+    // private String readableAddress;
+    // private Double latitude;
+    // private Double longitude;
 
     public Activity() {
         this.cost = new Cost();

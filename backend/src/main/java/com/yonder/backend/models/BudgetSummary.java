@@ -3,6 +3,7 @@ package com.yonder.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
+// Temporary Object. Built when needed to be displayed then discarded
 public class BudgetSummary {
     private Cost activityTotal;
     private Cost housingTotal;

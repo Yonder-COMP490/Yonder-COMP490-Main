@@ -15,6 +15,18 @@ public class Trip {
     private List<HousingBooking> housingBookings;
     private List<BudgetItem> budgetItems;
 
+    // private int id;
+    // private String name;
+    // private String description;
+    // private LocalDate startDate;
+    // public LocalDate endDate() => find latest item;
+    // private String preferredCurrency;
+
+    // private List<GreaterLocation> greaterLocations;
+    // private List<Activity> activities;
+    // private List<HousingBooking> housingBookings;
+    // private List<BudgetItem> budgetItems;
+
     public Trip() {
         this.preferredCurrency = "USD";
         this.activities = new ArrayList<>();
