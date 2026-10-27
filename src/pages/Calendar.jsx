@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
 import { useHousing } from "../components/HousingContext";
 import "./Calendar.css";
@@ -9,33 +9,38 @@ function Calendar() {
   const { activities } = useActivities();
   const { housing } = useHousing();
 
-  const today = new Date();
+  // Selected date is shared with the dashboard and itinerary sidebar.
+  const { selectedDate, selectDate } = useOutletContext();
 
-  const [currentMonth, setCurrentMonth] = useState(
-    today.getMonth()
-  );
-  const [currentYear, setCurrentYear] = useState(
-    today.getFullYear()
-  );
+  // Track which month the calendar is displaying.
+  const [displayedMonth, setDisplayedMonth] = useState(() => {
+    const date = new Date(`${selectedDate}T00:00:00`);
 
-  const [selectedDate, setSelectedDate] = useState(
-    `${today.getFullYear()}-${String(
-      today.getMonth() + 1
-    ).padStart(2, "0")}-${String(
-      today.getDate()
-    ).padStart(2, "0")}`
-  );
+    return new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      1
+    );
+  });
+
+  // Keep the calendar month synchronized with the selected date.
+  // This also handles dates changed from the itinerary sidebar.
+  useEffect(() => {
+    const date = new Date(`${selectedDate}T00:00:00`);
+
+    setDisplayedMonth(
+      new Date(date.getFullYear(), date.getMonth(), 1)
+    );
+  }, [selectedDate]);
+
+  const currentMonth = displayedMonth.getMonth();
+  const currentYear = displayedMonth.getFullYear();
 
   // Navigate between calendar months.
   function changeMonth(amount) {
-    const date = new Date(
-      currentYear,
-      currentMonth + amount,
-      1
+    setDisplayedMonth(
+      new Date(currentYear, currentMonth + amount, 1)
     );
-
-    setCurrentMonth(date.getMonth());
-    setCurrentYear(date.getFullYear());
   }
 
   function getDaysInMonth(year, month) {
@@ -54,17 +59,19 @@ function Calendar() {
     );
   }
 
-  // Check whether activities are scheduled for a date.
+  // Check whether an activity is scheduled for a given date.
   function hasActivity(date) {
     return activities.some(
       (activity) => activity.date === date
     );
   }
 
-  // Check whether housing applies to a date.
+  // Check whether housing applies to a given date.
   function hasHousing(date) {
     return housing.some(
       (housingItem) =>
+        housingItem.checkInDate &&
+        housingItem.checkOutDate &&
         date >= housingItem.checkInDate &&
         date <= housingItem.checkOutDate
     );
@@ -82,7 +89,7 @@ function Calendar() {
 
   const calendarDays = [];
 
-  // Add empty spaces before the first day.
+  // Add empty cells before the first day of the month.
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
       <div
@@ -92,7 +99,7 @@ function Calendar() {
     );
   }
 
-  // Generate the calendar dates.
+  // Generate a button for each day of the month.
   for (let day = 1; day <= daysInMonth; day++) {
     const dateString = getDateString(day);
 
@@ -108,7 +115,7 @@ function Calendar() {
         } ${dayHasHousing ? "has-housing" : ""} ${
           selectedDate === dateString ? "selected" : ""
         }`}
-        onClick={() => setSelectedDate(dateString)}
+        onClick={() => selectDate(dateString)}
         aria-label={`Select ${dateString}`}
         aria-pressed={selectedDate === dateString}
       >
@@ -137,10 +144,7 @@ function Calendar() {
           </button>
 
           <h1>
-            {new Date(
-              currentYear,
-              currentMonth
-            ).toLocaleDateString("en-US", {
+            {displayedMonth.toLocaleDateString("en-US", {
               month: "long",
               year: "numeric",
             })}
@@ -172,8 +176,9 @@ function Calendar() {
         </div>
       </div>
 
+      {/* Return to the homepage */}
       <Link to="/" className="home-button">
-        <button type="button">Home</button>
+        Home
       </Link>
     </div>
   );
