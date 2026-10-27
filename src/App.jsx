@@ -19,29 +19,27 @@ function App() {
   return (
     <ActivityProvider>
       <HousingProvider>
-        <BudgetProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
 
-              <Route element={<TripDashboard />}>
-                <Route
-                  path="/dashboard"
-                  element={<Navigate to="/Calendar" replace />}
-                />
-                <Route path="/Calendar" element={<Calendar />} />
-                <Route path="/Activities" element={<Activities />} />
-                <Route path="/Housing" element={<Housing />} />
-                <Route path="/Budget" element={<Budget />} />
-                <Route path="/maps" element={<Maps />} />
-              </Route>
+            <Route element={<TripDashboard />}>
+              <Route
+                path="/dashboard"
+                element={<Navigate to="/Calendar" replace />}
+              />
+              <Route path="/Calendar" element={<Calendar />} />
+              <Route path="/Activities" element={<Activities />} />
+              <Route path="/Housing" element={<Housing />} />
+              <Route path="/Budget" element={<Budget />} />
+              <Route path="/maps" element={<Maps />} />
+            </Route>
 
-              <Route path="/page3" element={<Page3 />} />
-              <Route path="/userinfo" element={<UserInfo />} />
-              <Route path="/backend-test" element={<BackendTest />} />
-            </Routes>
-          </BrowserRouter>
-        </BudgetProvider>
+            <Route path="/page3" element={<Page3 />} />
+            <Route path="/userinfo" element={<UserInfo />} />
+            <Route path="/backend-test" element={<BackendTest />} />
+          </Routes>
+        </BrowserRouter>
       </HousingProvider>
     </ActivityProvider>
   );
