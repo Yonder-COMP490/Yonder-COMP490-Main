@@ -19,7 +19,7 @@ function App() {
   return (
     <ActivityProvider>
       <HousingProvider>
-        <BrowserRouter>
+        <BrowserRouter> 
           <Routes>
             <Route path="/" element={<Home />} />
 
