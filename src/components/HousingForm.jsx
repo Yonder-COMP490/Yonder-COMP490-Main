@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Cost from "../components/Cost";
 
 function HousingForm({ housing, onSave, onCancel }) {
   const [name, setName] = useState(housing?.name || "");
@@ -31,11 +30,11 @@ function HousingForm({ housing, onSave, onCancel }) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const cost = new Cost(
-      Number(costPerDay) || 0,
-      Number(costPerDay) || 0,
-      currency
-    );
+    const cost = {
+      lowerEnd: Number(costPerDay) || 0,
+      upperEnd: Number(costPerDay) || 0,
+      currency,
+    };
 
     onSave({
       ...(housing || {}),
@@ -59,6 +58,7 @@ function HousingForm({ housing, onSave, onCancel }) {
         placeholder="Housing name"
         value={name}
         onChange={(event) => setName(event.target.value)}
+        required
       />
 
       <label>
@@ -68,9 +68,8 @@ function HousingForm({ housing, onSave, onCancel }) {
       <input
         type="date"
         value={checkInDate}
-        onChange={(event) =>
-          setCheckInDate(event.target.value)
-        }
+        onChange={(event) => setCheckInDate(event.target.value)}
+        required
       />
 
       <label>
@@ -80,9 +79,7 @@ function HousingForm({ housing, onSave, onCancel }) {
       <input
         type="time"
         value={checkInTime}
-        onChange={(event) =>
-          setCheckInTime(event.target.value)
-        }
+        onChange={(event) => setCheckInTime(event.target.value)}
       />
 
       <label>
@@ -92,9 +89,8 @@ function HousingForm({ housing, onSave, onCancel }) {
       <input
         type="date"
         value={checkOutDate}
-        onChange={(event) =>
-          setCheckOutDate(event.target.value)
-        }
+        onChange={(event) => setCheckOutDate(event.target.value)}
+        required
       />
 
       <label>
@@ -104,25 +100,22 @@ function HousingForm({ housing, onSave, onCancel }) {
       <input
         type="time"
         value={checkOutTime}
-        onChange={(event) =>
-          setCheckOutTime(event.target.value)
-        }
+        onChange={(event) => setCheckOutTime(event.target.value)}
       />
 
       <input
         type="number"
         placeholder="Cost per day"
+        min="0"
+        step="0.01"
         value={costPerDay}
-        onChange={(event) =>
-          setCostPerDay(event.target.value)
-        }
+        onChange={(event) => setCostPerDay(event.target.value)}
+        required
       />
 
       <select
         value={currency}
-        onChange={(event) =>
-          setCurrency(event.target.value)
-        }
+        onChange={(event) => setCurrency(event.target.value)}
       >
         <option value="USD">USD</option>
         <option value="JPY">JPY</option>

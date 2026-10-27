@@ -14,3 +14,20 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+
+## API keys
+
+The Maps page needs two keys.
+
+1. In the top folder, on `.env`, add your Google Maps key:
+```
+VITE_GOOGLE_MAPS_API_KEY=AIzaSyDQLMfypzSCBYgbiGSCMM3AZq5Slcc9zMc
+```
+
+2. In `backend/yonder-backend/.env`, add your SerpApi key:
+```
+SERPAPI_KEY=394cbd6c21bd1495dcaeb7b1180fdaeaeb5c8fa776faed42a72760e7e63bd3aa
+```
+
+3. Run `npm run dev`, then open http://localhost:5173/maps

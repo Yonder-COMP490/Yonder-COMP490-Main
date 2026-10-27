@@ -16,7 +16,11 @@ function HousingCard({ housing, onEdit }) {
       </p>
 
       <p>
-        {housing.costPerDay?.toString()} / day
+        {housing.costPerDay?.lowerEnd ===
+        housing.costPerDay?.upperEnd
+          ? `${housing.costPerDay?.currency ?? "USD"} ${housing.costPerDay?.lowerEnd ?? 0}`
+          : `${housing.costPerDay?.currency ?? "USD"} ${housing.costPerDay?.lowerEnd ?? 0} - ${housing.costPerDay?.upperEnd ?? 0}`}
+        {" / day"}
       </p>
 
       <button onClick={onEdit}>

@@ -70,6 +70,7 @@ public class TripManager {
         for (int i = 0; i < trip.getActivities().size(); i++) {
             if (trip.getActivities().get(i).getId() == id) {
                 updated.setId(id);
+                updated.attachToTrip(trip.getStartDate());
                 trip.getActivities().set(i, updated);
                 return updated;
             }
@@ -106,6 +107,7 @@ public class TripManager {
         for (int i = 0; i < trip.getHousingBookings().size(); i++) {
             if (trip.getHousingBookings().get(i).getId() == id) {
                 updated.setId(id);
+                updated.attachToTrip(trip.getStartDate());
                 trip.getHousingBookings().set(i, updated);
                 return updated;
             }
