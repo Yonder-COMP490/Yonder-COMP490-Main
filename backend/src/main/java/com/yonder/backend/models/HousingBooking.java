@@ -8,12 +8,24 @@ import java.time.temporal.ChronoUnit;
 public class HousingBooking {
     private int id;
     private String name;
-    private LocalDate checkInDate;
+    private String picture;
+
+    private boolean active = true;
+    private Integer tripDay;
+    private LocalDate fixedCheckInDate;
+
     private LocalTime checkInTime;
-    private LocalDate checkOutDate;
     private LocalTime checkOutTime;
+    private int nights;
+
     private Cost costPerDay;
     private String notes;
+
+    private String readableAddress;
+    private Double latitude;
+    private Double longitude;
+
+    private transient LocalDate tripStartDate;
 
     public HousingBooking() {
         this.costPerDay = new Cost();
@@ -29,14 +41,21 @@ public class HousingBooking {
         Cost costPerDay,
         String notes
     ) {
+        this();
         this.id = id;
         this.name = name;
-        this.checkInDate = checkInDate;
+        this.fixedCheckInDate = checkInDate;
         this.checkInTime = checkInTime;
-        this.checkOutDate = checkOutDate;
         this.checkOutTime = checkOutTime;
-        this.costPerDay = costPerDay;
+        this.costPerDay = costPerDay != null ? costPerDay : new Cost();
         this.notes = notes;
+
+        if (checkInDate != null && checkOutDate != null) {
+            this.nights = Math.max(
+                0,
+                (int) ChronoUnit.DAYS.between(checkInDate, checkOutDate)
+            );
+        }
     }
 
     public int getId() {
@@ -55,12 +74,64 @@ public class HousingBooking {
         this.name = name;
     }
 
-    public LocalDate getCheckInDate() {
-        return checkInDate;
+    public String getPicture() {
+        return picture;
     }
 
-    public void setCheckInDate(LocalDate checkInDate) {
-        this.checkInDate = checkInDate;
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public Integer getTripDay() {
+        return tripDay;
+    }
+
+    public void setTripDay(Integer tripDay) {
+        this.tripDay = tripDay;
+
+        if (tripDay != null) {
+            this.fixedCheckInDate = null;
+        }
+    }
+
+    public LocalDate getFixedCheckInDate() {
+        return fixedCheckInDate;
+    }
+
+    public void setFixedCheckInDate(LocalDate date) {
+        this.fixedCheckInDate = date;
+
+        if (date != null) {
+            this.tripDay = null;
+        }
+    }
+
+    public LocalDate getCheckInDate() {
+        if (fixedCheckInDate != null) {
+            return fixedCheckInDate;
+        }
+
+        if (tripDay != null && tripStartDate != null) {
+            return tripStartDate.plusDays(tripDay - 1L);
+        }
+
+        return null;
+    }
+
+    public void setCheckInDate(LocalDate date) {
+        setFixedCheckInDate(date);
+    }
+
+    public void attachToTrip(LocalDate tripStartDate) {
+        this.tripStartDate = tripStartDate;
     }
 
     public LocalTime getCheckInTime() {
@@ -72,11 +143,45 @@ public class HousingBooking {
     }
 
     public LocalDate getCheckOutDate() {
-        return checkOutDate;
+        LocalDate checkIn = getCheckInDate();
+
+        if (checkIn == null) {
+            return null;
+        }
+
+        return checkIn.plusDays(nights);
     }
 
+    // Compatibility with existing React requests.
     public void setCheckOutDate(LocalDate checkOutDate) {
-        this.checkOutDate = checkOutDate;
+        LocalDate checkIn = getCheckInDate();
+
+        if (checkIn != null && checkOutDate != null) {
+            long calculatedNights =
+                ChronoUnit.DAYS.between(checkIn, checkOutDate);
+
+            if (calculatedNights < 0 || calculatedNights > Integer.MAX_VALUE) {
+                throw new IllegalArgumentException(
+                    "Check-out date must not precede check-in date."
+                );
+            }
+
+            this.nights = (int) calculatedNights;
+        }
+    }
+
+    public int getNights() {
+        return nights;
+    }
+
+    public void setNights(int nights) {
+        if (nights < 0) {
+            throw new IllegalArgumentException(
+                "Number of nights cannot be negative."
+            );
+        }
+
+        this.nights = nights;
     }
 
     public LocalTime getCheckOutTime() {
@@ -103,16 +208,35 @@ public class HousingBooking {
         this.notes = notes;
     }
 
-    public int getNumberOfNights() {
-        if (checkInDate == null || checkOutDate == null) {
-            return 0;
-        }
+    public String getReadableAddress() {
+        return readableAddress;
+    }
 
-        return (int) ChronoUnit.DAYS.between(checkInDate, checkOutDate);
+    public void setReadableAddress(String readableAddress) {
+        this.readableAddress = readableAddress;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
     }
 
     public Cost getTotalCost() {
-        return costPerDay.multiply(getNumberOfNights());
+        if (costPerDay == null) {
+            return new Cost(0.0, "USD");
+        }
+
+        return costPerDay.multiply(nights);
     }
 }
-    

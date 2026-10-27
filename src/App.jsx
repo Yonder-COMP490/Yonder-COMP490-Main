@@ -14,7 +14,6 @@ import BackendTest from "./components/BackendTest";
 
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
-import { BudgetProvider } from "./components/BudgetContext";
 
 function App() {
   return (
@@ -26,7 +25,10 @@ function App() {
               <Route path="/" element={<Home />} />
 
               <Route element={<TripDashboard />}>
-                <Route path="/dashboard" element={<Navigate to="/Calendar" replace />} />
+                <Route
+                  path="/dashboard"
+                  element={<Navigate to="/Calendar" replace />}
+                />
                 <Route path="/Calendar" element={<Calendar />} />
                 <Route path="/Activities" element={<Activities />} />
                 <Route path="/Housing" element={<Housing />} />
