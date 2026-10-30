@@ -1,203 +1,344 @@
 
+import { useEffect, useRef } from "react";
 import { useActivities } from "./ActivityContext";
 import { useHousing } from "./HousingContext";
+import "./ItinerarySidebar.css";
+
+const HOUR_HEIGHT = 72;
+const DAY_MINUTES = 24 * 60;
 
 function formatDate(dateString) {
-  return new Date(`${dateString}T00:00:00`).toLocaleDateString(
-    "en-US",
-    {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
+  const [year, month, day] = dateString.split("-").map(Number);
+
+  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function timeToMinutes(time) {
+  if (!time) return null;
+
+  const match = String(time).match(/^(\d{1,2}):(\d{2})/);
+
+  if (!match) return null;
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+
+  if (
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59
+  ) {
+    return null;
+  }
+
+  return hours * 60 + minutes;
+}
+
+function formatTime(time) {
+  const minutes = timeToMinutes(time);
+
+  if (minutes === null) return "Time not set";
+
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+  const suffix = hours < 12 ? "AM" : "PM";
+  const displayHour = hours % 12 || 12;
+
+  return `${displayHour}:${String(remainder).padStart(2, "0")} ${suffix}`;
+}
+
+function addDays(dateString, amount) {
+  const [year, month, day] = dateString.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
+
+  date.setDate(date.getDate() + amount);
+
+  return (
+    `${date.getFullYear()}-` +
+    `${String(date.getMonth() + 1).padStart(2, "0")}-` +
+    `${String(date.getDate()).padStart(2, "0")}`
+  );
+}
+
+function prepareEvents(activities, housing) {
+  const events = [];
+
+  activities.forEach((activity) => {
+    if (!activity.date) return;
+
+    const start = timeToMinutes(activity.startTime);
+    const end = timeToMinutes(activity.endTime);
+
+    events.push({
+      id: `activity-${activity.id}`,
+      date: activity.date,
+      title: activity.name || "Untitled activity",
+      type: "Activity",
+      start,
+      end:
+        start !== null && end !== null && end > start
+          ? end
+          : start !== null
+            ? Math.min(start + 60, DAY_MINUTES)
+            : null,
+    });
+  });
+
+  housing.forEach((item) => {
+    if (item.checkInDate) {
+      const start = timeToMinutes(item.checkInTime);
+
+      events.push({
+        id: `housing-in-${item.id}`,
+        date: item.checkInDate,
+        title: item.name || "Accommodation",
+        type: "Check-in",
+        start,
+        end: start === null ? null : Math.min(start + 30, DAY_MINUTES),
+      });
     }
+
+    if (item.checkOutDate) {
+      const start = timeToMinutes(item.checkOutTime);
+
+      events.push({
+        id: `housing-out-${item.id}`,
+        date: item.checkOutDate,
+        title: item.name || "Accommodation",
+        type: "Check-out",
+        start,
+        end: start === null ? null : Math.min(start + 30, DAY_MINUTES),
+      });
+    }
+  });
+
+  return events;
+}
+
+function assignLanes(events) {
+  const timedEvents = events
+    .filter(
+      (event) =>
+        event.start !== null &&
+        event.end !== null &&
+        event.end > event.start
+    )
+    .sort((a, b) => a.start - b.start || a.end - b.end);
+
+  const lanes = [];
+  const positioned = [];
+
+  timedEvents.forEach((event) => {
+    let lane = lanes.findIndex((laneEnd) => laneEnd <= event.start);
+
+    if (lane === -1) {
+      lane = lanes.length;
+      lanes.push(event.end);
+    } else {
+      lanes[lane] = event.end;
+    }
+
+    positioned.push({ ...event, lane });
+  });
+
+  return positioned.map((event) => ({
+    ...event,
+    laneCount: lanes.length,
+  }));
+}
+
+function HourLabels() {
+  return (
+    <div className="itinerary-hour-labels">
+      {Array.from({ length: 24 }, (_, hour) => (
+        <div className="itinerary-hour-label" key={hour}>
+          {hour === 0
+            ? "12 AM"
+            : hour < 12
+              ? `${hour} AM`
+              : hour === 12
+                ? "12 PM"
+                : `${hour - 12} PM`}
+        </div>
+      ))}
+    </div>
   );
 }
 
 export default function ItinerarySidebar({
   selectedDate,
   onSelectDate,
-  view,
-  onViewChange,
 }) {
   const { activities, loading, error } = useActivities();
-  const { housing } = useHousing();
+  const { housing = [] } = useHousing();
 
-  const events = [];
+  const timelineScrollRef = useRef(null);
 
-  // Activity events
-  activities.forEach((activity) => {
-    if (!activity.date) return;
+  const events = prepareEvents(activities, housing);
 
-    events.push({
-      id: `activity-${activity.id}`,
-      date: activity.date,
-      time: activity.startTime || "",
-      title: activity.name,
-      type: "Activity",
-    });
-  });
+  const currentDate = selectedDate;
 
-  // Housing check-in and check-out events
-  housing.forEach((item) => {
-    if (item.checkInDate) {
-      events.push({
-        id: `checkin-${item.id}`,
-        date: item.checkInDate,
-        time: item.checkInTime || "",
-        title: item.name,
-        type: "Check-in",
-      });
+  // Start at 6 AM whenever the selected day changes.
+  useEffect(() => {
+    if (!loading && timelineScrollRef.current) {
+      timelineScrollRef.current.scrollTop = 6 * HOUR_HEIGHT;
     }
+  }, [currentDate, loading]);
 
-    if (item.checkOutDate) {
-      events.push({
-        id: `checkout-${item.id}`,
-        date: item.checkOutDate,
-        time: item.checkOutTime || "",
-        title: item.name,
-        type: "Check-out",
-      });
-    }
-
-    // Display ongoing hotel stays on intermediate days.
-    if (view === "day" &&
-        item.checkInDate &&
-        item.checkOutDate &&
-        selectedDate > item.checkInDate &&
-        selectedDate < item.checkOutDate) {
-      events.push({
-        id: `stay-${item.id}`,
-        date: selectedDate,
-        time: "",
-        title: item.name,
-        type: "Staying here",
-      });
-    }
-  });
-
-  events.sort(
-    (a, b) =>
-      a.date.localeCompare(b.date) ||
-      a.time.localeCompare(b.time)
+  const dayEvents = events.filter(
+    (event) => event.date === currentDate
   );
 
-  const visibleEvents =
-    view === "day"
-      ? events.filter((event) => event.date === selectedDate)
-      : events;
+  const timedEvents = assignLanes(dayEvents);
 
-  const groupedEvents = visibleEvents.reduce(
-    (groups, event) => {
-      if (!groups[event.date]) {
-        groups[event.date] = [];
-      }
-
-      groups[event.date].push(event);
-      return groups;
-    },
-    {}
+  const untimedEvents = dayEvents.filter(
+    (event) => event.start === null || event.end === null
   );
-
-  function changeDay(amount) {
-    const date = new Date(`${selectedDate}T00:00:00`);
-    date.setDate(date.getDate() + amount);
-
-    const newDate =
-      `${date.getFullYear()}-` +
-      `${String(date.getMonth() + 1).padStart(2, "0")}-` +
-      `${String(date.getDate()).padStart(2, "0")}`;
-
-    onSelectDate(newDate);
-  }
 
   return (
     <div className="itinerary-sidebar">
-      <h2>Itinerary</h2>
-      <p className="sidebar-subtitle">
-        Your trip schedule
-      </p>
-
-      <div className="sidebar-view-toggle">
+      <div className="itinerary-header">
         <button
           type="button"
-          className={view === "day" ? "active" : ""}
-          onClick={() => onViewChange("day")}
-          aria-pressed={view === "day"}
+          className="itinerary-nav-button"
+          aria-label="Previous day"
+          onClick={() =>
+            onSelectDate(addDays(currentDate, -1))
+          }
         >
-          Selected Day
+          &#8249;
         </button>
 
+        <div className="itinerary-date-heading">
+          <h2>Itinerary</h2>
+          <h3>{formatDate(currentDate)}</h3>
+        </div>
+
         <button
           type="button"
-          className={view === "all" ? "active" : ""}
-          onClick={() => onViewChange("all")}
-          aria-pressed={view === "all"}
+          className="itinerary-nav-button"
+          aria-label="Next day"
+          onClick={() =>
+            onSelectDate(addDays(currentDate, 1))
+          }
         >
-          Full Itinerary
+          &#8250;
         </button>
       </div>
-
-      {view === "day" && (
-        <div className="sidebar-day-navigation">
-          <button
-            type="button"
-            onClick={() => changeDay(-1)}
-            aria-label="Previous day"
-          >
-            ←
-          </button>
-
-          <strong>{formatDate(selectedDate)}</strong>
-
-          <button
-            type="button"
-            onClick={() => changeDay(1)}
-            aria-label="Next day"
-          >
-            →
-          </button>
-        </div>
-      )}
 
       {loading && <p>Loading activities...</p>}
 
       {error && (
-        <p role="alert">
-          Unable to load activities: {error}
-        </p>
+        <p role="alert">Unable to load activities: {error}</p>
       )}
 
-      {!loading && visibleEvents.length === 0 && (
-        <p className="sidebar-empty">
-          {view === "day"
-            ? "Nothing scheduled for this day."
-            : "No activities or accommodations scheduled yet."}
-        </p>
-      )}
+      {!loading && !error && (
+        <>
+          <div
+            className="itinerary-timeline-scroll"
+            ref={timelineScrollRef}
+          >
+            <div
+              className="itinerary-timeline"
+              style={{
+                height: (DAY_MINUTES / 60) * HOUR_HEIGHT,
+              }}
+            >
+              <HourLabels />
 
-      {Object.entries(groupedEvents).map(
-        ([date, dayEvents]) => (
-          <section className="sidebar-day" key={date}>
-            <h3>{formatDate(date)}</h3>
+              <div className="itinerary-event-area">
+                {Array.from({ length: 24 }, (_, hour) => (
+                  <div
+                    className="itinerary-hour-line"
+                    key={hour}
+                    style={{
+                      top: hour * HOUR_HEIGHT,
+                      height: HOUR_HEIGHT,
+                    }}
+                  />
+                ))}
 
-            {dayEvents.map((event) => (
-              <div
-                className="sidebar-event"
-                key={event.id}
-              >
-                <span className="sidebar-event-time">
-                  {event.time || "Time not set"}
-                </span>
+                {timedEvents.map((event) => {
+                  const top =
+                    (event.start / 60) * HOUR_HEIGHT;
 
-                <div className="sidebar-event-details">
+                  const height =
+                    ((event.end - event.start) / 60) *
+                    HOUR_HEIGHT;
+
+                  const width = 100 / event.laneCount;
+
+                  const startHour = Math.floor(event.start / 60);
+                  const startMinute = event.start % 60;
+                  const endHour = Math.floor(event.end / 60);
+                  const endMinute = event.end % 60;
+
+                  const startTime =
+                    `${String(startHour).padStart(2, "0")}:` +
+                    `${String(startMinute).padStart(2, "0")}`;
+
+                  const endTime =
+                    `${String(endHour).padStart(2, "0")}:` +
+                    `${String(endMinute).padStart(2, "0")}`;
+
+                  return (
+                    <div
+                      className={`itinerary-event itinerary-event-${event.type
+                        .toLowerCase()
+                        .replace("-", "")}`}
+                      key={event.id}
+                      title={`${event.title}: ${formatTime(startTime)} – ${formatTime(endTime)}`}
+                      style={{
+                        top,
+                        height: Math.max(height, 22),
+                        left: `${event.lane * width}%`,
+                        width: `${width}%`,
+                      }}
+                    >
+                      <strong>{event.title}</strong>
+
+                      <span>
+                        {formatTime(startTime)} – {formatTime(endTime)}
+                      </span>
+
+                      {event.type !== "Activity" && (
+                        <small>{event.type}</small>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {untimedEvents.length > 0 && (
+            <section className="itinerary-unscheduled">
+              <h4>Time not set</h4>
+
+              {untimedEvents.map((event) => (
+                <div
+                  key={event.id}
+                  className="itinerary-unscheduled-event"
+                >
                   <strong>{event.title}</strong>
                   <span>{event.type}</span>
                 </div>
-              </div>
-            ))}
-          </section>
-        )
+              ))}
+            </section>
+          )}
+
+          {dayEvents.length === 0 && (
+            <p className="sidebar-empty">
+              Nothing scheduled for this day.
+            </p>
+          )}
+        </>
       )}
     </div>
   );
