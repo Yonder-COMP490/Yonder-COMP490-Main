@@ -1,0 +1,435 @@
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap");
+
+.yonder-home {
+  min-height: 100vh;
+  background: #f9f8f4;
+  color: #254235;
+  font-family: "DM Sans", sans-serif;
+}
+
+.yonder-home * {
+  box-sizing: border-box;
+}
+
+.yonder-home h1,
+.yonder-home h2,
+.yonder-home h3,
+.home-logo {
+  font-family: "DM Serif Display", Georgia, serif;
+  font-weight: 400;
+}
+
+.home-header {
+  background: #f9f8f4;
+  border-bottom: 1px solid #e8e8de;
+}
+
+.home-header-inner {
+  max-width: 1320px;
+  min-height: 74px;
+  margin: auto;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.home-logo {
+  color: #254235;
+  font-size: 28px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.home-logo-symbol {
+  margin-right: 8px;
+  font-size: 22px;
+}
+
+.home-logo-period {
+  color: #72967a;
+}
+
+.home-navigation {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  gap: 32px;
+}
+
+.home-navigation a {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  color: #818780;
+  font-size: 13px;
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.home-navigation a:hover,
+.home-navigation a.home-nav-active {
+  color: #254235;
+}
+
+.home-navigation a.home-nav-active {
+  border-bottom-color: #436957;
+}
+
+.home-account {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+}
+
+.home-username {
+  color: #667268;
+  font-size: 13px;
+}
+
+.home-profile-button {
+  width: 39px;
+  height: 39px;
+  border: none;
+  border-radius: 50%;
+  background: #2b5544;
+  color: white;
+  cursor: pointer;
+  font-size: 17px;
+}
+
+.home-profile-menu {
+  position: absolute;
+  right: 0;
+  top: 49px;
+  min-width: 150px;
+  padding: 8px;
+  background: white;
+  border: 1px solid #e3e5dc;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+  z-index: 10;
+}
+
+.home-profile-menu a {
+  display: block;
+  padding: 11px;
+  border-radius: 6px;
+  color: #254235;
+  text-decoration: none;
+  font-size: 13px;
+}
+
+.home-profile-menu a:hover {
+  background: #f2f5ef;
+}
+
+.home-main {
+  max-width: 1248px;
+  padding: 46px 24px 90px;
+  margin: auto;
+}
+
+.home-welcome {
+  margin-bottom: 56px;
+}
+
+.home-eyebrow {
+  margin: 0 0 12px;
+  color: #668374;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.home-welcome h1 {
+  margin: 0 0 9px;
+  font-size: clamp(36px, 5vw, 52px);
+  line-height: 1.15;
+}
+
+.home-welcome > p:last-child {
+  margin: 0;
+  color: #899088;
+  font-size: 14px;
+}
+
+.home-section {
+  margin-bottom: 60px;
+  scroll-margin-top: 24px;
+}
+
+.home-section-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.home-section-header h2 {
+  margin: 0 0 6px;
+  font-size: 29px;
+}
+
+.home-section-header p {
+  margin: 0;
+  color: #8a9189;
+  font-size: 13px;
+}
+
+.home-trips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.home-trip-card,
+.home-destination-card {
+  overflow: hidden;
+  border: 1px solid #e4e8df;
+  border-radius: 11px;
+  background: #fffefa;
+}
+
+.home-trip-card {
+  color: inherit;
+  text-decoration: none;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.home-trip-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px rgba(36, 66, 53, 0.1);
+}
+
+.home-trip-card:focus-visible,
+.home-navigation a:focus-visible,
+.home-profile-button:focus-visible {
+  outline: 3px solid #7b9e84;
+  outline-offset: 3px;
+}
+
+.home-trip-image {
+  height: 190px;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-trip-image img,
+.home-destination-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.home-trip-status {
+  position: absolute;
+  top: 13px;
+  left: 13px;
+  padding: 7px 11px;
+  border-radius: 5px;
+  background: rgba(255, 254, 250, 0.94);
+  color: #355a49;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.home-trip-information {
+  padding: 17px;
+}
+
+.home-trip-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-trip-title-row h3 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.home-trip-title-row span {
+  font-size: 19px;
+}
+
+.home-trip-information > p {
+  margin: 7px 0 15px;
+  color: #848d83;
+  font-size: 12px;
+}
+
+.home-trip-details {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  color: #7f897f;
+  font-size: 11px;
+}
+
+.home-create-trip {
+  min-height: 288px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 26px;
+  border: 1px dashed #d1dfcb;
+  border-radius: 11px;
+  background: #eef3e9;
+  text-align: center;
+}
+
+.home-create-icon {
+  margin-bottom: 18px;
+  color: #91a993;
+  font-size: 50px;
+  font-weight: 300;
+}
+
+.home-create-trip h3 {
+  margin: 0 0 8px;
+  font-size: 23px;
+}
+
+.home-create-trip > p {
+  max-width: 180px;
+  margin: 0;
+  color: #8b998b;
+  line-height: 1.6;
+  font-size: 12px;
+}
+
+.home-coming-soon {
+  margin-top: 20px;
+  color: #718e76;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.home-inspiration {
+  padding-top: 34px;
+  border-top: 1px solid #e3e5dd;
+}
+
+.home-inspiration-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-destination-image {
+  height: 160px;
+  overflow: hidden;
+}
+
+.home-destination-details {
+  padding: 17px;
+}
+
+.home-destination-category {
+  margin: 0 0 10px;
+  color: #779581;
+  letter-spacing: 1.2px;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.home-destination-details h3 {
+  min-height: 58px;
+  margin: 0 0 12px;
+  font-size: 21px;
+  line-height: 1.25;
+}
+
+.home-destination-location {
+  margin: 0;
+  color: #92998e;
+  font-size: 11px;
+}
+
+.home-error {
+  color: #a33535;
+}
+
+.home-loading,
+.home-empty {
+  color: #808b80;
+  font-size: 14px;
+}
+
+.home-footer {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 24px max(24px, calc((100vw - 1200px) / 2));
+  border-top: 1px solid #e4e8df;
+  color: #909a90;
+  font-size: 11px;
+}
+
+@media (max-width: 950px) {
+  .home-trips-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-inspiration-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .home-header-inner {
+    min-height: 68px;
+    padding: 0 18px;
+    flex-wrap: wrap;
+  }
+
+  .home-navigation {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    gap: 24px;
+  }
+
+  .home-username {
+    display: none;
+  }
+
+  .home-main {
+    padding: 36px 18px 60px;
+  }
+
+  .home-welcome {
+    margin-bottom: 42px;
+  }
+
+  .home-trips-grid,
+  .home-inspiration-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-section-header h2 {
+    font-size: 26px;
+  }
+
+  .home-trip-image {
+    height: 210px;
+  }
+
+  .home-create-trip {
+    min-height: 210px;
+  }
+
+  .home-footer {
+    padding: 20px 18px;
+  }
+}
