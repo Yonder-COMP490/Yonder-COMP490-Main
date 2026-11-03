@@ -2,75 +2,59 @@
 .itinerary-sidebar {
   display: flex;
   flex-direction: column;
-  min-width: 0;
-  width: 100%;
   height: 100%;
   min-height: 0;
+  width: 100%;
   overflow: hidden;
-  color: #222;
 }
+
+/* Header and day navigation */
 
 .itinerary-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 8px 16px;
+  padding: 12px;
   border-bottom: 1px solid #ddd;
 }
 
-.itinerary-date-heading {
-  flex: 1;
-  min-width: 0;
+.itinerary-header button {
+  cursor: pointer;
+  padding: 6px 12px;
+}
+
+.itinerary-date {
+  font-weight: 600;
   text-align: center;
 }
 
-.itinerary-date-heading h2 {
-  margin: 0 0 6px;
-  font-size: 1.25rem;
-}
+/* Error message */
 
-.itinerary-date-heading h3 {
+.itinerary-drop-error {
+  color: #b42318;
+  padding: 6px 12px;
   margin: 0;
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.9rem;
 }
 
-.itinerary-nav-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background: white;
-  color: #333;
-  font-size: 1.8rem;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.itinerary-nav-button:hover {
-  background: #f0f0f0;
-}
+/* Scrollable timeline */
 
 .itinerary-timeline-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 4px 12px 0;
-  scrollbar-width: thin;
 }
 
 .itinerary-timeline {
   display: flex;
   position: relative;
   width: 100%;
-  min-width: 0;
+  min-height: calc(24 * 72px);
 }
+
+/* Hour labels */
 
 .itinerary-hour-labels {
   flex: 0 0 48px;
@@ -80,28 +64,35 @@
 .itinerary-hour-label {
   box-sizing: border-box;
   height: 72px;
-  padding: 0 5px 0 0;
+  padding: 0 5px;
+  border-top: 1px solid #ddd;
   color: #666;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   text-align: right;
-  transform: translateY(-7px);
+  position: relative;
+  top: -8px;
 }
+
+/* Timeline event area */
 
 .itinerary-event-area {
   position: relative;
   flex: 1;
   min-width: 0;
+  height: calc(24 * 72px);
   border-left: 1px solid #ddd;
 }
 
 .itinerary-hour-line {
   position: absolute;
-  right: 0;
   left: 0;
-  box-sizing: border-box;
-  border-top: 1px solid #e5e5e5;
+  right: 0;
+  height: 1px;
+  background: #ddd;
   pointer-events: none;
 }
+
+/* Events */
 
 .itinerary-event {
   position: absolute;
@@ -122,15 +113,14 @@
 }
 
 .itinerary-event strong {
-  font-size: 0.82rem;
-  line-height: 1.2;
+  font-weight: 600;
 }
 
-.itinerary-event span,
-.itinerary-event small {
-  font-size: 0.7rem;
-  line-height: 1.2;
+.itinerary-event span {
+  font-size: 0.72rem;
 }
+
+/* Housing events */
 
 .itinerary-event-checkin,
 .itinerary-event-checkout {
@@ -140,44 +130,92 @@
   color: #245b34;
 }
 
+/* Moving activities */
+
+.itinerary-event-activity {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.itinerary-event-activity:active {
+  cursor: grabbing;
+}
+
+.itinerary-event-dragging {
+  z-index: 3;
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Resize handles */
+
+.itinerary-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  z-index: 2;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.itinerary-resize-top {
+  top: 0;
+}
+
+.itinerary-resize-bottom {
+  bottom: 0;
+}
+
+.itinerary-event-activity:hover .itinerary-resize-handle {
+  background: rgba(33, 72, 121, 0.2);
+}
+
+/* Unscheduled activities */
+
 .itinerary-unscheduled {
+  flex: 0 0 auto;
+  max-height: 180px;
+  overflow-y: auto;
   padding: 12px;
   border-top: 1px solid #ddd;
 }
 
-.itinerary-unscheduled h4 {
+.itinerary-unscheduled h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.itinerary-unscheduled-instructions {
+  color: #666;
+  font-size: 0.85rem;
   margin: 0 0 8px;
 }
 
-.itinerary-unscheduled-event {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px;
+.itinerary-unscheduled-item {
+  padding: 8px 10px;
   margin-bottom: 6px;
-  border-radius: 6px;
-  background: #f3f3f3;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #f7f7f7;
   font-size: 0.85rem;
 }
 
-.sidebar-empty {
-  padding: 16px;
-  color: #666;
-  text-align: center;
-}
+/* Smaller screens */
 
-@media (max-width: 480px) {
+@media (max-width: 600px) {
   .itinerary-hour-labels {
-    flex-basis: 50px;
-    width: 50px;
+    flex-basis: 42px;
+    width: 42px;
   }
 
   .itinerary-event {
-    padding: 4px;
+    padding: 4px 5px;
     font-size: 0.7rem;
   }
 
-  .itinerary-event strong {
-    font-size: 0.72rem;
+  .itinerary-event span {
+    font-size: 0.65rem;
   }
 }

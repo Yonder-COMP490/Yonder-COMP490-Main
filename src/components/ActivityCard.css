@@ -33,6 +33,18 @@
   font-size: 0.85rem;
 }
 
+.activity-card-picture {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #f3f4f6;
+  cursor: grab;
+}
+
+.activity-card-picture:active {
+  cursor: grabbing;
+}
+
 /* Heading */
 .activity-card-heading {
   display: flex;

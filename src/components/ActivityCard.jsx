@@ -144,11 +144,24 @@ function ActivityCard({ activity, onSave }) {
 
   return (
     <article className="activity-card">
-      <div className="activity-card-picture">
+      <div
+        className="activity-card-picture"
+        draggable
+        onDragStart={(event) => {
+          event.dataTransfer.setData(
+            "application/x-yonder-activity",
+            String(activity.id)
+          );
+
+          event.dataTransfer.effectAllowed = "copy";
+        }}
+        title="Drag into the itinerary to schedule"
+      >
         {activity.picture ? (
           <img
             src={activity.picture}
             alt={activity.name || "Activity"}
+            draggable={false}
           />
         ) : (
           <div className="activity-card-picture-placeholder">
