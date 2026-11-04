@@ -1,47 +1,65 @@
-import { createContext, useContext, useState } from "react";
-import Cost from "../components/Cost";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
+import HousingAPI from "../api/HousingAPI";
 
 const HousingContext = createContext();
 
 export function HousingProvider({ children }) {
-  const [housing, setHousing] = useState([
-    {
-      id: 1,
-      name: "Kyoto Ryokan",
-      checkInDate: "2026-10-14",
-      checkInTime: "15:00",
-      checkOutDate: "2026-10-16",
-      checkOutTime: "10:00",
-      costPerDay: new Cost(120, 120, "USD"),
-    },
-    {
-      id: 2,
-      name: "Osaka Hotel",
-      checkInDate: "2026-10-16",
-      checkInTime: "15:00",
-      checkOutDate: "2026-10-18",
-      checkOutTime: "11:00",
-      costPerDay: new Cost(150, 150, "USD"),
-    },
-  ]);
+  const [housing, setHousing] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  function addHousing(housingItem) {
-    setHousing([
-      ...housing,
-      {
-        id: crypto.randomUUID(),
-        ...housingItem,
-      },
-    ]);
+  useEffect(() => {
+    async function loadHousing() {
+      try {
+        setError("");
+        const data = await HousingAPI.getAll();
+        setHousing(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadHousing();
+  }, []);
+
+  async function addHousing(housingItem) {
+    const created = await HousingAPI.add(housingItem);
+
+    setHousing((current) => [...current, created]);
+
+    return created;
   }
 
-  function updateHousing(updatedHousing) {
-    setHousing(
-      housing.map((housingItem) =>
-        housingItem.id === updatedHousing.id
-          ? updatedHousing
+  async function updateHousing(updatedHousing) {
+    const updated = await HousingAPI.update(
+      updatedHousing.id,
+      updatedHousing
+    );
+
+    setHousing((current) =>
+      current.map((housingItem) =>
+        housingItem.id === updated.id
+          ? updated
           : housingItem
       )
+    );
+
+    return updated;
+  }
+
+  async function removeHousing(id) {
+    await HousingAPI.remove(id);
+
+    setHousing((current) =>
+      current.filter((housingItem) => housingItem.id !== id)
     );
   }
 
@@ -49,8 +67,11 @@ export function HousingProvider({ children }) {
     <HousingContext.Provider
       value={{
         housing,
+        loading,
+        error,
         addHousing,
         updateHousing,
+        removeHousing,
       }}
     >
       {children}

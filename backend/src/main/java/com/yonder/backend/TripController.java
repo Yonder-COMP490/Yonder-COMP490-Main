@@ -5,6 +5,8 @@ import com.yonder.backend.models.Activity;
 import com.yonder.backend.models.BudgetItem;
 import com.yonder.backend.models.HousingBooking;
 import com.yonder.backend.models.Trip;
+import com.yonder.backend.services.BudgetService;
+import com.yonder.backend.models.BudgetSummary;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -13,11 +15,13 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
 public class TripController {
-
+    private final BudgetService budgetService;
     private final TripManager tripManager;
 
-    public TripController(TripManager tripManager) {
+    public TripController(TripManager tripManager, BudgetService budgetService)
+    {
         this.tripManager = tripManager;
+        this.budgetService = budgetService;
     }
 
     @GetMapping("/api/trip")
@@ -128,5 +132,12 @@ public class TripController {
                 HttpStatus.NOT_FOUND, "Budget item not found"
             );
         }
+    }
+
+    // ---------- Budget summary ----------
+
+    @GetMapping("/api/trip/budget")
+    public BudgetSummary getBudgetSummary() {
+        return budgetService.getBudgetSummary(tripManager.getTrip());
     }
 }

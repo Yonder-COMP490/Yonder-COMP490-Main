@@ -1,4 +1,3 @@
-
 package com.yonder.backend.models;
 
 public class BudgetItem {
@@ -48,5 +47,13 @@ public class BudgetItem {
 
     public void setDays(int days) {
         this.days = days;
+    }
+
+    public Cost getTotalCost() {
+        if (cost == null) {
+            return new Cost(0.0, "USD");
+        }
+
+        return cost.multiply(days);
     }
 }
