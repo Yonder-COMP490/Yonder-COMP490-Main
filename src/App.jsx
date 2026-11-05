@@ -1,4 +1,3 @@
-
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Home from "./pages/Home";
@@ -12,7 +11,7 @@ import Budget from "./pages/Budget";
 import UserInfo from "./pages/UserInfo";
 import Itinerary from "./pages/Itinerary";
 import BackendTest from "./components/BackendTest";
-
+import AIAssistant from "./components/AIAssistant";
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
 
@@ -21,6 +20,7 @@ function App() {
     <ActivityProvider>
       <HousingProvider>
         <BrowserRouter> 
+        <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
 
@@ -41,6 +41,7 @@ function App() {
             <Route path="/userinfo" element={<UserInfo />} />
             <Route path="/backend-test" element={<BackendTest />} />
           </Routes>
+          <AIAssistant />
         </BrowserRouter>
       </HousingProvider>
     </ActivityProvider>

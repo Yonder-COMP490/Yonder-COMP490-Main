@@ -68,7 +68,7 @@ def calculate_distance(user_a, user_b):
 	# finding categories rated by both users
 	common = user_a.notna() & user_b.notna()
 	if common.sum() < 3:
-	   return None 
+		return None 
 
 	difference = (user_a[common] - user_b[common]).abs().mean()
 
@@ -113,6 +113,16 @@ def predict_rating(test_user, category, k=5):
 	predicted_rating = sum(neighbor_ratings) / len(neighbor_ratings)
 
 	return predicted_rating
+
+# Collaborative Filtering Evaluation
+# k = 5
+# Test users: 129
+# Total predictions: 3096
+# Overall MAE: 0.55
+
+# Baseline Evaluation
+# Total predictions: 3096
+# Baseline MAE: 1.02
 	
 # test our prediction function
 # errors = []
