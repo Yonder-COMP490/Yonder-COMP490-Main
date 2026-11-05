@@ -256,3 +256,16 @@
   padding-right: 4px;
   font-size: 11px;
 }
+/* Expanded itinerary uses the full dashboard width. */
+
+.dashboard-body-full {
+  display: block;
+  padding: 0;
+}
+
+.dashboard-body-full .dashboard-content {
+  width: 100%;
+  padding: 0;
+  min-width: 0;
+  box-sizing: border-box;
+}

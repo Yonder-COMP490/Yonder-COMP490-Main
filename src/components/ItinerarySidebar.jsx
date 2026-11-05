@@ -1,5 +1,5 @@
-
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useActivities } from "./ActivityContext";
 import { useHousing } from "./HousingContext";
 import "./ItinerarySidebar.css";
@@ -9,12 +9,12 @@ const DAY_MINUTES = 24 * 60;
 const MAX_START_MINUTES = 22 * 60 + 45;
 const MAX_TIME_MINUTES = 23 * 60 + 45;
 
-function formatDate(date) {
-  if (!date) return "";
+function formatDate(dateString) {
+  if (!dateString) return "";
 
-  const parsedDate = new Date(`${date}T00:00:00`);
+  const date = new Date(`${dateString}T12:00:00`);
 
-  return parsedDate.toLocaleDateString("en-US", {
+  return date.toLocaleDateString("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -37,34 +37,26 @@ function timeToMinutes(time) {
 function minutesToTime(minutes) {
   const safeMinutes = Math.max(
     0,
-    Math.min(MAX_TIME_MINUTES, minutes)
+    Math.min(MAX_TIME_MINUTES, Math.round(minutes / 15) * 15)
   );
 
   const hours = Math.floor(safeMinutes / 60);
-  const remainingMinutes = safeMinutes % 60;
+  const mins = safeMinutes % 60;
 
-  return `${String(hours).padStart(2, "0")}:${String(
-    remainingMinutes
-  ).padStart(2, "0")}`;
+  return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
 function formatTime(minutes) {
-  if (minutes == null) return "";
-
   const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
+  const mins = minutes % 60;
+  const suffix = hours >= 12 ? "PM" : "AM";
+  const displayHour = hours % 12 || 12;
 
-  const date = new Date();
-  date.setHours(hours, remainingMinutes, 0, 0);
-
-  return date.toLocaleTimeString("en-US", {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+  return `${displayHour}:${String(mins).padStart(2, "0")} ${suffix}`;
 }
 
 function addDays(dateString, amount) {
-  const date = new Date(`${dateString}T00:00:00`);
+  const date = new Date(`${dateString}T12:00:00`);
   date.setDate(date.getDate() + amount);
 
   const year = date.getFullYear();
@@ -74,57 +66,64 @@ function addDays(dateString, amount) {
   return `${year}-${month}-${day}`;
 }
 
+function getActivityEnd(activity) {
+  const start = timeToMinutes(activity.startTime);
+  const suppliedEnd = timeToMinutes(activity.endTime);
+
+  if (start === null) return null;
+
+  if (suppliedEnd !== null && suppliedEnd > start) {
+    return suppliedEnd;
+  }
+
+  return Math.min(start + 60, MAX_TIME_MINUTES);
+}
+
 function prepareEvents(activities, housing, currentDate) {
   const events = [];
 
+  // Activities
   activities.forEach((activity) => {
-    if (!activity.date || activity.date !== currentDate) return;
+    if (activity.date !== currentDate) return;
 
     const start = timeToMinutes(activity.startTime);
-    const rawEnd = timeToMinutes(activity.endTime);
+    if (start === null) return;
 
-    let end = null;
-
-    if (start !== null) {
-      if (rawEnd !== null && rawEnd > start) {
-        end = Math.min(rawEnd, DAY_MINUTES);
-      } else {
-        end = Math.min(start + 60, MAX_TIME_MINUTES);
-      }
-    }
+    const end = getActivityEnd(activity);
 
     events.push({
       id: `activity-${activity.id}`,
+      type: "activity",
       activity,
-      activityId: activity.id,
-      date: activity.date,
       title: activity.name || "Untitled activity",
-      type: "Activity",
       start,
       end,
     });
   });
 
+  // Housing check-in and check-out
   housing.forEach((booking) => {
     if (booking.checkInDate === currentDate) {
+      const start = timeToMinutes(booking.checkInTime) ?? 15 * 60;
+
       events.push({
-        id: `housing-checkin-${booking.id}`,
-        date: booking.checkInDate,
-        title: booking.name || "Housing check-in",
-        type: "Check-in",
-        start: timeToMinutes(booking.checkInTime),
-        end: null,
+        id: `checkin-${booking.id}`,
+        type: "checkin",
+        title: booking.name || booking.location || "Housing check-in",
+        start,
+        end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
     }
 
     if (booking.checkOutDate === currentDate) {
+      const start = timeToMinutes(booking.checkOutTime) ?? 11 * 60;
+
       events.push({
-        id: `housing-checkout-${booking.id}`,
-        date: booking.checkOutDate,
-        title: booking.name || "Housing check-out",
-        type: "Check-out",
-        start: timeToMinutes(booking.checkOutTime),
-        end: null,
+        id: `checkout-${booking.id}`,
+        type: "checkout",
+        title: booking.name || booking.location || "Housing check-out",
+        start,
+        end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
     }
   });
@@ -133,75 +132,51 @@ function prepareEvents(activities, housing, currentDate) {
 }
 
 function assignLanes(events) {
-  const timedEvents = events
-    .filter((event) => event.start !== null)
-    .sort((a, b) => a.start - b.start);
+  const sorted = [...events].sort((a, b) => a.start - b.start);
+  const laneEnds = [];
 
-  const groups = [];
-
-  timedEvents.forEach((event) => {
-    let group = groups.find(
-      (candidate) => candidate.end > event.start
-    );
-
-    if (!group) {
-      group = {
-        end: event.end ?? event.start + 15,
-        events: [],
-        laneEnds: [],
-      };
-
-      groups.push(group);
-    }
-
-    let lane = group.laneEnds.findIndex(
-      (laneEnd) => laneEnd <= event.start
-    );
+  sorted.forEach((event) => {
+    let lane = laneEnds.findIndex((end) => end <= event.start);
 
     if (lane === -1) {
-      lane = group.laneEnds.length;
-      group.laneEnds.push(0);
+      lane = laneEnds.length;
+      laneEnds.push(event.end);
+    } else {
+      laneEnds[lane] = event.end;
     }
 
-    group.laneEnds[lane] = event.end ?? event.start + 15;
-    group.end = Math.max(
-      group.end,
-      event.end ?? event.start + 15
+    event.lane = lane;
+  });
+
+  sorted.forEach((event) => {
+    const overlapping = sorted.filter(
+      (other) => other.start < event.end && other.end > event.start
     );
 
-    event.lane = lane;
-    group.events.push(event);
+    event.laneCount = Math.max(
+      1,
+      ...overlapping.map((item) => item.lane + 1)
+    );
   });
 
-  groups.forEach((group) => {
-    group.events.forEach((event) => {
-      event.laneCount = group.laneEnds.length;
-    });
-  });
-
-  return timedEvents;
+  return sorted;
 }
 
 function HourLabels() {
   return (
     <div className="itinerary-hour-labels">
       {Array.from({ length: 24 }, (_, hour) => (
-        <div
-          key={hour}
-          className="itinerary-hour-label"
-          style={{ height: HOUR_HEIGHT }}
-        >
-          {new Date(2000, 0, 1, hour).toLocaleTimeString("en-US", {
-            hour: "numeric",
-            hour12: true,
-          })}
+        <div className="itinerary-hour-label" key={hour}>
+          {formatTime(hour * 60)}
         </div>
       ))}
     </div>
   );
 }
 
-function ItinerarySidebar() {
+function ItinerarySidebar({ selectedDate, onSelectDate }) {
+  const navigate = useNavigate();
+
   const {
     activities,
     loading,
@@ -209,9 +184,8 @@ function ItinerarySidebar() {
     updateActivity,
   } = useActivities();
 
-  const { housing = [] } = useHousing();
+  const { housing } = useHousing();
 
-  const [currentDate, setCurrentDate] = useState("");
   const [dropError, setDropError] = useState("");
   const [dragPreview, setDragPreview] = useState(null);
 
@@ -219,54 +193,71 @@ function ItinerarySidebar() {
   const timelineRef = useRef(null);
   const dragRef = useRef(null);
 
-  // Set the initial date using the first available activity.
-  useEffect(() => {
-    if (currentDate || activities.length === 0) return;
-
-    const firstScheduledActivity = activities.find(
-      (activity) => activity.date
-    );
-
-    if (firstScheduledActivity) {
-      setCurrentDate(firstScheduledActivity.date);
-    }
-  }, [activities, currentDate]);
-
   // Scroll to 6 AM whenever the selected day changes.
   useEffect(() => {
-    if (!timelineScrollRef.current) return;
+    if (timelineScrollRef.current) {
+      timelineScrollRef.current.scrollTop = HOUR_HEIGHT * 6;
+    }
+  }, [selectedDate]);
 
-    timelineScrollRef.current.scrollTop = HOUR_HEIGHT * 6;
-  }, [currentDate]);
-
-  const events = prepareEvents(
-    activities,
-    housing,
-    currentDate
+  const events = assignLanes(
+    prepareEvents(activities, housing, selectedDate)
   );
-
-  const timedEvents = assignLanes(events);
 
   const unscheduledActivities = activities.filter(
     (activity) => !activity.date
   );
 
-  function startActivityDrag(event, activity, start, end, mode) {
-    if (event.button !== 0) return;
+  function changeDay(amount) {
+    onSelectDate(addDays(selectedDate, amount));
+  }
 
-    event.preventDefault();
-    event.stopPropagation();
+  function getEventStyle(event) {
+    const preview =
+      dragPreview?.activityId === event.activity?.id
+        ? dragPreview
+        : null;
 
-    setDropError("");
+    const start = preview?.start ?? event.start;
+    const end = preview?.end ?? event.end;
+
+    const top = (start / 60) * HOUR_HEIGHT;
+    const height = Math.max(
+      ((end - start) / 60) * HOUR_HEIGHT,
+      24
+    );
+
+    const width = 100 / event.laneCount;
+    const left = width * event.lane;
+
+    return {
+      top: `${top}px`,
+      height: `${height}px`,
+      left: `${left}%`,
+      width: `${width}%`,
+    };
+  }
+
+  function startActivityDrag(pointerEvent, activity, mode = "move") {
+    if (pointerEvent.button !== 0) return;
+
+    pointerEvent.preventDefault();
+    pointerEvent.stopPropagation();
+
+    const start = timeToMinutes(activity.startTime);
+    const end = getActivityEnd(activity);
+
+    if (start === null || end === null) return;
 
     dragRef.current = {
       activity,
       mode,
-      startY: event.clientY,
+      startY: pointerEvent.clientY,
       originalStart: start,
       originalEnd: end,
       previewStart: start,
       previewEnd: end,
+      changed: false,
     };
 
     setDragPreview({
@@ -274,172 +265,103 @@ function ItinerarySidebar() {
       start,
       end,
     });
-  }
-
-  // Move and resize existing timeline activities.
-  useEffect(() => {
-    function handlePointerMove(event) {
-      const drag = dragRef.current;
-
-      if (!drag) return;
-
-      const difference = event.clientY - drag.startY;
-
-      const minuteDifference =
-        Math.round(
-          ((difference / HOUR_HEIGHT) * 60) / 15
-        ) * 15;
-
-      let start = drag.originalStart;
-      let end = drag.originalEnd;
-
-      if (drag.mode === "move") {
-        const duration = drag.originalEnd - drag.originalStart;
-
-        start = Math.max(
-          0,
-          Math.min(
-            MAX_START_MINUTES - duration,
-            drag.originalStart + minuteDifference
-          )
-        );
-
-        end = start + duration;
-      }
-
-      if (drag.mode === "resize-start") {
-        start = Math.max(
-          0,
-          Math.min(
-            drag.originalEnd - 15,
-            drag.originalStart + minuteDifference
-          )
-        );
-      }
-
-      if (drag.mode === "resize-end") {
-        end = Math.max(
-          drag.originalStart + 15,
-          Math.min(
-            MAX_TIME_MINUTES,
-            drag.originalEnd + minuteDifference
-          )
-        );
-      }
-
-      drag.previewStart = start;
-      drag.previewEnd = end;
-
-      setDragPreview({
-        activityId: drag.activity.id,
-        start,
-        end,
-      });
-    }
-
-    async function handlePointerUp() {
-      const drag = dragRef.current;
-
-      if (!drag) return;
-
-      dragRef.current = null;
-      setDragPreview(null);
-
-      // Don't make an API request if nothing changed.
-      if (
-        drag.previewStart === drag.originalStart &&
-        drag.previewEnd === drag.originalEnd
-      ) {
-        return;
-      }
-
-      try {
-        await updateActivity({
-          ...drag.activity,
-          tripDay: null,
-          date: currentDate,
-          active: true,
-          startTime: minutesToTime(drag.previewStart),
-          endTime: minutesToTime(drag.previewEnd),
-        });
-      } catch (err) {
-        setDropError(
-          err.message || "Unable to update activity schedule."
-        );
-      }
-    }
-
-    function handlePointerCancel() {
-      dragRef.current = null;
-      setDragPreview(null);
-    }
 
     window.addEventListener("pointermove", handlePointerMove);
     window.addEventListener("pointerup", handlePointerUp);
     window.addEventListener("pointercancel", handlePointerCancel);
+  }
 
-    return () => {
-      window.removeEventListener("pointermove", handlePointerMove);
-      window.removeEventListener("pointerup", handlePointerUp);
-      window.removeEventListener(
-        "pointercancel",
-        handlePointerCancel
+  function handlePointerMove(pointerEvent) {
+    const drag = dragRef.current;
+    if (!drag) return;
+
+    const deltaY = pointerEvent.clientY - drag.startY;
+
+    const deltaMinutes =
+      Math.round(deltaY / (HOUR_HEIGHT / 4)) * 15;
+
+    let nextStart = drag.originalStart;
+    let nextEnd = drag.originalEnd;
+
+    if (drag.mode === "move") {
+      const duration = drag.originalEnd - drag.originalStart;
+
+      nextStart = Math.max(
+        0,
+        Math.min(
+          MAX_START_MINUTES - duration,
+          drag.originalStart + deltaMinutes
+        )
       );
-    };
-  }, [updateActivity, currentDate]);
 
-  // Drop an unscheduled activity onto the timeline.
-  async function handleTimelineDrop(event) {
-    event.preventDefault();
-
-    const activityId = event.dataTransfer.getData(
-      "application/x-yonder-activity"
-    );
-
-    if (!activityId || !timelineRef.current) return;
-
-    const activity = activities.find(
-      (item) => String(item.id) === activityId
-    );
-
-    if (!activity) return;
-
-    const timelineRect =
-      timelineRef.current.getBoundingClientRect();
-
-    const mouseY = event.clientY - timelineRect.top;
-
-    const rawMinutes = (mouseY / HOUR_HEIGHT) * 60;
-
-    const startMinutes = Math.max(
-      0,
-      Math.min(
-        MAX_START_MINUTES,
-        Math.round(rawMinutes / 15) * 15
-      )
-    );
-
-    const endMinutes = Math.min(
-      startMinutes + 60,
-      MAX_TIME_MINUTES
-    );
-
-    setDropError("");
-
-    try {
-      await updateActivity({
-        ...activity,
-        tripDay: null,
-        date: currentDate,
-        active: true,
-        startTime: minutesToTime(startMinutes),
-        endTime: minutesToTime(endMinutes),
-      });
-    } catch (err) {
-      setDropError(
-        err.message || "Unable to schedule activity."
+      nextEnd = nextStart + duration;
+    } else if (drag.mode === "resize-start") {
+      nextStart = Math.max(
+        0,
+        Math.min(
+          drag.originalEnd - 15,
+          drag.originalStart + deltaMinutes
+        )
+      );
+    } else if (drag.mode === "resize-end") {
+      nextEnd = Math.max(
+        drag.originalStart + 15,
+        Math.min(
+          MAX_TIME_MINUTES,
+          drag.originalEnd + deltaMinutes
+        )
       );
     }
+
+    drag.previewStart = nextStart;
+    drag.previewEnd = nextEnd;
+
+    drag.changed =
+      nextStart !== drag.originalStart ||
+      nextEnd !== drag.originalEnd;
+
+    setDragPreview({
+      activityId: drag.activity.id,
+      start: nextStart,
+      end: nextEnd,
+    });
+  }
+
+  async function handlePointerUp() {
+    const drag = dragRef.current;
+    if (!drag) return;
+
+    if (drag.changed) {
+      try {
+        await updateActivity({
+          ...drag.activity,
+          tripDay: null,
+          date: selectedDate,
+          active: true,
+          startTime: minutesToTime(drag.previewStart),
+          endTime: minutesToTime(drag.previewEnd),
+        });
+
+        setDropError("");
+      } catch {
+        setDropError("Unable to update this activity.");
+      }
+    }
+
+    clearDrag();
+  }
+
+  function handlePointerCancel() {
+    clearDrag();
+  }
+
+  function clearDrag() {
+    dragRef.current = null;
+    setDragPreview(null);
+
+    window.removeEventListener("pointermove", handlePointerMove);
+    window.removeEventListener("pointerup", handlePointerUp);
+    window.removeEventListener("pointercancel", handlePointerCancel);
   }
 
   function handleDragOver(event) {
@@ -447,18 +369,57 @@ function ItinerarySidebar() {
     event.dataTransfer.dropEffect = "copy";
   }
 
-  function changeDay(amount) {
-    if (!currentDate) return;
+  async function handleDrop(event) {
+    event.preventDefault();
 
-    setCurrentDate((date) => addDays(date, amount));
-  }
+    const activityId = event.dataTransfer.getData(
+      "application/x-yonder-activity"
+    );
 
-  if (loading) {
-    return <p>Loading itinerary...</p>;
-  }
+    if (!activityId) return;
 
-  if (error) {
-    return <p role="alert">Failed to load activities: {error}</p>;
+    const activity = activities.find(
+      (item) => String(item.id) === String(activityId)
+    );
+
+    if (!activity) {
+      setDropError("Could not find that activity.");
+      return;
+    }
+
+    const rect = timelineRef.current
+      ?.querySelector(".itinerary-event-area")
+      ?.getBoundingClientRect();
+
+    if (!rect) return;
+
+    const rawMinutes =
+      ((event.clientY - rect.top) / HOUR_HEIGHT) * 60;
+
+    const start = Math.max(
+      0,
+      Math.min(
+        MAX_START_MINUTES,
+        Math.round(rawMinutes / 15) * 15
+      )
+    );
+
+    const end = Math.min(start + 60, MAX_TIME_MINUTES);
+
+    try {
+      await updateActivity({
+        ...activity,
+        tripDay: null,
+        date: selectedDate,
+        active: true,
+        startTime: minutesToTime(start),
+        endTime: minutesToTime(end),
+      });
+
+      setDropError("");
+    } catch {
+      setDropError("Unable to add this activity to the itinerary.");
+    }
   }
 
   return (
@@ -469,11 +430,11 @@ function ItinerarySidebar() {
           onClick={() => changeDay(-1)}
           aria-label="Previous day"
         >
-          &#8592;
+          &lt;
         </button>
 
         <div className="itinerary-date">
-          {currentDate ? formatDate(currentDate) : "Select a day"}
+          {formatDate(selectedDate)}
         </div>
 
         <button
@@ -481,66 +442,58 @@ function ItinerarySidebar() {
           onClick={() => changeDay(1)}
           aria-label="Next day"
         >
-          &#8594;
+          &gt;
         </button>
       </div>
 
+      <button
+        type="button"
+        className="itinerary-expand-button"
+        onClick={() => navigate("/Itinerary")}
+      >
+        Expand Itinerary
+      </button>
+
       {dropError && (
-        <p className="itinerary-drop-error" role="alert">
-          {dropError}
-        </p>
+        <p className="itinerary-drop-error">{dropError}</p>
       )}
+
+      {error && (
+        <p className="itinerary-drop-error">{error}</p>
+      )}
+
+      {loading && <p className="itinerary-loading">Loading...</p>}
 
       <div
         className="itinerary-timeline-scroll"
         ref={timelineScrollRef}
       >
-        <div className="itinerary-timeline">
+        <div
+          className="itinerary-timeline"
+          ref={timelineRef}
+        >
           <HourLabels />
 
           <div
             className="itinerary-event-area"
-            ref={timelineRef}
             onDragOver={handleDragOver}
-            onDrop={handleTimelineDrop}
+            onDrop={handleDrop}
           >
             {Array.from({ length: 24 }, (_, hour) => (
               <div
                 key={hour}
                 className="itinerary-hour-line"
-                style={{
-                  top: hour * HOUR_HEIGHT,
-                }}
+                style={{ top: `${hour * HOUR_HEIGHT}px` }}
               />
             ))}
 
-            {timedEvents.map((event) => {
-              const isActivity = event.type === "Activity";
+            {events.map((event) => {
+              const preview =
+                dragPreview?.activityId === event.activity?.id
+                  ? dragPreview
+                  : null;
 
-              let displayStart = event.start;
-              let displayEnd = event.end;
-
-              if (
-                isActivity &&
-                dragPreview?.activityId === event.activityId
-              ) {
-                displayStart = dragPreview.start;
-                displayEnd = dragPreview.end;
-              }
-
-              const duration = Math.max(
-                15,
-                displayEnd - displayStart
-              );
-
-              const left =
-                (event.lane / event.laneCount) * 100;
-
-              const width = 100 / event.laneCount;
-
-              const isDragging =
-                isActivity &&
-                dragPreview?.activityId === event.activityId;
+              const isActivity = event.type === "activity";
 
               return (
                 <div
@@ -548,42 +501,20 @@ function ItinerarySidebar() {
                   className={`itinerary-event ${
                     isActivity
                       ? "itinerary-event-activity"
-                      : ""
+                      : "itinerary-event-checkin itinerary-event-checkout"
                   } ${
-                    event.type === "Check-in"
-                      ? "itinerary-event-checkin"
-                      : ""
-                  } ${
-                    event.type === "Check-out"
-                      ? "itinerary-event-checkout"
-                      : ""
-                  } ${
-                    isDragging
-                      ? "itinerary-event-dragging"
-                      : ""
+                    preview ? "itinerary-event-dragging" : ""
                   }`}
-                  style={{
-                    top: (displayStart / 60) * HOUR_HEIGHT,
-                    height: (duration / 60) * HOUR_HEIGHT,
-                    left: `${left}%`,
-                    width: `${width}%`,
-                  }}
+                  style={getEventStyle(event)}
                   onPointerDown={
                     isActivity
-                      ? (eventPointer) =>
+                      ? (pointerEvent) =>
                           startActivityDrag(
-                            eventPointer,
+                            pointerEvent,
                             event.activity,
-                            event.start,
-                            event.end,
                             "move"
                           )
                       : undefined
-                  }
-                  title={
-                    isActivity
-                      ? "Drag to move this activity"
-                      : event.title
                   }
                 >
                   {isActivity && (
@@ -594,8 +525,6 @@ function ItinerarySidebar() {
                           startActivityDrag(
                             pointerEvent,
                             event.activity,
-                            event.start,
-                            event.end,
                             "resize-start"
                           )
                         }
@@ -607,8 +536,6 @@ function ItinerarySidebar() {
                           startActivityDrag(
                             pointerEvent,
                             event.activity,
-                            event.start,
-                            event.end,
                             "resize-end"
                           )
                         }
@@ -618,43 +545,15 @@ function ItinerarySidebar() {
 
                   <strong>{event.title}</strong>
 
-                  {isActivity && (
-                    <span>
-                      {formatTime(displayStart)} –{" "}
-                      {formatTime(displayEnd)}
-                    </span>
-                  )}
-
-                  {!isActivity && (
-                    <span>{event.type}</span>
-                  )}
+                  <span>
+                    {formatTime(preview?.start ?? event.start)} –{" "}
+                    {formatTime(preview?.end ?? event.end)}
+                  </span>
                 </div>
               );
             })}
           </div>
         </div>
-      </div>
-
-      <div className="itinerary-unscheduled">
-        <h3>Unscheduled Activities</h3>
-
-        {unscheduledActivities.length === 0 ? (
-          <p>All activities are scheduled.</p>
-        ) : (
-          <p className="itinerary-unscheduled-instructions">
-            Drag an activity's picture from the Activities page
-            onto the timeline to schedule it.
-          </p>
-        )}
-
-        {unscheduledActivities.map((activity) => (
-          <div
-            key={activity.id}
-            className="itinerary-unscheduled-item"
-          >
-            {activity.name || "Untitled activity"}
-          </div>
-        ))}
       </div>
     </div>
   );
