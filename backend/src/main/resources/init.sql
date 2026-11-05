@@ -60,21 +60,103 @@ CREATE TABLE IF NOT EXISTS activities (
     activity_id INT PRIMARY KEY,
     activity_name VARCHAR(100),
     picture_url VARCHAR(512),
-    end_date DATE, -- NOT NULL,
+
+    activityStatus BOOLEAN NOT NULL DEFAULT FALSE;
+    tripDay INT,
+    activityDate DATE, -- NOT NULL,
     
+    startTime TIME,
+    endTime TIME,
+    
+    trip_id INT NOT NULL;
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
 
-    private int id;
-    private String name;
-    private String picture;
-    private LocalDate date;
-    private LocalTime startTime;
-    private LocalTime endTime;
-    private Cost cost;
-    private String notes;
 
-    cost_lower_end NUMERIC(12, 2),
-    cost_upper_end NUMERIC(12, 2),
-    cost_currency VARCHAR(3)
+    cost_id BIGINT NOT NULL UNIQUE, 
+    CONSTRAINT fk_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
+    activityNotes TEXT,
+    location_address TEXT,
+    activity_latitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION,
 
 );
+
+-- 6 create Budget Item table
+CREATE TABLE IF NOT EXISTS budgetItem(
+    budgetItem_id INT PRIMARY KEY;
+    budgetItem_name VARCHAR(100);
+
+    trip_id INT NOT NULL;
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+
+    
+    cost_id BIGINT NOT NULL UNIQUE, 
+    CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
+
+    budgetItem_days INT,
+
+);
+
+-- 7 create COST table for the COST object, used throught.
+CREATE TABLE IF NOT EXISTS cost(
+    cost_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lower_end NUMERIC(19, 4) NOT NULL,
+    upper_end NUMERIC(19, 4) NOT NULL,
+    currency VARCHAR(3) NOT NULL,
+    CHECK (lower_end >= 0 AND upper_end >= lower_end),
+    CHECK (currency ~ '^[A-Z]{3}$')
+);
+
+
+-- 8 Create PointOfInterest table
+CREATE TABLE IF NOT EXISTS pointOfInterest(
+    point_id INT PRIMARY KEY;
+    trip_id INT NOT NULL;
+
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+
+    poi_Name VARCHAR(100),
+    poi_picture_url VARCHAR(512),
+
+    cost_id BIGINT NOT NULL UNIQUE, 
+    CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
+
+    --- Might be its own table, I see repetion. 
+    poi_notes TEXT,
+    location_address TEXT,
+    activity_latitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION,
+);
+
+-- 9 Create housing table
+CREATE TABLE IF NOT EXISTS housingBooking(
+    housingBooking_id INT PRIMARY KEY,
+
+    trip_id INT NOT NULL;
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+
+    hB_Name VARCHAR(100),
+    hB_picture_url VARCHAR(512),
+    
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    trip_day INTEGER,
+    fixed_check_in_date DATE,
+    check_in_time TIME,
+    check_out_time TIME,
+    nights INTEGER NOT NULL CHECK (nights >= 0),
+
+    cost_id BIGINT NOT NULL UNIQUE, 
+    CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
+
+    --private Cost costPerDay;
+
+    ---More repetition
+    housing_notes TEXT,
+    location_address TEXT,
+    activity_latitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION,
+
+);
+
+
