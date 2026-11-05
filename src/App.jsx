@@ -9,6 +9,7 @@ import Page3 from "./pages/Page3";
 import Maps from "./pages/Maps";
 import Budget from "./pages/Budget";
 import UserInfo from "./pages/UserInfo";
+import Itinerary from "./pages/Itinerary";
 import BackendTest from "./components/BackendTest";
 import AIAssistant from "./components/AIAssistant";
 import { ActivityProvider } from "./components/ActivityContext";
@@ -18,6 +19,7 @@ function App() {
   return (
     <ActivityProvider>
       <HousingProvider>
+        <BrowserRouter> 
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
@@ -32,6 +34,7 @@ function App() {
               <Route path="/Housing" element={<Housing />} />
               <Route path="/Budget" element={<Budget />} />
               <Route path="/maps" element={<Maps />} />
+              <Route path="/Itinerary" element={<Itinerary />} />
             </Route>
 
             <Route path="/page3" element={<Page3 />} />
