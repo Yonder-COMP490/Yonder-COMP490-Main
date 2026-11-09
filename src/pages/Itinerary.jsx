@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
@@ -23,6 +22,8 @@ function addDays(dateString, amount) {
 }
 
 function formatDate(dateString, options = {}) {
+  if (!dateString) return "";
+
   const date = new Date(`${dateString}T12:00:00`);
 
   return date.toLocaleDateString("en-US", {
@@ -94,7 +95,7 @@ function getActivityEvents(activities, date) {
         id: `activity-${activity.id}`,
         type: "activity",
         activity,
-        title: activity.name || "Untitled activity",
+        title: activity.description?.name || "Untitled activity",
         start,
         end,
       };
@@ -107,13 +108,16 @@ function getHousingEvents(housing, date) {
   housing.forEach((booking) => {
     if (!booking) return;
 
+    const bookingName = booking.description?.name;
+    const readableAddress = booking.location?.readableAddress;
+
     if (booking.checkInDate === date) {
       const start = timeToMinutes(booking.checkInTime) ?? 15 * 60;
 
       events.push({
         id: `housing-checkin-${booking.id}`,
         type: "checkin",
-        title: booking.name || booking.location || "Housing check-in",
+        title: bookingName || readableAddress || "Housing check-in",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -125,7 +129,7 @@ function getHousingEvents(housing, date) {
       events.push({
         id: `housing-checkout-${booking.id}`,
         type: "checkout",
-        title: booking.name || booking.location || "Housing check-out",
+        title: bookingName || readableAddress || "Housing check-out",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -192,7 +196,7 @@ export default function Itinerary() {
 
   const { housing } = useHousing();
 
-  // Ignore null entries in API data before using the objects.
+  // Ignore null entries in API data.
   const validActivities = Array.isArray(activities)
     ? activities.filter((activity) => activity != null)
     : [];
@@ -473,10 +477,6 @@ export default function Itinerary() {
     }
   }
 
-  const unscheduledActivities = validActivities.filter(
-    (activity) => !activity.date
-  );
-
   return (
     <div className="expanded-itinerary">
       <div className="expanded-itinerary-header">
@@ -562,8 +562,6 @@ export default function Itinerary() {
                     ))}
 
                     {events.map((event) => {
-                      // Only activity events can have a drag preview.
-                      // The explicit dragPreview check prevents null access.
                       const preview =
                         dragPreview &&
                         event.type === "activity" &&
@@ -637,30 +635,6 @@ export default function Itinerary() {
           </div>
         </div>
       </div>
-
-      {/* <section className="expanded-unscheduled">
-        <h2>Unscheduled Activities</h2>
-
-        {unscheduledActivities.length === 0 ? (
-          <p>All activities have been scheduled.</p>
-        ) : (
-          <p>
-            These activities do not have a date yet. Drag them from the
-            Activities page onto a day in this itinerary to schedule them.
-          </p>
-        )}
-
-        <div className="expanded-unscheduled-list">
-          {unscheduledActivities.map((activity) => (
-            <div
-              key={activity.id}
-              className="expanded-unscheduled-item"
-            >
-              {activity.name || "Untitled activity"}
-            </div>
-          ))}
-        </div>
-      </section> */}
     </div>
   );
 }
