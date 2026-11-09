@@ -1,10 +1,11 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
 import com.yonder.backend.models.BudgetItem;
 import com.yonder.backend.models.Cost;
+import com.yonder.backend.models.Description;
 import com.yonder.backend.models.HousingBooking;
+import com.yonder.backend.models.Location;
 import com.yonder.backend.models.Trip;
 
 import org.springframework.stereotype.Component;
@@ -32,23 +33,41 @@ public class TripManager {
 
         newTrip.addActivity(new Activity(
             1,
-            "Visit a Kyoto Temple",
+            new Description(
+                "Visit a Kyoto Temple",
+                "Visit a temple in Kyoto.",
+                "",
+                null
+            ),
             LocalDate.of(2027, 4, 3),
             LocalTime.of(10, 0),
             LocalTime.of(12, 0),
             new Cost(25.0, "USD"),
-            "Visit a temple in Kyoto."
+            new Location(
+                "Kyoto, Japan",
+                35.0116,
+                135.7681
+            )
         ));
 
         newTrip.addHousingBooking(new HousingBooking(
             1,
-            "Kyoto Hotel",
+            new Description(
+                "Kyoto Hotel",
+                "A sample hotel booking.",
+                "",
+                null
+            ),
             LocalDate.of(2027, 4, 1),
             LocalTime.of(15, 0),
             LocalDate.of(2027, 4, 5),
             LocalTime.of(11, 0),
             new Cost(80.0, "USD"),
-            "A sample hotel booking."
+            new Location(
+                "Kyoto, Japan",
+                35.0116,
+                135.7681
+            )
         ));
 
         return newTrip;
@@ -100,6 +119,7 @@ public class TripManager {
             .max()
             .orElse(0) + 1;
     }
+
     public Activity switchActivityScheduleType(int id, boolean useFixedDate) {
         for (Activity activity : trip.getActivities()) {
             if (activity.getId() == id) {

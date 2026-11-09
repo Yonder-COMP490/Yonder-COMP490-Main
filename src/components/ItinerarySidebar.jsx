@@ -83,8 +83,8 @@ function prepareEvents(activities, housing, currentDate) {
   const events = [];
 
   // Activities
-  activities.forEach((activity) => {
-    if (activity.date !== currentDate) return;
+  (activities ?? []).forEach((activity) => {
+    if (!activity || activity.date !== currentDate) return;
 
     const start = timeToMinutes(activity.startTime);
     if (start === null) return;
@@ -95,21 +95,26 @@ function prepareEvents(activities, housing, currentDate) {
       id: `activity-${activity.id}`,
       type: "activity",
       activity,
-      title: activity.name || "Untitled activity",
+      title: activity.description?.name || "Untitled activity",
       start,
       end,
     });
   });
 
   // Housing check-in and check-out
-  housing.forEach((booking) => {
+  (housing ?? []).forEach((booking) => {
+    if (!booking) return;
+
+    const bookingName = booking.description?.name;
+    const readableAddress = booking.location?.readableAddress;
+
     if (booking.checkInDate === currentDate) {
       const start = timeToMinutes(booking.checkInTime) ?? 15 * 60;
 
       events.push({
         id: `checkin-${booking.id}`,
         type: "checkin",
-        title: booking.name || booking.location || "Housing check-in",
+        title: bookingName || readableAddress || "Housing check-in",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -121,7 +126,7 @@ function prepareEvents(activities, housing, currentDate) {
       events.push({
         id: `checkout-${booking.id}`,
         type: "checkout",
-        title: booking.name || booking.location || "Housing check-out",
+        title: bookingName || readableAddress || "Housing check-out",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -205,13 +210,10 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
     prepareEvents(activities, housing, selectedDate)
   );
 
-  const unscheduledActivities = activities.filter(
-    (activity) => !activity.date
-  );
-
   function changeDay(amount) {
     onSelectDate(addDays(selectedDate, amount));
   }
+
   async function handleFixedDateChange(activity, useFixedDate) {
     try {
       await switchScheduleType(activity.id, useFixedDate);
@@ -387,7 +389,7 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
 
     if (!activityId) return;
 
-    const activity = activities.find(
+    const activity = (activities ?? []).find(
       (item) => String(item.id) === String(activityId)
     );
 
@@ -501,10 +503,9 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
                 dragPreview?.activityId === event.activity?.id
                   ? dragPreview
                   : null;
-                  
 
               const isActivity = event.type === "activity";
-              
+
               return (
                 <div
                   key={event.id}

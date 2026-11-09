@@ -1,28 +1,35 @@
-
 import { useEffect, useState } from "react";
 import "./ActivityCard.css";
 
 function ActivityCard({ activity, onSave }) {
-  const [expanded, setExpanded] = useState(false);
+  const description = activity.description ?? {};
 
+  const [expanded, setExpanded] = useState(false);
   const [editingField, setEditingField] = useState(null);
-  const [name, setName] = useState(activity.name || "");
+
+  const [name, setName] = useState(description.name ?? "");
+  const [activityDescription, setActivityDescription] = useState(
+    description.description ?? ""
+  );
   const [costAmount, setCostAmount] = useState(
     formatCostAmount(activity.cost)
   );
   const [currency, setCurrency] = useState(
-    activity.cost?.currency || "USD"
+    activity.cost?.currency ?? "USD"
   );
-  const [notes, setNotes] = useState(activity.notes || "");
+  const [notes, setNotes] = useState(description.notes ?? "");
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setName(activity.name || "");
+    const currentDescription = activity.description ?? {};
+
+    setName(currentDescription.name ?? "");
+    setActivityDescription(currentDescription.description ?? "");
     setCostAmount(formatCostAmount(activity.cost));
-    setCurrency(activity.cost?.currency || "USD");
-    setNotes(activity.notes || "");
+    setCurrency(activity.cost?.currency ?? "USD");
+    setNotes(currentDescription.notes ?? "");
   }, [activity]);
 
   function formatCostAmount(cost) {
@@ -69,6 +76,15 @@ function ActivityCard({ activity, onSave }) {
     }
   }
 
+  function getDescriptionChanges(changes) {
+    return {
+      description: {
+        ...(activity.description ?? {}),
+        ...changes,
+      },
+    };
+  }
+
   async function saveName(event) {
     event.preventDefault();
 
@@ -76,7 +92,19 @@ function ActivityCard({ activity, onSave }) {
 
     if (!trimmedName) return;
 
-    await saveChanges({ name: trimmedName });
+    await saveChanges(
+      getDescriptionChanges({ name: trimmedName })
+    );
+  }
+
+  async function saveDescription(event) {
+    event.preventDefault();
+
+    await saveChanges(
+      getDescriptionChanges({
+        description: activityDescription.trim(),
+      })
+    );
   }
 
   async function saveCost(event) {
@@ -99,11 +127,13 @@ function ActivityCard({ activity, onSave }) {
       return;
     }
 
+    const normalizedCurrency = currency.trim().toUpperCase() || "USD";
+
     const saved = await saveChanges({
       cost: {
         lowerEnd: lower,
         upperEnd: upper,
-        currency: currency.trim().toUpperCase() || "USD",
+        currency: normalizedCurrency,
       },
     });
 
@@ -111,21 +141,27 @@ function ActivityCard({ activity, onSave }) {
       setCostAmount(
         lower === upper ? `${lower}` : `${lower}-${upper}`
       );
-      setCurrency(currency.trim().toUpperCase() || "USD");
+      setCurrency(normalizedCurrency);
     }
   }
 
   async function saveNotes(event) {
     event.preventDefault();
 
-    await saveChanges({ notes });
+    await saveChanges(
+      getDescriptionChanges({ notes })
+    );
   }
 
   function cancelEditing() {
-    setName(activity.name || "");
+    const currentDescription = activity.description ?? {};
+
+    setName(currentDescription.name ?? "");
+    setActivityDescription(currentDescription.description ?? "");
     setCostAmount(formatCostAmount(activity.cost));
-    setCurrency(activity.cost?.currency || "USD");
-    setNotes(activity.notes || "");
+    setCurrency(activity.cost?.currency ?? "USD");
+    setNotes(currentDescription.notes ?? "");
+
     setEditingField(null);
     setError("");
   }
@@ -142,6 +178,8 @@ function ActivityCard({ activity, onSave }) {
     return "Not scheduled";
   }
 
+  const picture = activity.description?.picture ?? null;
+
   return (
     <article className="activity-card">
       <div
@@ -157,10 +195,10 @@ function ActivityCard({ activity, onSave }) {
         }}
         title="Drag into the itinerary to schedule"
       >
-        {activity.picture ? (
+        {picture ? (
           <img
-            src={activity.picture}
-            alt={activity.name || "Activity"}
+            src={picture}
+            alt={activity.description?.name || "Activity"}
             draggable={false}
           />
         ) : (
@@ -182,17 +220,19 @@ function ActivityCard({ activity, onSave }) {
               required
             />
 
-            <button type="submit" disabled={saving}>
-              Save
-            </button>
+            <div className="activity-card-actions">
+              <button type="submit" disabled={saving}>
+                Save
+              </button>
 
-            <button
-              type="button"
-              disabled={saving}
-              onClick={cancelEditing}
-            >
-              Cancel
-            </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={cancelEditing}
+              >
+                Cancel
+              </button>
+            </div>
           </form>
         ) : (
           <button
@@ -201,7 +241,7 @@ function ActivityCard({ activity, onSave }) {
             onClick={() => setEditingField("name")}
             title="Click to edit name"
           >
-            {activity.name || "Untitled activity"}
+            {activity.description?.name || "Untitled activity"}
           </button>
         )}
 
@@ -224,6 +264,48 @@ function ActivityCard({ activity, onSave }) {
 
       {expanded && (
         <div className="activity-card-details">
+          {/* Description */}
+          <div className="activity-description-field">
+            {editingField === "description" ? (
+              <form
+                onSubmit={saveDescription}
+                className="activity-description-form"
+              >
+                <textarea
+                  value={activityDescription}
+                  onChange={(event) =>
+                    setActivityDescription(event.target.value)
+                  }
+                  placeholder="Add a description..."
+                  autoFocus
+                />
+
+                <div className="activity-card-actions">
+                  <button type="submit" disabled={saving}>
+                    Save
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={cancelEditing}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <button
+                type="button"
+                className="activity-card-inline-value activity-description-value"
+                onClick={() => setEditingField("description")}
+                title="Click to edit description"
+              >
+                {activity.description?.description || "Add description"}
+              </button>
+            )}
+          </div>
+
           <p>
             <strong>Schedule:</strong> {formatDate()}
           </p>
@@ -246,48 +328,48 @@ function ActivityCard({ activity, onSave }) {
             <strong>Cost:</strong>
 
             {editingField === "cost" ? (
-            <form
-              onSubmit={saveCost}
-              className="activity-cost-form"
-            >
-              <div className="activity-cost-inputs">
-                <input
-                  type="text"
-                  className="activity-cost-amount"
-                  placeholder="25 or 25-50"
-                  value={costAmount}
-                  onChange={(event) =>
-                    setCostAmount(event.target.value)
-                  }
-                  autoFocus
-                />
+              <form
+                onSubmit={saveCost}
+                className="activity-cost-form"
+              >
+                <div className="activity-cost-inputs">
+                  <input
+                    type="text"
+                    className="activity-cost-amount"
+                    placeholder="25 or 25-50"
+                    value={costAmount}
+                    onChange={(event) =>
+                      setCostAmount(event.target.value)
+                    }
+                    autoFocus
+                  />
 
-                <input
-                  type="text"
-                  className="activity-cost-currency"
-                  placeholder="USD"
-                  value={currency}
-                  onChange={(event) =>
-                    setCurrency(event.target.value)
-                  }
-                  maxLength={3}
-                />
-              </div>
+                  <input
+                    type="text"
+                    className="activity-cost-currency"
+                    placeholder="USD"
+                    value={currency}
+                    onChange={(event) =>
+                      setCurrency(event.target.value)
+                    }
+                    maxLength={3}
+                  />
+                </div>
 
-              <div className="activity-cost-actions">
-                <button type="submit" disabled={saving}>
-                  Save
-                </button>
+                <div className="activity-card-actions">
+                  <button type="submit" disabled={saving}>
+                    Save
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={cancelEditing}
-                >
-                  Cancel
-                </button>
-              </div>
-            </form>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={cancelEditing}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
             ) : (
               <button
                 type="button"
@@ -311,24 +393,24 @@ function ActivityCard({ activity, onSave }) {
               >
                 <textarea
                   value={notes}
-                  onChange={(event) =>
-                    setNotes(event.target.value)
-                  }
+                  onChange={(event) => setNotes(event.target.value)}
                   placeholder="Add notes..."
                   autoFocus
                 />
 
-                <button type="submit" disabled={saving}>
-                  Save
-                </button>
+                <div className="activity-card-actions">
+                  <button type="submit" disabled={saving}>
+                    Save
+                  </button>
 
-                <button
-                  type="button"
-                  disabled={saving}
-                  onClick={cancelEditing}
-                >
-                  Cancel
-                </button>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={cancelEditing}
+                  >
+                    Cancel
+                  </button>
+                </div>
               </form>
             ) : (
               <button
@@ -337,7 +419,7 @@ function ActivityCard({ activity, onSave }) {
                 onClick={() => setEditingField("notes")}
                 title="Click to edit notes"
               >
-                {activity.notes || "Add notes"}
+                {activity.description?.notes || "Add notes"}
               </button>
             )}
           </div>

@@ -1,4 +1,3 @@
-
 const API_URL = "http://localhost:8080/api/trip";
 
 function serializeHousing(housing) {
@@ -17,17 +16,38 @@ function serializeHousing(housing) {
         )
       : 0;
 
+  const description = housing.description ?? {};
+  const location = housing.location ?? {};
+
   return {
     id: housing.id ?? 0,
-    name: housing.name,
-    picture: housing.picture ?? null,
+
+    description: {
+      name: description.name ?? housing.name ?? "",
+      description:
+        description.description ??
+        (typeof housing.description === "string" ? housing.description : ""),
+      notes: description.notes ?? housing.notes ?? "",
+      picture: description.picture ?? housing.picture ?? null,
+    },
+
+    location: {
+      readableAddress:
+        location.readableAddress ?? housing.readableAddress ?? null,
+      latitude: location.latitude ?? housing.latitude ?? null,
+      longitude: location.longitude ?? housing.longitude ?? null,
+    },
+
     active: housing.active ?? true,
     tripDay: housing.tripDay ?? null,
+
     checkInDate,
     checkInTime: housing.checkInTime ?? null,
     checkOutDate,
     checkOutTime: housing.checkOutTime ?? null,
+
     nights: housing.nights ?? calculatedNights,
+
     costPerDay: {
       lowerEnd: housing.costPerDay?.lowerEnd ?? 0,
       upperEnd:
@@ -36,10 +56,6 @@ function serializeHousing(housing) {
         0,
       currency: housing.costPerDay?.currency ?? "USD",
     },
-    notes: housing.notes ?? "",
-    readableAddress: housing.readableAddress ?? null,
-    latitude: housing.latitude ?? null,
-    longitude: housing.longitude ?? null,
   };
 }
 

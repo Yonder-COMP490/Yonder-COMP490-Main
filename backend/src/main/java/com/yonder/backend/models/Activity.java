@@ -1,14 +1,12 @@
-
 package com.yonder.backend.models;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 
 public class Activity {
     private int id;
-    private String name;
-    private String picture;
 
     private boolean active = true;
     private Integer tripDay;
@@ -16,35 +14,37 @@ public class Activity {
 
     private LocalTime startTime;
     private LocalTime endTime;
+    
+    private Description description;
+    private Location location;
     private Cost cost;
-    private String notes;
-    private String readableAddress;
-    private Double latitude;
-    private Double longitude;
 
     private transient LocalDate tripStartDate;
 
     public Activity() {
+        this.description = new Description();
+        this.location = new Location();
         this.cost = new Cost();
     }
 
     public Activity(
         int id,
-        String name,
+        Description description,
         LocalDate date,
         LocalTime startTime,
         LocalTime endTime,
         Cost cost,
-        String notes
+        Location location
     ) {
         this();
+
         this.id = id;
-        this.name = name;
+        this.description = description != null ? description : new Description();
         this.fixedDate = date;
         this.startTime = startTime;
         this.endTime = endTime;
         this.cost = cost != null ? cost : new Cost();
-        this.notes = notes;
+        this.location = location != null ? location : new Location();
     }
 
     public int getId() {
@@ -55,20 +55,20 @@ public class Activity {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Description getDescription() {
+        return description;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDescription(Description description) {
+        this.description = description != null ? description : new Description();
     }
 
-    public String getPicture() {
-        return picture;
+    public Location getLocation() {
+        return location;
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
+    public void setLocation(Location location) {
+        this.location = location != null ? location : new Location();
     }
 
     public boolean isActive() {
@@ -90,6 +90,7 @@ public class Activity {
             this.fixedDate = null;
         }
     }
+
     public void switchScheduleType(boolean useFixedDate, LocalDate tripStartDate) {
         // Already using the requested scheduling type.
         if (useFixedDate && fixedDate != null) {
@@ -108,7 +109,9 @@ public class Activity {
         }
 
         if (currentDate == null) {
-            throw new IllegalStateException("Cannot switch scheduling type without a date.");
+            throw new IllegalStateException(
+                "Cannot switch scheduling type without a date."
+            );
         }
 
         if (useFixedDate) {
@@ -116,10 +119,12 @@ public class Activity {
             this.tripDay = null;
         } else {
             if (tripStartDate == null) {
-                throw new IllegalArgumentException("Trip start date is required.");
+                throw new IllegalArgumentException(
+                    "Trip start date is required."
+                );
             }
 
-            this.tripDay = (int) java.time.temporal.ChronoUnit.DAYS.between(
+            this.tripDay = (int) ChronoUnit.DAYS.between(
                 tripStartDate,
                 currentDate
             ) + 1;
@@ -197,39 +202,6 @@ public class Activity {
     }
 
     public void setCost(Cost cost) {
-        this.cost = cost;
+        this.cost = cost != null ? cost : new Cost();
     }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public String getReadableAddress() {
-        return readableAddress;
-    }
-
-    public void setReadableAddress(String readableAddress) {
-        this.readableAddress = readableAddress;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
-    }
-    
 }

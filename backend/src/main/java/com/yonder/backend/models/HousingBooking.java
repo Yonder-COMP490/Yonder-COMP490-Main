@@ -1,4 +1,3 @@
-
 package com.yonder.backend.models;
 
 import java.time.LocalDate;
@@ -7,8 +6,6 @@ import java.time.temporal.ChronoUnit;
 
 public class HousingBooking {
     private int id;
-    private String name;
-    private String picture;
 
     private boolean active = true;
     private Integer tripDay;
@@ -18,37 +15,37 @@ public class HousingBooking {
     private LocalTime checkOutTime;
     private int nights;
 
+    private Description description;
+    private Location location;
     private Cost costPerDay;
-    private String notes;
-
-    private String readableAddress;
-    private Double latitude;
-    private Double longitude;
 
     private transient LocalDate tripStartDate;
 
     public HousingBooking() {
+        this.description = new Description();
+        this.location = new Location();
         this.costPerDay = new Cost();
     }
 
     public HousingBooking(
         int id,
-        String name,
+        Description description,
         LocalDate checkInDate,
         LocalTime checkInTime,
         LocalDate checkOutDate,
         LocalTime checkOutTime,
         Cost costPerDay,
-        String notes
+        Location location
     ) {
         this();
+
         this.id = id;
-        this.name = name;
+        this.description = description != null ? description : new Description();
         this.fixedCheckInDate = checkInDate;
         this.checkInTime = checkInTime;
         this.checkOutTime = checkOutTime;
         this.costPerDay = costPerDay != null ? costPerDay : new Cost();
-        this.notes = notes;
+        this.location = location != null ? location : new Location();
 
         if (checkInDate != null && checkOutDate != null) {
             this.nights = Math.max(
@@ -66,20 +63,20 @@ public class HousingBooking {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public Description getDescription() {
+        return description;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setDescription(Description description) {
+        this.description = description != null ? description : new Description();
     }
 
-    public String getPicture() {
-        return picture;
+    public Location getLocation() {
+        return location;
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
+    public void setLocation(Location location) {
+        this.location = location != null ? location : new Location();
     }
 
     public boolean isActive() {
@@ -197,39 +194,7 @@ public class HousingBooking {
     }
 
     public void setCostPerDay(Cost costPerDay) {
-        this.costPerDay = costPerDay;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public String getReadableAddress() {
-        return readableAddress;
-    }
-
-    public void setReadableAddress(String readableAddress) {
-        this.readableAddress = readableAddress;
-    }
-
-    public Double getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(Double latitude) {
-        this.latitude = latitude;
-    }
-
-    public Double getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(Double longitude) {
-        this.longitude = longitude;
+        this.costPerDay = costPerDay != null ? costPerDay : new Cost();
     }
 
     public Cost getTotalCost() {
