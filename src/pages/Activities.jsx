@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Link } from "react-router-dom";
 
 import ActivityCard from "../components/ActivityCard";
@@ -17,58 +16,38 @@ function Activities() {
     updateActivity,
   } = useActivities();
 
-  const [editingActivityId, setEditingActivityId] = useState(null);
-  const [saveError, setSaveError] = useState("");
-
-  async function handleSave(activity) {
-    setSaveError("");
-
-    try {
-      if (editingActivityId !== null) {
-        await updateActivity(activity);
-        setEditingActivityId(null);
-      } else {
-        await addActivity(activity);
-      }
-    } catch (err) {
-      setSaveError(err.message);
-    }
-  }
-
   if (loading) {
     return <p>Loading activities...</p>;
+  }
+
+  async function handleAdd(activity) {
+    await addActivity(activity);
+  }
+
+  async function handleUpdate(activity) {
+    await updateActivity(activity);
   }
 
   return (
     <div>
       <h1>Activities</h1>
 
-      {error && <p role="alert">Failed to load activities: {error}</p>}
-
-      {saveError && <p role="alert">Failed to save activity: {saveError}</p>}
+      {error && (
+        <p role="alert">
+          Failed to load activities: {error}
+        </p>
+      )}
 
       <div className="activities">
-        {activities.map((activity) =>
-          editingActivityId === activity.id ? (
-            <ActivityForm
-              key={activity.id}
-              activity={activity}
-              onSave={handleSave}
-              onCancel={() => setEditingActivityId(null)}
-            />
-          ) : (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              onEdit={() => {
-                setSaveError("");
-                setEditingActivityId(activity.id);
-              }}
-            />
-          )
-        )}
+        {activities.map((activity) => (
+          <ActivityCard
+            key={activity.id}
+            activity={activity}
+            onSave={handleUpdate}
+          />
+        ))}
 
-        <ActivityForm onSave={handleSave} />
+        <ActivityForm onSave={handleAdd} />
       </div>
 
       <Link to="/">
