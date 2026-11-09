@@ -34,14 +34,23 @@ CREATE TABLE IF NOT EXISTS profiles (
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE -- no need for a new id for the profile since its a 1-to-1 relationship, so we can use the same user id and link em together. ON DELETE CASCADE is a little extra so if the user is deleted so is the profile.(No orphans)
 );
 
+-- 7 create COSTs table for the COSTs object, used throught.
+CREATE TABLE IF NOT EXISTS costs(
+    cost_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    lower_end NUMERIC(19, 4) NOT NULL,
+    upper_end NUMERIC(19, 4) NOT NULL,
+    currency VARCHAR(3) NOT NULL,
+    CHECK (lower_end >= 0 AND upper_end >= lower_end),
+    CHECK (currency ~ '^[A-Z]{3}$')
+);
 
 -- 4. Create Trips Table
 CREATE TABLE IF NOT EXISTS trips (
-    trip_id INT PRIMARY KEY,
+    trip_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     trip_name VARCHAR(100),
     start_date DATE NOT NULL,
     end_date DATE, -- NOT NULL,
-    prefferredCurrency VARCHAR(3) NOT NULL;
+    preferredCurrency VARCHAR(3) NOT NULL
 
     --private int id;
     --private String name;
@@ -57,19 +66,19 @@ CREATE TABLE IF NOT EXISTS trips (
 
 -- 5 Create Activities Table
 CREATE TABLE IF NOT EXISTS activities (
-    activity_id INT PRIMARY KEY,
+    activity_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     activity_name VARCHAR(100),
     picture_url VARCHAR(512),
 
-    activityStatus BOOLEAN NOT NULL DEFAULT FALSE;
+    activity_status BOOLEAN NOT NULL DEFAULT FALSE,
     tripDay INT,
     activityDate DATE, -- NOT NULL,
     
     startTime TIME,
     endTime TIME,
     
-    trip_id INT NOT NULL;
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+    trip_id INT NOT NULL,
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
 
 
     cost_id BIGINT NOT NULL UNIQUE, 
@@ -78,43 +87,35 @@ CREATE TABLE IF NOT EXISTS activities (
     activityNotes TEXT,
     location_address TEXT,
     activity_latitude DOUBLE PRECISION,
-    activity_longitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION
 
 );
 
 -- 6 create Budget Item table
 CREATE TABLE IF NOT EXISTS budgetItem(
-    budgetItem_id INT PRIMARY KEY;
-    budgetItem_name VARCHAR(100);
+    budgetItem_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    budgetItem_name VARCHAR(100),
 
-    trip_id INT NOT NULL;
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+    trip_id INT NOT NULL,
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE,
 
     
     cost_id BIGINT NOT NULL UNIQUE, 
     CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
-    budgetItem_days INT,
+    budgetItem_days INT
 
 );
 
--- 7 create COST table for the COST object, used throught.
-CREATE TABLE IF NOT EXISTS cost(
-    cost_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    lower_end NUMERIC(19, 4) NOT NULL,
-    upper_end NUMERIC(19, 4) NOT NULL,
-    currency VARCHAR(3) NOT NULL,
-    CHECK (lower_end >= 0 AND upper_end >= lower_end),
-    CHECK (currency ~ '^[A-Z]{3}$')
-);
+
 
 
 -- 8 Create PointOfInterest table
 CREATE TABLE IF NOT EXISTS pointOfInterest(
-    point_id INT PRIMARY KEY;
-    trip_id INT NOT NULL;
+    point_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    trip_id INT NOT NULL,
 
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
 
     poi_Name VARCHAR(100),
     poi_picture_url VARCHAR(512),
@@ -126,15 +127,15 @@ CREATE TABLE IF NOT EXISTS pointOfInterest(
     poi_notes TEXT,
     location_address TEXT,
     activity_latitude DOUBLE PRECISION,
-    activity_longitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION
 );
 
 -- 9 Create housing table
 CREATE TABLE IF NOT EXISTS housingBooking(
-    housingBooking_id INT PRIMARY KEY,
+    housingBooking_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
-    trip_id INT NOT NULL;
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE 
+    trip_id INT NOT NULL,
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
 
     hB_Name VARCHAR(100),
     hB_picture_url VARCHAR(512),
@@ -155,7 +156,7 @@ CREATE TABLE IF NOT EXISTS housingBooking(
     housing_notes TEXT,
     location_address TEXT,
     activity_latitude DOUBLE PRECISION,
-    activity_longitude DOUBLE PRECISION,
+    activity_longitude DOUBLE PRECISION
 
 );
 

@@ -10,14 +10,13 @@ Maven for Java is included in the Extension Pack for Java. VS Code can run Maven
 Extentions installed:
 -Extension Pack for Java
 -SQLTools - (by Matheus Teixeira)
--PostgreSQL - (by Microsoft)
+-PostgreSQL - (by Chris Kolkman)
 
 ## Backend database setup
 
 ### Local versions
 
 - Java: Eclipse Temurin OpenJDK 25
-- PostgreSQL: 18.6 Windows x64 installer
 - PostgreSQL JDBC driver: 42.7.13 (pgJDBC)
 
 The PostgreSQL installer installs the database server and related tools. The JDBC driver is a separate Java dependency; it must be on the Java project's classpath for Java code to connect to PostgreSQL. pgJDBC 42.7.13 supports Java 8 and newer and PostgreSQL 8.4 and newer. Driver testing is currently limited to PostgreSQL 9.1 and newer.
@@ -96,3 +95,6 @@ Added swagger UI to see the endpoints in the web, yet to upload the readme about
 In a new terminal in backend run : .\mvnw.cmd spring-boot:run
 
 In another terminal run: npm.cmd run dev
+
+
+SELECT current_database(), inet_server_addr(); --> run in the SQL query in the PostgreSQL extention query editor to verify connection to online database if needed.
