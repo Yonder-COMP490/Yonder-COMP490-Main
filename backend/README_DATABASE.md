@@ -75,23 +75,16 @@ Alternatively, use the Maven for Java extension in VS Code to run the `test` goa
 
 ## Connection details
 
-The default PostgreSQL port is `5432`. The local JDBC URL is configured in `.env` using this format:
-
-```text
-jdbc:postgresql://localhost:5432/DATABASE_NAME
-```
-
-Replace `yonder` with the database name you created if it differs. The PostgreSQL server must be running and accept connections before the Java application can start.
-
-The driver is discovered automatically when its JAR is on the classpath; modern Java applications do not need to call `Class.forName("org.postgresql.Driver")`.
+I will give database credentials in Person.(Not good to store credentials in a shared file.)
 
 
-Added swagger UI to see the endpoints in the web, yet to upload the readme about it. http://localhost:8080/swagger-ui/index.html 
+-------------
+Added swagger UI to see the endpoints in the web. http://localhost:8080/swagger-ui/index.html 
 
 "email": "test@example.com",
   "password": "secret123"
 
-
+-------------
 In a new terminal in backend run : .\mvnw.cmd spring-boot:run
 
 In another terminal run: npm.cmd run dev
