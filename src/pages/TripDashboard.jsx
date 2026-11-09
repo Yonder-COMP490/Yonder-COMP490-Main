@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import ItinerarySidebar from "../components/ItinerarySidebar";
+import TripAPI from "../api/TripAPI";
 import "./TripDashboard.css";
 
 const tabs = [
@@ -21,8 +22,32 @@ function getTodayString() {
 }
 
 export default function TripDashboard() {
+  const [trip, setTrip] = useState(null);
   const [selectedDate, setSelectedDate] = useState(getTodayString);
+  const [tripError, setTripError] = useState("");
+
   const location = useLocation();
+
+  useEffect(() => {
+    async function loadTrip() {
+      try {
+        const loadedTrip = await TripAPI.get();
+
+        setTrip(loadedTrip);
+
+        if (loadedTrip.startDate) {
+          setSelectedDate(loadedTrip.startDate);
+        }
+
+        setTripError("");
+      } catch (error) {
+        console.error("Unable to load trip:", error);
+        setTripError("Unable to load trip information.");
+      }
+    }
+
+    loadTrip();
+  }, []);
 
   const isItineraryPage = location.pathname === "/Itinerary";
 
@@ -57,7 +82,18 @@ export default function TripDashboard() {
         }`}
       >
         <main className="dashboard-content">
-          <Outlet context={{ selectedDate, selectDate }} />
+          {tripError && (
+            <p className="trip-error">{tripError}</p>
+          )}
+
+          <Outlet
+            context={{
+              selectedDate,
+              selectDate,
+              trip,
+              setTrip,
+            }}
+          />
         </main>
 
         {!isItineraryPage && (

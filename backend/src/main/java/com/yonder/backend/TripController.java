@@ -1,4 +1,3 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -11,9 +10,21 @@ import com.yonder.backend.models.BudgetSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(
+    origins = "http://localhost:5173",
+    allowedHeaders = "*",
+    methods = {
+        RequestMethod.GET,
+        RequestMethod.POST,
+        RequestMethod.PUT,
+        RequestMethod.PATCH,
+        RequestMethod.DELETE,
+        RequestMethod.OPTIONS
+    }
+)
 public class TripController {
     private final BudgetService budgetService;
     private final TripManager tripManager;
@@ -28,7 +39,7 @@ public class TripController {
     public Trip getTrip() {
         return tripManager.getTrip();
     }
-    
+
     @PutMapping("/api/trip")
     public Trip updateTrip(@RequestBody Trip trip) {
         if (trip.getDays() < 1) {

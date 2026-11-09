@@ -1,20 +1,64 @@
-
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
 import { useHousing } from "../components/HousingContext";
+import TripAPI from "../api/TripAPI";
 import "./Calendar.css";
 
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(dateString, amount) {
+  const date = new Date(`${dateString}T00:00:00`);
+  date.setDate(date.getDate() + amount);
+  return formatDate(date);
+}
+
+function daysBetween(startDate, endDate) {
+  const start = new Date(`${startDate}T00:00:00`);
+  const end = new Date(`${endDate}T00:00:00`);
+
+  return Math.round(
+    (end - start) / (1000 * 60 * 60 * 24)
+  );
+}
+
 function Calendar() {
-  const { activities } = useActivities();
-  const { housing } = useHousing();
+  const {
+    activities,
+    refreshActivities,
+  } = useActivities();
 
-  // Selected date is shared with the dashboard and itinerary sidebar.
-  const { selectedDate, selectDate } = useOutletContext();
+  const {
+    housing,
+    refreshHousing,
+  } = useHousing();
 
-  // Track which month the calendar is displaying.
+  const outletContext = useOutletContext();
+
+  if (!outletContext) {
+    throw new Error(
+      "Calendar must be rendered inside TripDashboard."
+    );
+  }
+
+  const {
+    selectedDate,
+    selectDate,
+    trip,
+    setTrip,
+  } = outletContext;
+
+  const tripStartDate = trip?.startDate ?? null;
+
   const [displayedMonth, setDisplayedMonth] = useState(() => {
-    const date = new Date(`${selectedDate}T00:00:00`);
+    const initialDate = tripStartDate || selectedDate;
+    const date = new Date(`${initialDate}T00:00:00`);
 
     return new Date(
       date.getFullYear(),
@@ -23,9 +67,15 @@ function Calendar() {
     );
   });
 
-  // Keep the calendar month synchronized with the selected date.
-  // This also handles dates changed from the itinerary sidebar.
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragDate, setDragDate] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  // Keep the displayed month synchronized with the selected date.
   useEffect(() => {
+    if (!selectedDate) return;
+
     const date = new Date(`${selectedDate}T00:00:00`);
 
     setDisplayedMonth(
@@ -33,10 +83,31 @@ function Calendar() {
     );
   }, [selectedDate]);
 
+  // Once the trip loads, show its starting month.
+  useEffect(() => {
+    if (!tripStartDate) return;
+
+    const date = new Date(`${tripStartDate}T00:00:00`);
+
+    setDisplayedMonth(
+      new Date(date.getFullYear(), date.getMonth(), 1)
+    );
+  }, [tripStartDate]);
+
   const currentMonth = displayedMonth.getMonth();
   const currentYear = displayedMonth.getFullYear();
 
-  // Navigate between calendar months.
+  // Use the preview date while dragging.
+  const displayedTripStartDate =
+    isDragging && dragDate
+      ? dragDate
+      : tripStartDate;
+
+  const tripEndDate =
+    displayedTripStartDate && trip?.days
+      ? addDays(displayedTripStartDate, trip.days - 1)
+      : null;
+
   function changeMonth(amount) {
     setDisplayedMonth(
       new Date(currentYear, currentMonth + amount, 1)
@@ -59,14 +130,21 @@ function Calendar() {
     );
   }
 
-  // Check whether an activity is scheduled for a given date.
+  function isTripDay(date) {
+    return (
+      displayedTripStartDate &&
+      tripEndDate &&
+      date >= displayedTripStartDate &&
+      date <= tripEndDate
+    );
+  }
+
   function hasActivity(date) {
     return activities.some(
       (activity) => activity.date === date
     );
   }
 
-  // Check whether housing applies to a given date.
   function hasHousing(date) {
     return housing.some(
       (housingItem) =>
@@ -76,6 +154,110 @@ function Calendar() {
         date <= housingItem.checkOutDate
     );
   }
+
+  function getDateAtPoint(x, y) {
+    const element = document.elementFromPoint(x, y);
+    const dayElement = element?.closest("[data-calendar-date]");
+
+    if (!dayElement) return null;
+
+    return dayElement.dataset.calendarDate;
+  }
+
+  function handleDragStart(event) {
+    if (event.button !== 0 || !tripStartDate || isSaving) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    setError("");
+    setDragDate(tripStartDate);
+    setIsDragging(true);
+  }
+
+  // Track the date currently underneath the pointer.
+  useEffect(() => {
+    if (!isDragging) return;
+
+    function handlePointerMove(event) {
+      const date = getDateAtPoint(event.clientX, event.clientY);
+
+      if (date) {
+        setDragDate(date);
+      }
+    }
+
+    async function handlePointerUp(event) {
+      const finalDate =
+        getDateAtPoint(event.clientX, event.clientY) || dragDate;
+
+      setIsDragging(false);
+      setDragDate(null);
+
+      if (!finalDate || finalDate === tripStartDate) {
+        return;
+      }
+
+      const oldStartDate = tripStartDate;
+      const selectedDayOffset =
+        selectedDate >= oldStartDate &&
+        selectedDate <= addDays(oldStartDate, trip.days - 1)
+          ? daysBetween(oldStartDate, selectedDate)
+          : null;
+
+      setIsSaving(true);
+      setError("");
+
+      try {
+        const updatedTrip = await TripAPI.update({
+          ...trip,
+          startDate: finalDate,
+        });
+
+        setTrip(updatedTrip);
+
+        // Refresh the frontend copies of the affected dates.
+        await Promise.all([
+          refreshActivities(),
+          refreshHousing(),
+        ]);
+
+        // Preserve the selected trip day, if it was within the trip.
+        if (selectedDayOffset !== null) {
+          selectDate(addDays(finalDate, selectedDayOffset));
+        } else {
+          selectDate(finalDate);
+        }
+      } catch (err) {
+        console.error("Unable to move trip start date:", err);
+        setError(
+          "Unable to update the trip start date. Please try again."
+        );
+      } finally {
+        setIsSaving(false);
+      }
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [
+    isDragging,
+    dragDate,
+    tripStartDate,
+    selectedDate,
+    trip,
+    setTrip,
+    selectDate,
+    refreshActivities,
+    refreshHousing,
+  ]);
 
   const daysInMonth = getDaysInMonth(
     currentYear,
@@ -89,7 +271,7 @@ function Calendar() {
 
   const calendarDays = [];
 
-  // Add empty cells before the first day of the month.
+  // Empty cells before the first day of the month.
   for (let i = 0; i < firstDay; i++) {
     calendarDays.push(
       <div
@@ -99,26 +281,52 @@ function Calendar() {
     );
   }
 
-  // Generate a button for each day of the month.
+  // Calendar date cells.
   for (let day = 1; day <= daysInMonth; day++) {
     const dateString = getDateString(day);
 
     const dayHasActivity = hasActivity(dateString);
     const dayHasHousing = hasHousing(dateString);
+    const dayIsTripDay = isTripDay(dateString);
+    const isTripStart = dateString === displayedTripStartDate;
 
     calendarDays.push(
       <button
         key={day}
         type="button"
+        data-calendar-date={dateString}
         className={`calendar-day ${
+          dayIsTripDay ? "trip-day" : ""
+        } ${
           dayHasActivity ? "has-activity" : ""
-        } ${dayHasHousing ? "has-housing" : ""} ${
+        } ${
+          dayHasHousing ? "has-housing" : ""
+        } ${
           selectedDate === dateString ? "selected" : ""
+        } ${
+          isDragging && dateString === dragDate
+            ? "drag-target"
+            : ""
         }`}
-        onClick={() => selectDate(dateString)}
+        onClick={() => {
+          if (!isDragging && !isSaving) {
+            selectDate(dateString);
+          }
+        }}
         aria-label={`Select ${dateString}`}
         aria-pressed={selectedDate === dateString}
       >
+        {isTripStart && (
+          <span
+            className="trip-start-handle"
+            title="Drag to change trip start date"
+            aria-label="Drag to change trip start date"
+            onPointerDown={handleDragStart}
+          >
+            <span className="trip-start-handle-icon">↔</span>
+          </span>
+        )}
+
         <span className="calendar-day-number">
           {day}
         </span>
@@ -133,12 +341,12 @@ function Calendar() {
   return (
     <div className="calendar-page">
       <div className="calendar-section">
-        {/* Month navigation */}
         <div className="month-header">
           <button
             type="button"
             onClick={() => changeMonth(-1)}
             aria-label="Previous month"
+            disabled={isDragging || isSaving}
           >
             ←
           </button>
@@ -154,12 +362,22 @@ function Calendar() {
             type="button"
             onClick={() => changeMonth(1)}
             aria-label="Next month"
+            disabled={isDragging || isSaving}
           >
             →
           </button>
         </div>
 
-        {/* Days of the week */}
+        {error && (
+          <p className="calendar-error">{error}</p>
+        )}
+
+        {isSaving && (
+          <p className="calendar-status">
+            Updating trip dates...
+          </p>
+        )}
+
         <div className="weekday-header">
           <div>Sun</div>
           <div>Mon</div>
@@ -170,13 +388,15 @@ function Calendar() {
           <div>Sat</div>
         </div>
 
-        {/* Calendar grid */}
-        <div className="calendar-grid">
+        <div
+          className={`calendar-grid ${
+            isDragging ? "calendar-grid-dragging" : ""
+          }`}
+        >
           {calendarDays}
         </div>
       </div>
 
-      {/* Return to the homepage */}
       <Link to="/" className="home-button">
         Home
       </Link>
