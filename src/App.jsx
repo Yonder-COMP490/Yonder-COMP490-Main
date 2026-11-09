@@ -20,7 +20,6 @@ function App() {
     <ActivityProvider>
       <HousingProvider>
         <BrowserRouter> 
-        <BrowserRouter>
           <Routes>
             <Route path="/" element={<Home />} />
 
