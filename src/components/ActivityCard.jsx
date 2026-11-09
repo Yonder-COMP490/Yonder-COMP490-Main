@@ -132,7 +132,7 @@ function ActivityCard({ activity, onSave }) {
 
   function formatDate() {
     if (activity.fixedDate || activity.date) {
-      return `Fixed date: ${activity.fixedDate || activity.date}`;
+      return `Date: ${activity.fixedDate || activity.date}`;
     }
 
     if (activity.tripDay != null) {

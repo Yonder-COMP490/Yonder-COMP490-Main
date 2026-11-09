@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
@@ -164,6 +165,64 @@ function Calendar() {
     return dayElement.dataset.calendarDate;
   }
 
+  // Shared function for dragging and manually entering a date.
+  async function updateTripStartDate(finalDate) {
+    if (!finalDate || finalDate === tripStartDate || isSaving) {
+      return;
+    }
+
+    const parsedDate = new Date(`${finalDate}T00:00:00`);
+
+    if (
+      !/^\d{4}-\d{2}-\d{2}$/.test(finalDate) ||
+      Number.isNaN(parsedDate.getTime()) ||
+      formatDate(parsedDate) !== finalDate
+    ) {
+      setError("Please enter a valid date in YYYY-MM-DD format.");
+      return;
+    }
+
+    const oldStartDate = tripStartDate;
+
+    const selectedDayOffset =
+      selectedDate >= oldStartDate &&
+      selectedDate <= addDays(oldStartDate, trip.days - 1)
+        ? daysBetween(oldStartDate, selectedDate)
+        : null;
+
+    setIsSaving(true);
+    setError("");
+
+    try {
+      const updatedTrip = await TripAPI.update({
+        ...trip,
+        startDate: finalDate,
+      });
+
+      setTrip(updatedTrip);
+
+      // Refresh the frontend copies of the affected dates.
+      await Promise.all([
+        refreshActivities(),
+        refreshHousing(),
+      ]);
+
+      // Preserve the selected trip day, if it was within the trip.
+      if (selectedDayOffset !== null) {
+        selectDate(addDays(finalDate, selectedDayOffset));
+      } else {
+        selectDate(finalDate);
+      }
+    } catch (err) {
+      console.error("Unable to move trip start date:", err);
+      setError(
+        "Unable to update the trip start date. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   function handleDragStart(event) {
     if (event.button !== 0 || !tripStartDate || isSaving) {
       return;
@@ -175,6 +234,23 @@ function Calendar() {
     setError("");
     setDragDate(tripStartDate);
     setIsDragging(true);
+  }
+
+  // Double-click the move handle to enter a specific start date.
+  function handleMoveButtonDoubleClick(event) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (!tripStartDate || isSaving) return;
+
+    const newDate = window.prompt(
+      "Enter the new trip start date (YYYY-MM-DD):",
+      tripStartDate
+    );
+
+    if (newDate === null) return;
+
+    updateTripStartDate(newDate.trim());
   }
 
   // Track the date currently underneath the pointer.
@@ -200,44 +276,7 @@ function Calendar() {
         return;
       }
 
-      const oldStartDate = tripStartDate;
-      const selectedDayOffset =
-        selectedDate >= oldStartDate &&
-        selectedDate <= addDays(oldStartDate, trip.days - 1)
-          ? daysBetween(oldStartDate, selectedDate)
-          : null;
-
-      setIsSaving(true);
-      setError("");
-
-      try {
-        const updatedTrip = await TripAPI.update({
-          ...trip,
-          startDate: finalDate,
-        });
-
-        setTrip(updatedTrip);
-
-        // Refresh the frontend copies of the affected dates.
-        await Promise.all([
-          refreshActivities(),
-          refreshHousing(),
-        ]);
-
-        // Preserve the selected trip day, if it was within the trip.
-        if (selectedDayOffset !== null) {
-          selectDate(addDays(finalDate, selectedDayOffset));
-        } else {
-          selectDate(finalDate);
-        }
-      } catch (err) {
-        console.error("Unable to move trip start date:", err);
-        setError(
-          "Unable to update the trip start date. Please try again."
-        );
-      } finally {
-        setIsSaving(false);
-      }
+      await updateTripStartDate(finalDate);
     }
 
     window.addEventListener("pointermove", handlePointerMove);
@@ -319,9 +358,10 @@ function Calendar() {
         {isTripStart && (
           <span
             className="trip-start-handle"
-            title="Drag to change trip start date"
-            aria-label="Drag to change trip start date"
+            title="Drag to move trip. Double-click to enter a date."
+            aria-label="Move trip start date"
             onPointerDown={handleDragStart}
+            onDoubleClick={handleMoveButtonDoubleClick}
           >
             <span className="trip-start-handle-icon">↔</span>
           </span>
