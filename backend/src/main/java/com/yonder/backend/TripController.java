@@ -28,6 +28,23 @@ public class TripController {
     public Trip getTrip() {
         return tripManager.getTrip();
     }
+    
+    @PutMapping("/api/trip")
+    public Trip updateTrip(@RequestBody Trip trip) {
+        if (trip.getDays() < 1) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Trip must be at least one day long"
+            );
+        }
+
+        if (trip.getStartDate() == null) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Trip start date is required"
+            );
+        }
+
+        return tripManager.updateTrip(trip);
+    }
 
     // ---------- Activities ----------
 

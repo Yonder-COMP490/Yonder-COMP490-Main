@@ -13,6 +13,7 @@ public class Trip {
     private String preferredCurrency;
 
     //private List<Transportation> transportation; 
+    private List<TripSection> tripSections;
     private List<Activity> activities;
     private List<HousingBooking> housingBookings;
     private List<BudgetItem> budgetItems;
@@ -20,6 +21,7 @@ public class Trip {
 
     public Trip() {
         preferredCurrency = "USD";
+        tripSections = new ArrayList<>();
         activities = new ArrayList<>();
         housingBookings = new ArrayList<>();
         budgetItems = new ArrayList<>();
@@ -83,6 +85,26 @@ public class Trip {
 
     public void setPreferredCurrency(String preferredCurrency) {
         this.preferredCurrency = preferredCurrency;
+    }
+
+    public List<TripSection> getTripSections() {
+        return tripSections;
+    }
+
+    public void setTripSections(List<TripSection> tripSections) {
+        this.tripSections = tripSections != null
+            ? tripSections : new ArrayList<>();
+        refreshScheduledDates();
+    }
+
+    public void addTripSection(TripSection tripSection) {
+        if (tripSection != null) {
+            tripSections.add(tripSection);
+        }
+    }
+
+    public void removeTripSection(int tripSectionId) {
+        tripSections.removeIf(tripSection -> tripSection.getId() == tripSectionId);
     }
 
     public List<Activity> getActivities() {
