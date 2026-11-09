@@ -70,6 +70,10 @@ function Calendar() {
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragDate, setDragDate] = useState(null);
+
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeDate, setResizeDate] = useState(null);
+
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -98,7 +102,7 @@ function Calendar() {
   const currentMonth = displayedMonth.getMonth();
   const currentYear = displayedMonth.getFullYear();
 
-  // Use the preview date while dragging.
+  // Use the preview date while dragging the start or end handle.
   const displayedTripStartDate =
     isDragging && dragDate
       ? dragDate
@@ -108,6 +112,11 @@ function Calendar() {
     displayedTripStartDate && trip?.days
       ? addDays(displayedTripStartDate, trip.days - 1)
       : null;
+
+  const displayedTripEndDate =
+    isResizing && resizeDate
+      ? resizeDate
+      : tripEndDate;
 
   function changeMonth(amount) {
     setDisplayedMonth(
@@ -134,9 +143,9 @@ function Calendar() {
   function isTripDay(date) {
     return (
       displayedTripStartDate &&
-      tripEndDate &&
+      displayedTripEndDate &&
       date >= displayedTripStartDate &&
-      date <= tripEndDate
+      date <= displayedTripEndDate
     );
   }
 
@@ -165,7 +174,7 @@ function Calendar() {
     return dayElement.dataset.calendarDate;
   }
 
-  // Shared function for dragging and manually entering a date.
+  // Shared function for moving the trip's start date.
   async function updateTripStartDate(finalDate) {
     if (!finalDate || finalDate === tripStartDate || isSaving) {
       return;
@@ -201,13 +210,11 @@ function Calendar() {
 
       setTrip(updatedTrip);
 
-      // Refresh the frontend copies of the affected dates.
       await Promise.all([
         refreshActivities(),
         refreshHousing(),
       ]);
 
-      // Preserve the selected trip day, if it was within the trip.
       if (selectedDayOffset !== null) {
         selectDate(addDays(finalDate, selectedDayOffset));
       } else {
@@ -223,8 +230,63 @@ function Calendar() {
     }
   }
 
+  // Update the trip's number of days using its new end date.
+  async function updateTripDuration(finalDate) {
+    if (!finalDate || !tripStartDate || isSaving) {
+      return;
+    }
+
+    if (finalDate < tripStartDate) {
+      setError("A trip must be at least one day long.");
+      return;
+    }
+
+    const newDays = daysBetween(tripStartDate, finalDate) + 1;
+
+    if (newDays === trip.days) {
+      return;
+    }
+
+    setIsSaving(true);
+    setError("");
+
+    try {
+      const updatedTrip = await TripAPI.update({
+        ...trip,
+        days: newDays,
+      });
+
+      setTrip(updatedTrip);
+
+      await Promise.all([
+        refreshActivities(),
+        refreshHousing(),
+      ]);
+
+      const newEndDate = addDays(tripStartDate, newDays - 1);
+
+      // Move the selected date if it is now outside the trip.
+      if (selectedDate > newEndDate) {
+        selectDate(newEndDate);
+      }
+    } catch (err) {
+      console.error("Unable to update trip duration:", err);
+      setError(
+        "Unable to update the trip duration. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // Start dragging the trip's starting date.
   function handleDragStart(event) {
-    if (event.button !== 0 || !tripStartDate || isSaving) {
+    if (
+      event.button !== 0 ||
+      !tripStartDate ||
+      isSaving ||
+      isResizing
+    ) {
       return;
     }
 
@@ -236,7 +298,7 @@ function Calendar() {
     setIsDragging(true);
   }
 
-  // Double-click the move handle to enter a specific start date.
+  // Double-click the starting-date handle to enter a date.
   function handleMoveButtonDoubleClick(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -253,7 +315,26 @@ function Calendar() {
     updateTripStartDate(newDate.trim());
   }
 
-  // Track the date currently underneath the pointer.
+  // Start dragging the trip's ending date.
+  function handleResizeStart(event) {
+    if (
+      event.button !== 0 ||
+      !tripEndDate ||
+      isSaving ||
+      isDragging
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    setError("");
+    setResizeDate(tripEndDate);
+    setIsResizing(true);
+  }
+
+  // Track the date currently underneath the start-date drag.
   useEffect(() => {
     if (!isDragging) return;
 
@@ -298,6 +379,51 @@ function Calendar() {
     refreshHousing,
   ]);
 
+  // Track the date currently underneath the end-date drag.
+  useEffect(() => {
+    if (!isResizing) return;
+
+    function handlePointerMove(event) {
+      const date = getDateAtPoint(event.clientX, event.clientY);
+
+      if (date && date >= tripStartDate) {
+        setResizeDate(date);
+      }
+    }
+
+    async function handlePointerUp(event) {
+      const finalDate =
+        getDateAtPoint(event.clientX, event.clientY) || resizeDate;
+
+      setIsResizing(false);
+      setResizeDate(null);
+
+      if (!finalDate || finalDate < tripStartDate) {
+        return;
+      }
+
+      await updateTripDuration(finalDate);
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [
+    isResizing,
+    resizeDate,
+    tripStartDate,
+    trip,
+    selectedDate,
+    setTrip,
+    selectDate,
+    refreshActivities,
+    refreshHousing,
+  ]);
+
   const daysInMonth = getDaysInMonth(
     currentYear,
     currentMonth
@@ -327,7 +453,12 @@ function Calendar() {
     const dayHasActivity = hasActivity(dateString);
     const dayHasHousing = hasHousing(dateString);
     const dayIsTripDay = isTripDay(dateString);
-    const isTripStart = dateString === displayedTripStartDate;
+
+    const isTripStart =
+      dateString === displayedTripStartDate;
+
+    const isTripEnd =
+      dateString === displayedTripEndDate;
 
     calendarDays.push(
       <button
@@ -343,12 +474,13 @@ function Calendar() {
         } ${
           selectedDate === dateString ? "selected" : ""
         } ${
-          isDragging && dateString === dragDate
+          (isDragging && dateString === dragDate) ||
+          (isResizing && dateString === resizeDate)
             ? "drag-target"
             : ""
         }`}
         onClick={() => {
-          if (!isDragging && !isSaving) {
+          if (!isDragging && !isResizing && !isSaving) {
             selectDate(dateString);
           }
         }}
@@ -362,8 +494,21 @@ function Calendar() {
             aria-label="Move trip start date"
             onPointerDown={handleDragStart}
             onDoubleClick={handleMoveButtonDoubleClick}
+            onClick={(event) => event.stopPropagation()}
           >
             <span className="trip-start-handle-icon">↔</span>
+          </span>
+        )}
+
+        {isTripEnd && (
+          <span
+            className="trip-end-handle"
+            title="Drag to change trip duration"
+            aria-label="Change trip duration"
+            onPointerDown={handleResizeStart}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="trip-end-handle-icon">↔</span>
           </span>
         )}
 
@@ -386,7 +531,7 @@ function Calendar() {
             type="button"
             onClick={() => changeMonth(-1)}
             aria-label="Previous month"
-            disabled={isDragging || isSaving}
+            disabled={isDragging || isResizing || isSaving}
           >
             ←
           </button>
@@ -402,7 +547,7 @@ function Calendar() {
             type="button"
             onClick={() => changeMonth(1)}
             aria-label="Next month"
-            disabled={isDragging || isSaving}
+            disabled={isDragging || isResizing || isSaving}
           >
             →
           </button>
@@ -431,6 +576,8 @@ function Calendar() {
         <div
           className={`calendar-grid ${
             isDragging ? "calendar-grid-dragging" : ""
+          } ${
+            isResizing ? "calendar-grid-resizing" : ""
           }`}
         >
           {calendarDays}

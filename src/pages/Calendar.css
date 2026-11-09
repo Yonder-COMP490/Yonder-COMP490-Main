@@ -184,6 +184,41 @@
 }
 
 /* =========================================================
+   Trip End Day Handle
+   ========================================================= */
+
+.trip-end-handle {
+  position: absolute;
+  bottom: 5px;
+  right: 5px;
+  z-index: 3;
+  width: 25px;
+  height: 25px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4285f4;
+  color: white;
+  border-radius: 5px;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.trip-end-handle:active {
+  cursor: grabbing;
+}
+
+.trip-end-handle-icon {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.calendar-grid-resizing {
+  user-select: none;
+}
+
+/* =========================================================
    Status Messages
    ========================================================= */
 
