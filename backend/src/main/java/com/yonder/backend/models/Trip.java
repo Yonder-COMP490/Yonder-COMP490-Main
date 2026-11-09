@@ -9,7 +9,7 @@ public class Trip {
     private int id;
     private String name;
     private LocalDate startDate;
-    private LocalDate endDate;
+    private int days;
     private String preferredCurrency;
 
     //private List<Transportation> transportation; 
@@ -30,14 +30,14 @@ public class Trip {
         int id,
         String name,
         LocalDate startDate,
-        LocalDate endDate,
+        int days,
         String preferredCurrency
     ) {
         this();
         this.id = id;
         this.name = name;
         this.startDate = startDate;
-        this.endDate = endDate;
+        this.days = days;
 
         if (preferredCurrency != null) {
             this.preferredCurrency = preferredCurrency;
@@ -69,12 +69,12 @@ public class Trip {
         refreshScheduledDates();
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
+    public int getDays() {
+        return days;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
+    public void setDays(int days) {
+        this.days = days;
     }
 
     public String getPreferredCurrency() {

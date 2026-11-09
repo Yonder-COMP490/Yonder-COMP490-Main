@@ -90,6 +90,43 @@ public class Activity {
             this.fixedDate = null;
         }
     }
+    public void switchScheduleType(boolean useFixedDate, LocalDate tripStartDate) {
+        // Already using the requested scheduling type.
+        if (useFixedDate && fixedDate != null) {
+            return;
+        }
+
+        if (!useFixedDate && tripDay != null) {
+            return;
+        }
+
+        // Get the current effective date before clearing either field.
+        LocalDate currentDate = fixedDate;
+
+        if (currentDate == null && tripDay != null && tripStartDate != null) {
+            currentDate = tripStartDate.plusDays(tripDay - 1L);
+        }
+
+        if (currentDate == null) {
+            throw new IllegalStateException("Cannot switch scheduling type without a date.");
+        }
+
+        if (useFixedDate) {
+            this.fixedDate = currentDate;
+            this.tripDay = null;
+        } else {
+            if (tripStartDate == null) {
+                throw new IllegalArgumentException("Trip start date is required.");
+            }
+
+            this.tripDay = (int) java.time.temporal.ChronoUnit.DAYS.between(
+                tripStartDate,
+                currentDate
+            ) + 1;
+
+            this.fixedDate = null;
+        }
+    }
 
     public LocalDate getFixedDate() {
         return fixedDate;
@@ -194,4 +231,5 @@ public class Activity {
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
+    
 }

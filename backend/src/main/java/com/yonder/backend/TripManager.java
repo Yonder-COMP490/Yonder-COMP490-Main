@@ -26,7 +26,7 @@ public class TripManager {
             1,
             "Japan Trip",
             LocalDate.of(2027, 4, 1),
-            LocalDate.of(2027, 4, 10),
+            10,
             "USD"
         );
 
@@ -90,6 +90,17 @@ public class TripManager {
             .mapToInt(Activity::getId)
             .max()
             .orElse(0) + 1;
+    }
+    public Activity switchActivityScheduleType(int id, boolean useFixedDate) {
+        for (Activity activity : trip.getActivities()) {
+            if (activity.getId() == id) {
+                activity.switchScheduleType(useFixedDate, trip.getStartDate());
+                activity.attachToTrip(trip.getStartDate());
+                return activity;
+            }
+        }
+
+        return null;
     }
 
     // ---------- Housing bookings ----------

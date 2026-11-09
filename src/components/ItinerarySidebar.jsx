@@ -182,6 +182,7 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
     loading,
     error,
     updateActivity,
+    switchScheduleType,
   } = useActivities();
 
   const { housing } = useHousing();
@@ -210,6 +211,14 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
 
   function changeDay(amount) {
     onSelectDate(addDays(selectedDate, amount));
+  }
+  async function handleFixedDateChange(activity, useFixedDate) {
+    try {
+      await switchScheduleType(activity.id, useFixedDate);
+      setDropError("");
+    } catch {
+      setDropError("Unable to change activity scheduling type.");
+    }
   }
 
   function getEventStyle(event) {
@@ -492,9 +501,10 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
                 dragPreview?.activityId === event.activity?.id
                   ? dragPreview
                   : null;
+                  
 
               const isActivity = event.type === "activity";
-
+              
               return (
                 <div
                   key={event.id}
@@ -549,6 +559,26 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
                     {formatTime(preview?.start ?? event.start)} –{" "}
                     {formatTime(preview?.end ?? event.end)}
                   </span>
+
+                  {isActivity && (
+                    <label
+                      className="itinerary-fixed-date-toggle"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={event.activity.fixedDate != null}
+                        onChange={(e) =>
+                          handleFixedDateChange(
+                            event.activity,
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <span>Fixed Date</span>
+                    </label>
+                  )}
                 </div>
               );
             })}

@@ -183,6 +183,30 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.itinerary-fixed-date-toggle {
+  position: absolute;
+  bottom: 5px;
+  right: 7px;
+
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  font-size: 11px;
+  color: inherit;
+  cursor: pointer;
+  z-index: 5;
+
+  user-select: none;
+}
+
+.itinerary-fixed-date-toggle input {
+  margin: 0;
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+}
+
 /* Resize handles */
 
 .itinerary-resize-handle {

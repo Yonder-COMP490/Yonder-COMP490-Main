@@ -5,7 +5,7 @@ public class PointOfInterest {
     private int id;
     private String name;
     private String picture;
-    private GreaterLocation greaterLocation;
+    private TripSection TripSection;
     private Cost cost;
     private String notes;
 
@@ -21,7 +21,7 @@ public class PointOfInterest {
         int id,
         String name,
         String picture,
-        GreaterLocation greaterLocation,
+        TripSection TripSection,
         Cost cost,
         String notes,
         String readableAddress,
@@ -31,7 +31,7 @@ public class PointOfInterest {
         this.id = id;
         this.name = name;
         this.picture = picture;
-        this.greaterLocation = greaterLocation;
+        this.TripSection = TripSection;
         this.cost = cost != null ? cost : new Cost();
         this.notes = notes;
         this.readableAddress = readableAddress;
@@ -48,12 +48,12 @@ public class PointOfInterest {
     public String getPicture() { return picture; }
     public void setPicture(String picture) { this.picture = picture; }
 
-    public GreaterLocation getGreaterLocation() {
-        return greaterLocation;
+    public TripSection getTripSection() {
+        return TripSection;
     }
 
-    public void setGreaterLocation(GreaterLocation greaterLocation) {
-        this.greaterLocation = greaterLocation;
+    public void setTripSection(TripSection TripSection) {
+        this.TripSection = TripSection;
     }
 
     public Cost getCost() { return cost; }

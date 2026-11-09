@@ -84,6 +84,23 @@ class ActivityAPI {
       throw new Error("Failed to remove activity.");
     }
   }
+  async switchScheduleType(id, useFixedDate) {
+    const response = await fetch(
+      `${API_URL}/activities/${id}/schedule?useFixedDate=${useFixedDate}`,
+      {
+        method: "PATCH",
+      }
+    );
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(
+        `Failed to switch activity schedule (${response.status}): ${details}`
+      );
+    }
+
+    return await response.json();
+  }
 }
 
 export default new ActivityAPI();

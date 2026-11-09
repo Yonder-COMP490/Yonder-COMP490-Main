@@ -62,6 +62,24 @@ public class TripController {
             );
         }
     }
+    @PatchMapping("/api/trip/activities/{id}/schedule")
+    public Activity switchActivityScheduleType(
+        @PathVariable int id,
+        @RequestParam boolean useFixedDate
+    ) {
+        Activity result = tripManager.switchActivityScheduleType(
+            id,
+            useFixedDate
+        );
+
+        if (result == null) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Activity not found"
+            );
+        }
+
+        return result;
+    }
 
     // ---------- Housing bookings ----------
 

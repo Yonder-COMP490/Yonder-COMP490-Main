@@ -52,6 +52,17 @@ export function ActivityProvider({ children }) {
       throw err;
     }
   }
+  async function switchScheduleType(id, useFixedDate) {
+    const updated = await ActivityAPI.switchScheduleType(id, useFixedDate);
+
+    setActivities((current) =>
+      current.map((activity) =>
+        activity.id === updated.id ? updated : activity
+      )
+    );
+
+    return updated;
+  }
 
   async function removeActivity(id) {
     await ActivityAPI.remove(id);
@@ -86,6 +97,7 @@ export function ActivityProvider({ children }) {
         addActivity,
         updateActivity,
         removeActivity,
+        switchScheduleType,
         getMapMarkers,
       }}
     >
