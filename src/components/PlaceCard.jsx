@@ -1,8 +1,14 @@
 // one card in the hotel list on the maps page
 // called PlaceCard so we can reuse it for restaurants and stuff later
-function PlaceCard({ place }) {
+// selected = highlight this card, onHover / onClick = what to do on hover / click
+function PlaceCard({ place, selected, onHover, onClick }) {
   return (
-    <div className="place-card">
+    <div
+      id={"card-" + place.id} // so the map can scroll to this card
+      className={selected ? "place-card selected" : "place-card"}
+      onMouseEnter={onHover}
+      onClick={onClick}
+    >
       {/* only show the pic if the hotel has one */}
       {place.image && <img src={place.image} alt={place.name} />}
 
