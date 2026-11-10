@@ -189,6 +189,25 @@
   font-size: 1.1em;
 }
 
+/* the dates and total on the popup */
+.popup-info .popup-stay {
+  font-size: 13px;
+  color: #555;
+}
+
+/* blue Check availability button */
+.popup-book {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  background: #1a73e8;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
 /* round X button in the corner of the popup */
 .popup-close {
   position: absolute;

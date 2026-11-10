@@ -29,12 +29,49 @@ const MIN_DRAG_KM = 1.5;
 // how long to wait after a drag before searching, in case you drag again
 const DRAG_WAIT_MS = 800;
 
+// our local java server that has the current trip
+const TRIP_URL = "http://localhost:8080/api/trip";
+
+// gets the dates to search: the trip's dates, or tomorrow for 1 night if the trip can't be used
+async function fetchSearchDates() {
+  const tomorrow = dateFromToday(1);
+  const nextDay = dateFromToday(2);
+
+  try {
+    const response = await fetch(TRIP_URL);
+    const trip = await response.json();
+
+    // dates look like "2027-04-01", so comparing them as text works
+    if (trip.startDate >= tomorrow && trip.endDate > trip.startDate) {
+      return { checkIn: trip.startDate, checkOut: trip.endDate };
+    }
+  } catch {
+    // no trip to read, so use tomorrow below
+  }
+
+  return { checkIn: tomorrow, checkOut: nextDay };
+}
+
+// turns "2027-04-01" into "Apr 1"
+function shortDate(text) {
+  const date = new Date(text + "T00:00:00");
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+// where the Check availability button goes: the hotel's own site, or a Google search if it has none
+function bookingLink(place) {
+  if (place.link && place.link.startsWith("http")) return place.link;
+
+  const words = place.name + " " + place.searchedIn + " book";
+  return "https://www.google.com/search?" + new URLSearchParams({ q: words });
+}
+
 // asks our server for hotels and gives back everything it found
-async function fetchHotels(query) {
+async function fetchHotels(query, checkIn, checkOut) {
   const search = new URLSearchParams({
     q: query,
-    check_in_date: dateFromToday(1), // tomorrow
-    check_out_date: dateFromToday(2), // 1 night
+    check_in_date: checkIn,
+    check_out_date: checkOut,
   });
 
   const response = await fetch(HOTELS_URL + "?" + search);
@@ -42,9 +79,13 @@ async function fetchHotels(query) {
 }
 
 // only keep what we need from each hotel
-function pickHotelInfo(data) {
+// searchedIn = the place we searched, so the Google link can name it
+function pickHotelInfo(data, searchedIn) {
   return (data.properties || []).map((hotel) => ({
     id: hotel.property_token,
+    link: hotel.link,
+    searchedIn: searchedIn,
+    totalPrice: hotel.total_rate?.lowest,
     name: hotel.name,
     rating: hotel.overall_rating?.toFixed(1), // 4.653846 -> "4.7"
     reviews: hotel.reviews,
@@ -190,6 +231,10 @@ function Maps() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("0");
 
+  // the dates we search hotels for (null = not loaded yet)
+  const [checkIn, setCheckIn] = useState(null);
+  const [checkOut, setCheckOut] = useState(null);
+
   // small note on the map, like "Loading hotels in this area..." ("" = no note)
   const [areaNote, setAreaNote] = useState("");
 
@@ -246,15 +291,29 @@ function Maps() {
     };
   }, []);
 
+  // find out which dates to search when the page opens
+  useEffect(() => {
+    async function loadDates() {
+      const dates = await fetchSearchDates();
+      setCheckIn(dates.checkIn);
+      setCheckOut(dates.checkOut);
+    }
+
+    loadDates();
+  }, []);
+
   // get the hotels from  backend
   // runs again when city changes
   useEffect(() => {
+    // wait until we know the dates
+    if (!checkIn) return;
+
     // used to skip old searches
     let ignore = false;
 
     async function loadHotels() {
       try {
-        const data = await fetchHotels("hotels in " + city);
+        const data = await fetchHotels("hotels in " + city, checkIn, checkOut);
 
         // old search, skip it
         if (ignore) return;
@@ -264,7 +323,7 @@ function Maps() {
           return;
         }
 
-        const hotels = pickHotelInfo(data);
+        const hotels = pickHotelInfo(data, city);
 
         setPlaces(hotels);
         setMessage(hotels.length === 0 ? "No hotels found for " + city : "");
@@ -280,7 +339,7 @@ function Maps() {
     return () => {
       ignore = true;
     };
-  }, [city]);
+  }, [city, checkIn, checkOut]);
 
   // add a pin for each hotel
   useEffect(() => {
@@ -344,7 +403,7 @@ function Maps() {
 
   // after you drag the map, find hotels around the new spot and add them
   useEffect(() => {
-    if (!mapReady) return;
+    if (!mapReady || !checkIn) return;
 
     let dragTimer;
 
@@ -374,7 +433,7 @@ function Maps() {
         }
         searchedAreasRef.current.add(areaName);
 
-        const data = await fetchHotels("hotels in " + areaName);
+        const data = await fetchHotels("hotels in " + areaName, checkIn, checkOut);
 
         // you dragged again or searched a city while this one was loading
         if (thisSearch !== searchIdRef.current) return;
@@ -385,7 +444,7 @@ function Maps() {
         }
 
         // keep the old hotels and add only the ones we don't have yet
-        const newHotels = pickHotelInfo(data);
+        const newHotels = pickHotelInfo(data, areaName);
         setPlaces((oldHotels) => {
           const oldIds = new Set(oldHotels.map((hotel) => hotel.id));
           return [...oldHotels, ...newHotels.filter((hotel) => !oldIds.has(hotel.id))];
@@ -415,7 +474,7 @@ function Maps() {
       startListener.remove();
       endListener.remove();
     };
-  }, [mapReady]);
+  }, [mapReady, checkIn, checkOut]);
 
   // highlight the picked hotel's bubble and scroll the list to its card
   useEffect(() => {
@@ -514,10 +573,22 @@ function Maps() {
     popupPin.position = { lat: openPlace.lat, lng: openPlace.lng };
     popupPin.map = mapRef.current;
 
-    // wait a frame for the card to draw, then measure where it fits
-    const frame = requestAnimationFrame(() => {
+    let frame;
+
+    // measure where the card fits, but only once google has put it on the map
+    function measureCard() {
+      const card = popupDiv.querySelector(".map-popup");
+
+      // not on the map yet (no size), so try again next frame
+      if (!card || card.getBoundingClientRect().width === 0) {
+        frame = requestAnimationFrame(measureCard);
+        return;
+      }
+
       setPopupShift({ id: openPlace.id, ...findPopupShift(openPlace.id, mapDiv.current, popupDiv) });
-    });
+    }
+
+    frame = requestAnimationFrame(measureCard);
 
     return () => cancelAnimationFrame(frame);
   }, [openPlace, mapReady, popupDiv]);
@@ -625,6 +696,22 @@ function Maps() {
                 <p className="price">
                   {openPlace.price ? `${openPlace.price} / night` : "Price not available"}
                 </p>
+
+                {/* the dates these prices are for, and the total if we have it */}
+                <p className="popup-stay">
+                  {shortDate(checkIn)} – {shortDate(checkOut)}
+                  {openPlace.totalPrice && ` · ${openPlace.totalPrice} total`}
+                </p>
+
+                {/* a button, not the whole card, so a stray click doesn't leave the page */}
+                <a
+                  className="popup-book"
+                  href={bookingLink(openPlace)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Check availability
+                </a>
               </div>
             </div>,
             popupDiv
