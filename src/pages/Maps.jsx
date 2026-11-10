@@ -23,6 +23,67 @@ function dateFromToday(days) {
   return date.toISOString().slice(0, 10);
 }
 
+// only search again if the map moved at least this far, to save searches
+const MIN_DRAG_KM = 1.5;
+
+// how long to wait after a drag before searching, in case you drag again
+const DRAG_WAIT_MS = 800;
+
+// asks our server for hotels and gives back everything it found
+async function fetchHotels(query) {
+  const search = new URLSearchParams({
+    q: query,
+    check_in_date: dateFromToday(1), // tomorrow
+    check_out_date: dateFromToday(2), // 1 night
+  });
+
+  const response = await fetch(HOTELS_URL + "?" + search);
+  return response.json();
+}
+
+// only keep what we need from each hotel
+function pickHotelInfo(data) {
+  return (data.properties || []).map((hotel) => ({
+    id: hotel.property_token,
+    name: hotel.name,
+    rating: hotel.overall_rating?.toFixed(1), // 4.653846 -> "4.7"
+    reviews: hotel.reviews,
+    price: hotel.rate_per_night?.lowest, // ?. means if theres no price, just return undefined instead of crashing
+    image: hotel.images?.[0]?.thumbnail,
+    lat: hotel.gps_coordinates?.latitude, // hotel pins
+    lng: hotel.gps_coordinates?.longitude,
+  }));
+}
+
+// about how many km apart two spots on the map are
+function distanceKm(a, b) {
+  const kmNorth = (a.lat - b.lat) * 111; // 1 degree of latitude is about 111 km
+  const kmEast = (a.lng - b.lng) * 111 * Math.cos((a.lat * Math.PI) / 180);
+  return Math.sqrt(kmNorth * kmNorth + kmEast * kmEast);
+}
+
+// turns a spot on the map into a name like "La Jolla, San Diego, CA"
+// gives back null if there's no city there, like out in the ocean
+async function findAreaName(center) {
+  const geocoder = new window.google.maps.Geocoder();
+  const answer = await geocoder.geocode({ location: center });
+  const parts = answer.results[0].address_components;
+
+  // finds one piece of the address, like the city
+  function getPart(type) {
+    const part = parts.find((item) => item.types.includes(type));
+    return part ? part.short_name : null;
+  }
+
+  const city = getPart("locality");
+  const state = getPart("administrative_area_level_1");
+  if (!city || !state) return null;
+
+  const neighborhood = getPart("neighborhood");
+  if (neighborhood) return neighborhood + ", " + city + ", " + state;
+  return city + ", " + state;
+}
+
 // turns a price like "$1,193" into the number 1193
 function priceToNumber(price) {
   return Number(price.replace(/[^0-9.]/g, ""));
@@ -129,6 +190,19 @@ function Maps() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("0");
 
+  // small note on the map, like "Loading hotels in this area..." ("" = no note)
+  const [areaNote, setAreaNote] = useState("");
+
+  // true when the next hotels to load should zoom the map (only for a city search)
+  const shouldZoomRef = useRef(true);
+
+  // the last spot we searched, and the area names we already searched
+  const lastCenterRef = useRef(null);
+  const searchedAreasRef = useRef(new Set());
+
+  // goes up with every search, so we can ignore answers from an older one
+  const searchIdRef = useRef(0);
+
   // the hotels that match the filters. places always keeps every hotel
   // useMemo only redoes this when a filter or the hotels change, so the pins don't redraw on every click
   const shownPlaces = useMemo(() => {
@@ -179,15 +253,8 @@ function Maps() {
     let ignore = false;
 
     async function loadHotels() {
-      const search = new URLSearchParams({
-        q: "hotels in " + city,
-        check_in_date: dateFromToday(1), // tomorrow
-        check_out_date: dateFromToday(2), // 1 night
-      });
-
       try {
-        const response = await fetch(HOTELS_URL + "?" + search);
-        const data = await response.json();
+        const data = await fetchHotels("hotels in " + city);
 
         // old search, skip it
         if (ignore) return;
@@ -197,17 +264,7 @@ function Maps() {
           return;
         }
 
-        // only keep what we need from each hotel
-        const hotels = (data.properties || []).map((hotel) => ({
-          id: hotel.property_token,
-          name: hotel.name,
-          rating: hotel.overall_rating?.toFixed(1), // 4.653846 -> "4.7"
-          reviews: hotel.reviews,
-          price: hotel.rate_per_night?.lowest, // ?. means if theres no price, just return undefined instead of crashing
-          image: hotel.images?.[0]?.thumbnail,
-          lat: hotel.gps_coordinates?.latitude, // hotel pins
-          lng: hotel.gps_coordinates?.longitude,
-        }));
+        const hotels = pickHotelInfo(data);
 
         setPlaces(hotels);
         setMessage(hotels.length === 0 ? "No hotels found for " + city : "");
@@ -266,9 +323,10 @@ function Maps() {
     });
   }, [shownPlaces, mapReady]);
 
-  // only zooms for a new search, so the map stays still when you change a filter
+  // only zooms for a new city, so the map stays still for filters and drags
   useEffect(() => {
-    if (!mapReady) return;
+    if (!mapReady || !shouldZoomRef.current || places.length === 0) return;
+    shouldZoomRef.current = false;
 
     // box that will fit all the pins
     const bounds = new window.google.maps.LatLngBounds();
@@ -283,6 +341,81 @@ function Maps() {
       mapRef.current.fitBounds(bounds);
     }
   }, [places, mapReady]);
+
+  // after you drag the map, find hotels around the new spot and add them
+  useEffect(() => {
+    if (!mapReady) return;
+
+    let dragTimer;
+
+    function currentCenter() {
+      const center = mapRef.current.getCenter();
+      return { lat: center.lat(), lng: center.lng() };
+    }
+
+    async function searchThisArea() {
+      const center = currentCenter();
+
+      // barely moved, so save a search
+      if (distanceKm(lastCenterRef.current, center) < MIN_DRAG_KM) return;
+      lastCenterRef.current = center;
+
+      searchIdRef.current += 1;
+      const thisSearch = searchIdRef.current;
+      setAreaNote("Loading hotels in this area...");
+
+      try {
+        const areaName = await findAreaName(center);
+
+        // nothing to search here, or we already did this area
+        if (!areaName || searchedAreasRef.current.has(areaName)) {
+          if (thisSearch === searchIdRef.current) setAreaNote("");
+          return;
+        }
+        searchedAreasRef.current.add(areaName);
+
+        const data = await fetchHotels("hotels in " + areaName);
+
+        // you dragged again or searched a city while this one was loading
+        if (thisSearch !== searchIdRef.current) return;
+
+        if (data.error) {
+          setAreaNote("Could not load hotels in this area");
+          return;
+        }
+
+        // keep the old hotels and add only the ones we don't have yet
+        const newHotels = pickHotelInfo(data);
+        setPlaces((oldHotels) => {
+          const oldIds = new Set(oldHotels.map((hotel) => hotel.id));
+          return [...oldHotels, ...newHotels.filter((hotel) => !oldIds.has(hotel.id))];
+        });
+        setAreaNote("");
+      } catch {
+        if (thisSearch === searchIdRef.current) {
+          setAreaNote("Could not load hotels in this area");
+        }
+      }
+    }
+
+    // remember where the map was before the very first drag
+    const startListener = mapRef.current.addListener("dragstart", () => {
+      clearTimeout(dragTimer);
+      if (!lastCenterRef.current) lastCenterRef.current = currentCenter();
+    });
+
+    // wait a moment after the drag ends, then search
+    const endListener = mapRef.current.addListener("dragend", () => {
+      clearTimeout(dragTimer);
+      dragTimer = setTimeout(searchThisArea, DRAG_WAIT_MS);
+    });
+
+    return () => {
+      clearTimeout(dragTimer);
+      startListener.remove();
+      endListener.remove();
+    };
+  }, [mapReady]);
 
   // highlight the picked hotel's bubble and scroll the list to its card
   useEffect(() => {
@@ -341,6 +474,13 @@ function Maps() {
     // start the new city with no filters
     setMaxPrice("");
     setMinRating("0");
+
+    // forget the old drags, drop any that are still loading, and zoom to the new city
+    searchIdRef.current += 1;
+    lastCenterRef.current = null;
+    searchedAreasRef.current = new Set();
+    shouldZoomRef.current = true;
+    setAreaNote("");
 
     // new city = new search
     setCity(newCity);
@@ -456,6 +596,8 @@ function Maps() {
         {/* map, with the popup card on top of it */}
         <div className="map-area">
           <div className="map" ref={mapDiv}></div>
+
+          {areaNote && <div className="map-note">{areaNote}</div>}
 
           {/* popup card, drawn inside its map pin with createPortal */}
           {openPlace && createPortal(
