@@ -11,16 +11,30 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Component
 public class TripManager {
 
+    // Original sample trip, retained for existing API compatibility.
     private final Trip trip;
+
+    // Stores all trips in memory, indexed by their unique IDs.
+    private final Map<Integer, Trip> trips = new LinkedHashMap<>();
 
     public TripManager() {
         trip = createSampleTrip();
+        trips.put(trip.getId(), trip);
     }
 
+    /**
+     * Creates the sample trip used by the existing application.
+     *
+     * @return the sample Japan trip
+     */
     private Trip createSampleTrip() {
         Trip newTrip = new Trip(
             1,
@@ -54,8 +68,84 @@ public class TripManager {
         return newTrip;
     }
 
+    /**
+     * Returns the original sample trip.
+     * Retained for compatibility with /api/trip.
+     *
+     * @return the original trip
+     */
     public Trip getTrip() {
         return trip;
+    }
+
+    // ---------- Multiple-trip management ----------
+
+    /**
+     * Returns all trips stored in memory.
+     *
+     * @return a list of trips
+     */
+    public synchronized List<Trip> getTrips() {
+        return new ArrayList<>(trips.values());
+    }
+
+    /**
+     * Retrieves a trip by its ID.
+     *
+     * @param id the trip ID
+     * @return the matching trip, or null if not found
+     */
+    public synchronized Trip getTripById(int id) {
+        return trips.get(id);
+    }
+
+    /**
+     * Creates a new trip and assigns a unique ID.
+     *
+     * @param requested the requested trip information
+     * @return the newly created trip
+     * @throws IllegalArgumentException if trip details are invalid
+     */
+    public synchronized Trip createTrip(Trip requested) {
+        if (requested == null ||
+            requested.getName() == null ||
+            requested.getName().isBlank()) {
+            throw new IllegalArgumentException(
+                "Trip name is required."
+            );
+        }
+
+        if (requested.getStartDate() == null ||
+            requested.getEndDate() == null) {
+            throw new IllegalArgumentException(
+                "Trip start and end dates are required."
+            );
+        }
+
+        if (requested.getEndDate().isBefore(
+                requested.getStartDate())) {
+            throw new IllegalArgumentException(
+                "End date cannot be before start date."
+            );
+        }
+
+        int nextId = trips.keySet()
+            .stream()
+            .mapToInt(Integer::intValue)
+            .max()
+            .orElse(0) + 1;
+
+        Trip newTrip = new Trip(
+            nextId,
+            requested.getName().trim(),
+            requested.getStartDate(),
+            requested.getEndDate(),
+            requested.getPreferredCurrency()
+        );
+
+        trips.put(newTrip.getId(), newTrip);
+
+        return newTrip;
     }
 
     // ---------- Activities ----------
