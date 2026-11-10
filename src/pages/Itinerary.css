@@ -1,0 +1,289 @@
+.expanded-itinerary {
+  width: 100%;
+  min-width: 0;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.expanded-itinerary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.expanded-itinerary-header h1 {
+  margin: 0;
+}
+
+.expanded-itinerary-header p {
+  margin: 5px 0 0;
+  color: #666;
+}
+
+.itinerary-day-navigation {
+  display: flex;
+  gap: 10px;
+}
+
+.itinerary-day-navigation button {
+  padding: 10px 15px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: white;
+}
+
+.itinerary-day-navigation button:hover {
+  background: #f3f4f6;
+}
+
+.expanded-itinerary-error {
+  color: #b42318;
+  margin: 10px 0;
+}
+
+/* One scroll container for the entire seven-day timeline. */
+
+.week-scroll {
+  width: 100%;
+  max-height: calc(100vh - 260px);
+  min-height: 500px;
+  overflow: auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
+
+.week-grid {
+  min-width: 1900px;
+}
+
+/* Header columns align exactly with the timeline columns. */
+
+.week-header-row,
+.week-timeline-row {
+  display: grid;
+  grid-template-columns: 65px repeat(7, minmax(260px, 1fr));
+}
+
+.week-header-row {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: #f7f7f7;
+  border-bottom: 1px solid #ccc;
+}
+
+.week-header-spacer {
+  border-right: 1px solid #ddd;
+}
+
+.week-day-header {
+  min-width: 0;
+  padding: 12px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  border-right: 1px solid #ddd;
+  background: #f7f7f7;
+  color: #333;
+}
+
+.week-day-header:hover {
+  background: #eee;
+}
+
+.week-day-header.selected {
+  background: #e5efff;
+  box-shadow: inset 0 -3px #3478d4;
+}
+
+.week-day-header strong {
+  font-size: 15px;
+}
+
+.week-day-header span {
+  font-size: 13px;
+  color: #666;
+}
+
+/* Shared hour labels. */
+
+.week-hour-labels {
+  position: relative;
+  height: calc(24 * 72px);
+  background: #fafafa;
+  border-right: 1px solid #ddd;
+}
+
+.week-hour-label {
+  box-sizing: border-box;
+  height: 72px;
+  padding: 0 7px 0 0;
+  position: relative;
+  top: -8px;
+  text-align: right;
+  color: #666;
+  font-size: 12px;
+  border-top: 1px solid #ddd;
+}
+
+/* Each day has the same timeline height. */
+
+.week-day-column {
+  min-width: 0;
+  height: calc(24 * 72px);
+  border-right: 1px solid #ddd;
+}
+
+.week-day-column.selected {
+  background: #fbfdff;
+}
+
+.week-day-event-area {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.week-hour-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: #e5e5e5;
+  pointer-events: none;
+}
+
+/* Events. */
+
+.week-event {
+  position: absolute;
+  box-sizing: border-box;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow: hidden;
+  padding: 7px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.week-event strong {
+  font-weight: 600;
+}
+
+.week-event span {
+  font-size: 11px;
+}
+
+.week-event-activity {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  color: #214879;
+  background: #e5efff;
+  border: 1px solid #a8c5ef;
+  border-left: 4px solid #5085d4;
+}
+
+.week-event-activity:active {
+  cursor: grabbing;
+}
+
+.week-event-housing {
+  color: #245b34;
+  background: #e1f4e6;
+  border: 1px solid #a6d5b3;
+  border-left: 4px solid #41945b;
+}
+
+.week-event-dragging {
+  z-index: 3;
+  opacity: 0.8;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Activity resize handles. */
+
+.week-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 7px;
+  z-index: 2;
+  cursor: ns-resize;
+  touch-action: none;
+}
+
+.week-resize-handle.top {
+  top: 0;
+}
+
+.week-resize-handle.bottom {
+  bottom: 0;
+}
+
+.week-event-activity:hover .week-resize-handle {
+  background: rgba(33, 72, 121, 0.2);
+}
+
+/* Unscheduled activities. */
+
+.expanded-unscheduled {
+  margin-top: 25px;
+}
+
+.expanded-unscheduled h2 {
+  margin-bottom: 8px;
+}
+
+.expanded-unscheduled p {
+  color: #666;
+}
+
+.expanded-unscheduled-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.expanded-unscheduled-item {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #f7f7f7;
+}
+
+/* Smaller screens. */
+
+@media (max-width: 700px) {
+  .expanded-itinerary {
+    padding: 12px;
+  }
+
+  .expanded-itinerary-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .itinerary-day-navigation {
+    width: 100%;
+  }
+
+  .itinerary-day-navigation button {
+    flex: 1;
+  }
+
+  .week-scroll {
+    max-height: calc(100vh - 300px);
+  }
+}

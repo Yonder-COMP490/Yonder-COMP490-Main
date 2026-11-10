@@ -1,6 +1,5 @@
-
 import { useState } from "react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import ItinerarySidebar from "../components/ItinerarySidebar";
 import "./TripDashboard.css";
 
@@ -14,21 +13,21 @@ const tabs = [
 
 function getTodayString() {
   const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
 
-  return (
-    `${today.getFullYear()}-` +
-    `${String(today.getMonth() + 1).padStart(2, "0")}-` +
-    `${String(today.getDate()).padStart(2, "0")}`
-  );
+  return `${year}-${month}-${day}`;
 }
 
 export default function TripDashboard() {
   const [selectedDate, setSelectedDate] = useState(getTodayString);
-  const [itineraryView, setItineraryView] = useState("all");
+  const location = useLocation();
+
+  const isItineraryPage = location.pathname === "/Itinerary";
 
   function selectDate(date) {
     setSelectedDate(date);
-    setItineraryView("day");
   }
 
   return (
@@ -38,10 +37,7 @@ export default function TripDashboard() {
         <span>Trip Planner</span>
       </header>
 
-      <nav
-        className="dashboard-tabs"
-        aria-label="Trip navigation"
-      >
+      <nav className="dashboard-tabs">
         {tabs.map((tab) => (
           <NavLink
             key={tab.path}
@@ -55,27 +51,26 @@ export default function TripDashboard() {
         ))}
       </nav>
 
-      <div className="dashboard-body">
+      <div
+        className={`dashboard-body ${
+          isItineraryPage ? "dashboard-body-full" : ""
+        }`}
+      >
         <main className="dashboard-content">
-          <Outlet
-            context={{
-              selectedDate,
-              selectDate,
-            }}
-          />
+          <Outlet context={{ selectedDate, selectDate }} />
         </main>
 
-        <aside
-          className="dashboard-itinerary"
-          aria-label="Trip itinerary"
-        >
-          <ItinerarySidebar
-            selectedDate={selectedDate}
-            onSelectDate={selectDate}
-            view={itineraryView}
-            onViewChange={setItineraryView}
-          />
-        </aside>
+        {!isItineraryPage && (
+          <aside
+            className="dashboard-itinerary"
+            aria-label="Trip itinerary"
+          >
+            <ItinerarySidebar
+              selectedDate={selectedDate}
+              onSelectDate={selectDate}
+            />
+          </aside>
+        )}
       </div>
     </div>
   );

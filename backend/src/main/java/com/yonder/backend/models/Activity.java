@@ -10,7 +10,7 @@ public class Activity {
     private String name;
     private String picture;
 
-    private boolean active = true;
+    private boolean active = false;
     private Integer tripDay;
     private LocalDate fixedDate;
 
