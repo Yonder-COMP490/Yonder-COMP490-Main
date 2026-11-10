@@ -1,3 +1,4 @@
+
 const API_URL = "http://localhost:8080/api/trip";
 
 function serializeTrip(trip) {
@@ -7,6 +8,15 @@ function serializeTrip(trip) {
     startDate: trip.startDate,
     days: trip.days,
     preferredCurrency: trip.preferredCurrency,
+
+    tripSections: (trip.tripSections ?? []).map((section) => ({
+      id: section.id,
+      name: section.name,
+      days: section.days,
+      hexColor: section.hexColor,
+      latitude: section.latitude ?? null,
+      longitude: section.longitude ?? null,
+    })),
   };
 }
 
@@ -24,7 +34,9 @@ class TripAPI {
   async update(trip) {
     const response = await fetch(API_URL, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(serializeTrip(trip)),
     });
 

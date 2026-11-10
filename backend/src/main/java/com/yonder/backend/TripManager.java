@@ -80,8 +80,12 @@ public class TripManager {
     public Trip updateTrip(Trip updated) {
         trip.setName(updated.getName());
         trip.setStartDate(updated.getStartDate());
-        trip.setDays(updated.getDays());
         trip.setPreferredCurrency(updated.getPreferredCurrency());
+
+        trip.setDaysAndTripSections(
+            updated.getDays(),
+            updated.getTripSections()
+        );
 
         return trip;
     }

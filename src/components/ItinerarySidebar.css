@@ -1,3 +1,4 @@
+
 .itinerary-sidebar {
   display: flex;
   flex-direction: column;
@@ -7,18 +8,20 @@
   overflow: hidden;
 }
 
-/* Header and day navigation */
+/* =========================================================
+   Header and day navigation
+   ========================================================= */
 
 .itinerary-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   padding: 12px;
   border-bottom: 1px solid #ddd;
 }
 
-.itinerary-header button {
+.itinerary-header > button:not(.itinerary-expand-button) {
   flex: 0 0 auto;
   width: 32px;
   height: 32px;
@@ -29,12 +32,13 @@
   background: white;
 }
 
-.itinerary-header button:hover {
+.itinerary-header > button:hover {
   background: #f3f4f6;
 }
 
 .itinerary-date {
   min-width: 0;
+  flex: 1;
   font-weight: 600;
   font-size: 0.85rem;
   text-align: center;
@@ -42,22 +46,162 @@
 
 /* Expand button */
 
-.itinerary-expand-button {
-  width: calc(100% - 24px);
-  margin: 10px 12px;
-  padding: 9px 12px;
+.itinerary-header .itinerary-expand-button {
+  flex: 0 0 auto;
+  width: auto;
+  height: 32px;
+  margin: 0;
+  padding: 5px 9px;
   cursor: pointer;
   border: 1px solid #ccc;
-  border-radius: 6px;
+  border-radius: 5px;
   background: white;
-  font-size: 0.9rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
-.itinerary-expand-button:hover {
+.itinerary-header .itinerary-expand-button:hover {
   background: #f3f4f6;
 }
 
-/* Error and loading messages */
+/* =========================================================
+   Current trip section
+   ========================================================= */
+
+.itinerary-section-indicator {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex: 0 0 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 2px 0 0;
+  padding: 8px 10px;
+  border: 1px solid #e5e7eb;
+  border-left: 4px solid #6C8EBF;
+  border-radius: 5px;
+  background: #f9fafb;
+  font-size: 0.85rem;
+}
+
+.itinerary-section-color {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border-radius: 3px;
+}
+
+.itinerary-section-name-button {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.itinerary-section-name-button:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   Section editor
+   ========================================================= */
+
+.itinerary-section-editor {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.itinerary-section-editor label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+}
+
+.itinerary-section-editor label span {
+  flex: 0 0 75px;
+  color: #555;
+}
+
+.itinerary-section-editor input {
+  box-sizing: border-box;
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.itinerary-section-editor-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.itinerary-section-editor-buttons button {
+  padding: 5px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: white;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.itinerary-section-editor-buttons button:hover {
+  background: #eee;
+}
+
+.itinerary-section-editor-buttons button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.itinerary-section-error {
+  margin: 0;
+  color: #b42318;
+  font-size: 0.75rem;
+}
+
+.itinerary-section-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remove-section-button {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.remove-section-button:hover:not(:disabled) {
+  background: #eee;
+  color: #c0392b;
+}
+
+.remove-section-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   Error and loading messages
+   ========================================================= */
 
 .itinerary-drop-error {
   color: #b42318;
@@ -73,7 +217,9 @@
   font-size: 0.85rem;
 }
 
-/* Scrollable timeline */
+/* =========================================================
+   Scrollable timeline
+   ========================================================= */
 
 .itinerary-timeline-scroll {
   flex: 1;
@@ -89,7 +235,9 @@
   min-height: calc(24 * 72px);
 }
 
-/* Hour labels */
+/* =========================================================
+   Hour labels
+   ========================================================= */
 
 .itinerary-hour-labels {
   flex: 0 0 48px;
@@ -108,7 +256,9 @@
   top: -8px;
 }
 
-/* Timeline event area */
+/* =========================================================
+   Timeline event area
+   ========================================================= */
 
 .itinerary-event-area {
   position: relative;
@@ -127,7 +277,9 @@
   pointer-events: none;
 }
 
-/* Events */
+/* =========================================================
+   Events
+   ========================================================= */
 
 .itinerary-event {
   position: absolute;
@@ -165,7 +317,9 @@
   color: #245b34;
 }
 
-/* Moving activities */
+/* =========================================================
+   Moving activities
+   ========================================================= */
 
 .itinerary-event-activity {
   cursor: grab;
@@ -187,16 +341,13 @@
   position: absolute;
   bottom: 5px;
   right: 7px;
-
   display: flex;
   align-items: center;
   gap: 4px;
-
   font-size: 11px;
   color: inherit;
   cursor: pointer;
   z-index: 5;
-
   user-select: none;
 }
 
@@ -207,7 +358,9 @@
   cursor: pointer;
 }
 
-/* Resize handles */
+/* =========================================================
+   Resize handles
+   ========================================================= */
 
 .itinerary-resize-handle {
   position: absolute;
@@ -231,7 +384,9 @@
   background: rgba(33, 72, 121, 0.2);
 }
 
-/* Unscheduled activities */
+/* =========================================================
+   Unscheduled activities
+   ========================================================= */
 
 .itinerary-unscheduled {
   flex: 0 0 auto;
@@ -267,7 +422,9 @@
   font-size: 0.85rem;
 }
 
-/* Smaller screens */
+/* =========================================================
+   Smaller screens
+   ========================================================= */
 
 @media (max-width: 600px) {
   .itinerary-hour-labels {
@@ -282,5 +439,19 @@
 
   .itinerary-event span {
     font-size: 0.65rem;
+  }
+
+  .itinerary-header {
+    gap: 6px;
+    padding: 8px;
+  }
+
+  .itinerary-header .itinerary-expand-button {
+    padding: 5px 7px;
+    font-size: 0.72rem;
+  }
+
+  .itinerary-section-indicator {
+    padding: 7px 8px;
   }
 }

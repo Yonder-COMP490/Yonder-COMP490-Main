@@ -29,6 +29,71 @@ function daysBetween(startDate, endDate) {
   );
 }
 
+function getSectionForDate(trip, dateString) {
+  if (!trip?.startDate || !dateString || !trip?.tripSections?.length) {
+    return null;
+  }
+
+  const start = new Date(`${trip.startDate}T12:00:00`);
+  const date = new Date(`${dateString}T12:00:00`);
+
+  const dayOffset = Math.round(
+    (date - start) / (1000 * 60 * 60 * 24)
+  );
+
+  if (dayOffset < 0 || dayOffset >= trip.days) {
+    return null;
+  }
+
+  let currentDay = 0;
+
+  for (const section of trip.tripSections) {
+    const sectionEnd = currentDay + section.days;
+
+    if (dayOffset < sectionEnd) {
+      return section;
+    }
+
+    currentDay = sectionEnd;
+  }
+
+  return null;
+}
+
+function getSectionBoundaryOffsets(sections) {
+  const boundaries = [];
+  let currentDay = 0;
+
+  (sections ?? []).forEach((section, index) => {
+    currentDay += section.days;
+
+    if (index < sections.length - 1) {
+      boundaries.push({
+        sectionIndex: index,
+        dayOffset: currentDay,
+      });
+    }
+  });
+
+  return boundaries;
+}
+
+function getSectionEndOffsets(sections) {
+  const ends = [];
+  let currentDay = 0;
+
+  (sections ?? []).forEach((section, index) => {
+    currentDay += section.days;
+
+    ends.push({
+      sectionIndex: index,
+      dayOffset: currentDay - 1,
+    });
+  });
+
+  return ends;
+}
+
 function Calendar() {
   const {
     activities,
@@ -36,7 +101,6 @@ function Calendar() {
   } = useActivities();
 
   const {
-    housing,
     refreshHousing,
   } = useHousing();
 
@@ -73,6 +137,8 @@ function Calendar() {
 
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDate, setResizeDate] = useState(null);
+
+  const [sectionDragPreview, setSectionDragPreview] = useState(null);
 
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
@@ -118,6 +184,31 @@ function Calendar() {
       ? resizeDate
       : tripEndDate;
 
+  // Preview section lengths while dragging a section boundary.
+  const displayedSections = (trip?.tripSections ?? []).map(
+    (section) => ({ ...section })
+  );
+
+  if (sectionDragPreview) {
+    const {
+      sectionIndex,
+      boundary,
+      leftStart,
+      pairTotal,
+    } = sectionDragPreview;
+
+    if (
+      displayedSections[sectionIndex] &&
+      displayedSections[sectionIndex + 1]
+    ) {
+      displayedSections[sectionIndex].days =
+        boundary - leftStart;
+
+      displayedSections[sectionIndex + 1].days =
+        pairTotal - displayedSections[sectionIndex].days;
+    }
+  }
+
   function changeMonth(amount) {
     setDisplayedMonth(
       new Date(currentYear, currentMonth + amount, 1)
@@ -155,16 +246,6 @@ function Calendar() {
     );
   }
 
-  function hasHousing(date) {
-    return housing.some(
-      (housingItem) =>
-        housingItem.checkInDate &&
-        housingItem.checkOutDate &&
-        date >= housingItem.checkInDate &&
-        date <= housingItem.checkOutDate
-    );
-  }
-
   function getDateAtPoint(x, y) {
     const element = document.elementFromPoint(x, y);
     const dayElement = element?.closest("[data-calendar-date]");
@@ -172,6 +253,180 @@ function Calendar() {
     if (!dayElement) return null;
 
     return dayElement.dataset.calendarDate;
+  }
+
+  // Save changes to the trip's sections.
+  async function saveTripSections(updatedSections) {
+    if (isSaving) return;
+
+    setIsSaving(true);
+    setError("");
+
+    try {
+      const updatedTrip = await TripAPI.update({
+        ...trip,
+        tripSections: updatedSections,
+      });
+
+      setTrip(updatedTrip);
+    } catch (err) {
+      console.error("Unable to update trip sections:", err);
+      setError(
+        "Unable to update trip sections. Please try again."
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // Split the selected section into two sections.
+  async function handleAddSection(sectionIndex) {
+    if (
+      isSaving ||
+      isDragging ||
+      isResizing ||
+      sectionDragPreview
+    ) {
+      return;
+    }
+
+    const updatedSections = (trip?.tripSections ?? []).map(
+      (section) => ({ ...section })
+    );
+
+    const section = updatedSections[sectionIndex];
+
+    // A section needs at least two days to be split.
+    if (!section || section.days < 2) {
+      return;
+    }
+
+    const firstHalf = Math.ceil(section.days / 2);
+    const secondHalf = section.days - firstHalf;
+
+    section.days = firstHalf;
+
+    const nextId =
+      updatedSections.reduce(
+        (maximum, item) => Math.max(maximum, Number(item.id) || 0),
+        0
+      ) + 1;
+
+    const newSection = {
+      id: nextId,
+      name: `Section ${updatedSections.length + 1}`,
+      days: secondHalf,
+      hexColor: "#6C8EBF",
+      latitude: null,
+      longitude: null,
+    };
+
+    updatedSections.splice(sectionIndex + 1, 0, newSection);
+
+    await saveTripSections(updatedSections);
+  }
+
+  // Drag the boundary between two neighboring sections.
+  function handleSectionBoundaryDragStart(
+    event,
+    sectionIndex,
+    originalBoundary
+  ) {
+    if (
+      event.button !== 0 ||
+      isSaving ||
+      isDragging ||
+      isResizing ||
+      sectionDragPreview
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const sections = trip?.tripSections ?? [];
+
+    const leftStart = sections
+      .slice(0, sectionIndex)
+      .reduce((total, section) => total + section.days, 0);
+
+    const pairTotal =
+      sections[sectionIndex].days +
+      sections[sectionIndex + 1].days;
+
+    let currentBoundary = originalBoundary;
+
+    const minimumBoundary = leftStart + 1;
+    const maximumBoundary = leftStart + pairTotal - 1;
+
+    setError("");
+
+    setSectionDragPreview({
+      sectionIndex,
+      boundary: originalBoundary,
+      leftStart,
+      pairTotal,
+    });
+
+    function handlePointerMove(pointerEvent) {
+      const date = getDateAtPoint(
+        pointerEvent.clientX,
+        pointerEvent.clientY
+      );
+
+      if (!date || !tripStartDate) return;
+
+      const dayOffset = daysBetween(tripStartDate, date);
+
+      const nextBoundary = Math.max(
+        minimumBoundary,
+        Math.min(maximumBoundary, dayOffset)
+      );
+
+      currentBoundary = nextBoundary;
+
+      setSectionDragPreview({
+        sectionIndex,
+        boundary: nextBoundary,
+        leftStart,
+        pairTotal,
+      });
+    }
+
+    async function handlePointerUp() {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerCancel);
+
+      setSectionDragPreview(null);
+
+      if (currentBoundary === originalBoundary) {
+        return;
+      }
+
+      const updatedSections = sections.map(
+        (section) => ({ ...section })
+      );
+
+      updatedSections[sectionIndex].days =
+        currentBoundary - leftStart;
+
+      updatedSections[sectionIndex + 1].days =
+        pairTotal - updatedSections[sectionIndex].days;
+
+      await saveTripSections(updatedSections);
+    }
+
+    function handlePointerCancel() {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      setSectionDragPreview(null);
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerCancel);
   }
 
   // Shared function for moving the trip's start date.
@@ -265,7 +520,6 @@ function Calendar() {
 
       const newEndDate = addDays(tripStartDate, newDays - 1);
 
-      // Move the selected date if it is now outside the trip.
       if (selectedDate > newEndDate) {
         selectDate(newEndDate);
       }
@@ -446,13 +700,52 @@ function Calendar() {
     );
   }
 
+  const sectionBoundaries =
+    getSectionBoundaryOffsets(displayedSections);
+
+  const sectionEnds =
+    getSectionEndOffsets(displayedSections);
+
   // Calendar date cells.
   for (let day = 1; day <= daysInMonth; day++) {
     const dateString = getDateString(day);
 
     const dayHasActivity = hasActivity(dateString);
-    const dayHasHousing = hasHousing(dateString);
     const dayIsTripDay = isTripDay(dateString);
+
+    const daySection = dayIsTripDay
+      ? getSectionForDate(
+          {
+            ...trip,
+            startDate: displayedTripStartDate,
+            tripSections: displayedSections,
+          },
+          dateString
+        )
+      : null;
+
+    const dayOffset = displayedTripStartDate
+      ? daysBetween(displayedTripStartDate, dateString)
+      : -1;
+
+    const boundaryAtStart = sectionBoundaries.find(
+      (boundary) => boundary.dayOffset === dayOffset
+    );
+
+    const sectionEndAtDate = sectionEnds.find(
+      (sectionEnd) => sectionEnd.dayOffset === dayOffset
+    );
+
+    const sectionIndex = sectionEndAtDate
+      ? sectionEndAtDate.sectionIndex
+      : -1;
+
+    const sectionForAdd = displayedSections[sectionIndex];
+
+    const canAddSection =
+      !!sectionForAdd &&
+      sectionForAdd.days >= 2 &&
+      !isSaving;
 
     const isTripStart =
       dateString === displayedTripStartDate;
@@ -470,8 +763,6 @@ function Calendar() {
         } ${
           dayHasActivity ? "has-activity" : ""
         } ${
-          dayHasHousing ? "has-housing" : ""
-        } ${
           selectedDate === dateString ? "selected" : ""
         } ${
           (isDragging && dateString === dragDate) ||
@@ -480,7 +771,12 @@ function Calendar() {
             : ""
         }`}
         onClick={() => {
-          if (!isDragging && !isResizing && !isSaving) {
+          if (
+            !isDragging &&
+            !isResizing &&
+            !isSaving &&
+            !sectionDragPreview
+          ) {
             selectDate(dateString);
           }
         }}
@@ -516,8 +812,73 @@ function Calendar() {
           {day}
         </span>
 
-        {dayHasHousing && (
-          <div className="housing-line" />
+        {daySection && (
+          <div
+            className="trip-section-line"
+            style={{
+              backgroundColor: daySection.hexColor || "#6C8EBF",
+            }}
+            title={daySection.name}
+          />
+        )}
+
+        {boundaryAtStart && (
+          <span
+            role="button"
+            tabIndex={0}
+            className="trip-section-boundary-handle"
+            title="Drag to change the length of these sections"
+            aria-label="Adjust section boundary"
+            onPointerDown={(event) =>
+              handleSectionBoundaryDragStart(
+                event,
+                boundaryAtStart.sectionIndex,
+                boundaryAtStart.dayOffset
+              )
+            }
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+              }
+            }}
+          >
+            ↔
+          </span>
+        )}
+
+        {sectionEndAtDate && (
+          <span
+            role="button"
+            tabIndex={0}
+            className="trip-section-add-button"
+            title={
+              canAddSection
+                ? `Add a section after ${sectionForAdd.name}`
+                : "This section needs at least two days to split"
+            }
+            aria-label={`Add a section after ${sectionForAdd.name}`}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+
+              if (canAddSection) {
+                handleAddSection(sectionIndex);
+              }
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+
+                if (canAddSection) {
+                  handleAddSection(sectionIndex);
+                }
+              }
+            }}
+          >
+            +
+          </span>
         )}
       </button>
     );
@@ -531,7 +892,12 @@ function Calendar() {
             type="button"
             onClick={() => changeMonth(-1)}
             aria-label="Previous month"
-            disabled={isDragging || isResizing || isSaving}
+            disabled={
+              isDragging ||
+              isResizing ||
+              isSaving ||
+              !!sectionDragPreview
+            }
           >
             ←
           </button>
@@ -547,7 +913,12 @@ function Calendar() {
             type="button"
             onClick={() => changeMonth(1)}
             aria-label="Next month"
-            disabled={isDragging || isResizing || isSaving}
+            disabled={
+              isDragging ||
+              isResizing ||
+              isSaving ||
+              !!sectionDragPreview
+            }
           >
             →
           </button>
@@ -559,7 +930,7 @@ function Calendar() {
 
         {isSaving && (
           <p className="calendar-status">
-            Updating trip dates...
+            Updating trip...
           </p>
         )}
 
@@ -578,6 +949,8 @@ function Calendar() {
             isDragging ? "calendar-grid-dragging" : ""
           } ${
             isResizing ? "calendar-grid-resizing" : ""
+          } ${
+            sectionDragPreview ? "calendar-grid-section-dragging" : ""
           }`}
         >
           {calendarDays}

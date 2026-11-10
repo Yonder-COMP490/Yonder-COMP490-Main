@@ -104,6 +104,8 @@ export default function TripDashboard() {
             <ItinerarySidebar
               selectedDate={selectedDate}
               onSelectDate={selectDate}
+              trip={trip}
+              setTrip={setTrip}
             />
           </aside>
         )}
