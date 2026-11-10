@@ -24,3 +24,13 @@ dist-ssr
 *.sw?
 .venv
 .env
+
+# Environment variables and secrets (database credentials, API keys)
+.env
+**/.env
+.env.*
+**/.env.*
+
+# Allow example configuration files
+!.env.example
+!**/.env.example
