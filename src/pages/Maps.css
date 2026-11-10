@@ -74,6 +74,32 @@
   cursor: pointer;
 }
 
+/* max price and min rating boxes */
+.hotel-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hotel-filters label {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 90px;
+  font-size: 14px;
+}
+
+.hotel-filters input,
+.hotel-filters select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
 /* white price bubble on the map */
 .price-pin {
   padding: 4px 8px;

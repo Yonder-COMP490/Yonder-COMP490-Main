@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import PlaceCard from "../components/PlaceCard";
@@ -21,6 +21,28 @@ function dateFromToday(days) {
   const date = new Date();
   date.setDate(date.getDate() + days);
   return date.toISOString().slice(0, 10);
+}
+
+// turns a price like "$1,193" into the number 1193
+function priceToNumber(price) {
+  return Number(price.replace(/[^0-9.]/g, ""));
+}
+
+// checks one hotel against the filters. true = show it, false = hide it
+function passesFilters(place, maxPrice, minRating) {
+  // "" means no max price was typed
+  if (maxPrice !== "") {
+    if (!place.price) return false;
+    if (priceToNumber(place.price) > Number(maxPrice)) return false;
+  }
+
+  // "0" means "Any" rating
+  if (minRating !== "0") {
+    if (!place.rating) return false;
+    if (Number(place.rating) < Number(minRating)) return false;
+  }
+
+  return true;
 }
 
 function clamp(value, min, max) {
@@ -102,6 +124,16 @@ function Maps() {
 
   // how far to slide the popup card so it fits, and which hotel that was measured for
   const [popupShift, setPopupShift] = useState(null);
+
+  // what's picked in the filter boxes
+  const [maxPrice, setMaxPrice] = useState("");
+  const [minRating, setMinRating] = useState("0");
+
+  // the hotels that match the filters. places always keeps every hotel
+  // useMemo only redoes this when a filter or the hotels change, so the pins don't redraw on every click
+  const shownPlaces = useMemo(() => {
+    return places.filter((place) => passesFilters(place, maxPrice, minRating));
+  }, [places, maxPrice, minRating]);
 
   // load the map when the page opens
   useEffect(() => {
@@ -202,10 +234,7 @@ function Maps() {
     pinsRef.current.forEach((pin) => (pin.map = null));
     pinsRef.current = [];
 
-    // box that will fit all the pins
-    const bounds = new window.google.maps.LatLngBounds();
-
-    places.forEach((place) => {
+    shownPlaces.forEach((place) => {
       // skip if no location
       if (!place.lat || !place.lng) return;
 
@@ -234,11 +263,23 @@ function Maps() {
       });
 
       pinsRef.current.push(pin);
-      bounds.extend(position);
+    });
+  }, [shownPlaces, mapReady]);
+
+  // only zooms for a new search, so the map stays still when you change a filter
+  useEffect(() => {
+    if (!mapReady) return;
+
+    // box that will fit all the pins
+    const bounds = new window.google.maps.LatLngBounds();
+
+    places.forEach((place) => {
+      if (!place.lat || !place.lng) return;
+      bounds.extend({ lat: place.lat, lng: place.lng });
     });
 
     // zoom map to fit the pins
-    if (pinsRef.current.length > 0) {
+    if (!bounds.isEmpty()) {
       mapRef.current.fitBounds(bounds);
     }
   }, [places, mapReady]);
@@ -256,7 +297,7 @@ function Maps() {
 
     const card = document.getElementById("card-" + selectedId);
     if (card) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [selectedId, places]);
+  }, [selectedId, shownPlaces]);
 
   // turn the bubbles you already clicked grey
   useEffect(() => {
@@ -264,7 +305,19 @@ function Maps() {
       const bubble = document.getElementById("pin-" + id);
       if (bubble) bubble.classList.add("visited");
     });
-  }, [visitedIds, places]);
+  }, [visitedIds, shownPlaces]);
+
+  // runs when either filter box changes
+  function changeFilters(newMaxPrice, newMinRating) {
+    setMaxPrice(newMaxPrice);
+    setMinRating(newMinRating);
+
+    // close the popup if its hotel doesn't match anymore
+    const openHotel = places.find((place) => place.id === openId);
+    if (openHotel && !passesFilters(openHotel, newMaxPrice, newMinRating)) {
+      setOpenId(null);
+    }
+  }
 
   // runs when you click Search
   function handleSearch(event) {
@@ -284,6 +337,10 @@ function Maps() {
     setSelectedId(null);
     setOpenId(null);
     setVisitedIds(new Set());
+
+    // start the new city with no filters
+    setMaxPrice("");
+    setMinRating("0");
 
     // new city = new search
     setCity(newCity);
@@ -344,10 +401,42 @@ function Maps() {
             <button type="submit">Search</button>
           </form>
 
+          {/* filter boxes */}
+          <div className="hotel-filters">
+            <label>
+              Max price
+              <input
+                type="number"
+                min="0"
+                placeholder="Any"
+                value={maxPrice}
+                onChange={(event) => changeFilters(event.target.value, minRating)}
+              />
+            </label>
+
+            <label>
+              Min rating
+              <select
+                value={minRating}
+                onChange={(event) => changeFilters(maxPrice, event.target.value)}
+              >
+                <option value="0">Any</option>
+                <option value="3">3+</option>
+                <option value="4">4+</option>
+                <option value="4.5">4.5+</option>
+              </select>
+            </label>
+          </div>
+
           <h2>Hotels in {city}</h2>
           <p>{message}</p>
 
-          {places.map((place) => (
+          {/* we have hotels, but the filters hid all of them */}
+          {places.length > 0 && shownPlaces.length === 0 && (
+            <p>No hotels match your filters</p>
+          )}
+
+          {shownPlaces.map((place) => (
             <PlaceCard
               key={place.id}
               place={place}
