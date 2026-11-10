@@ -1,122 +1,38 @@
+
 import { useState } from "react";
 
 function ActivityForm({ activity, onSave, onCancel }) {
   const [name, setName] = useState(activity?.name || "");
-  const [picture, setPicture] = useState(activity?.picture || "");
-  const [date, setDate] = useState(activity?.date || "");
-  const [startTime, setStartTime] = useState(activity?.startTime || "");
-  const [endTime, setEndTime] = useState(activity?.endTime || "");
-
-  const [lowerEnd, setLowerEnd] = useState(
-    activity?.cost?.lowerEnd ?? 0
-  );
-
-  const [upperEnd, setUpperEnd] = useState(
-    activity?.cost?.upperEnd ?? 0
-  );
-
-  const [currency, setCurrency] = useState(
-    activity?.cost?.currency || "USD"
-  );
-
-  const [notes, setNotes] = useState(activity?.notes || "");
 
   function handleSubmit(event) {
     event.preventDefault();
 
-    const cost = {
-      lowerEnd: Number(lowerEnd) || 0,
-      upperEnd: Math.max(
-        Number(lowerEnd) || 0,
-        Number(upperEnd) || 0
-      ),
-      currency,
-    };
+    const trimmedName = name.trim();
+    if (!trimmedName) return;
 
-    onSave({
-      ...(activity || {}),
-      name,
-      picture,
-      date,
-      startTime,
-      endTime,
-      cost,
-      notes,
-    });
+    if (activity) {
+      onSave({
+        ...activity,
+        name: trimmedName,
+      });
+    } else {
+      onSave({
+        name: trimmedName,
+      });
+    }
   }
 
   return (
     <form className="activity-form" onSubmit={handleSubmit}>
-      <h2>{activity ? "Edit Activity" : "Add Activity"}</h2>
+      <h2>{activity ? "Edit Activity Name" : "Add Activity"}</h2>
 
       <input
         type="text"
         placeholder="Activity name"
         value={name}
         onChange={(event) => setName(event.target.value)}
+        autoFocus
         required
-      />
-
-      <input
-        type="text"
-        placeholder="Picture URL"
-        value={picture}
-        onChange={(event) => setPicture(event.target.value)}
-      />
-
-      <input
-        type="date"
-        value={date}
-        onChange={(event) => setDate(event.target.value)}
-        required
-      />
-
-      <input
-        type="time"
-        value={startTime}
-        onChange={(event) => setStartTime(event.target.value)}
-        required
-      />
-
-      <input
-        type="time"
-        value={endTime}
-        onChange={(event) => setEndTime(event.target.value)}
-        required
-      />
-
-      <input
-        type="number"
-        placeholder="Minimum cost"
-        min="0"
-        value={lowerEnd}
-        onChange={(event) => setLowerEnd(event.target.value)}
-        required
-      />
-
-      <input
-        type="number"
-        placeholder="Maximum cost"
-        min="0"
-        value={upperEnd}
-        onChange={(event) => setUpperEnd(event.target.value)}
-        required
-      />
-
-      <select
-        value={currency}
-        onChange={(event) => setCurrency(event.target.value)}
-      >
-        <option value="USD">USD</option>
-        <option value="JPY">JPY</option>
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-      </select>
-
-      <textarea
-        placeholder="Notes"
-        value={notes}
-        onChange={(event) => setNotes(event.target.value)}
       />
 
       <div>
