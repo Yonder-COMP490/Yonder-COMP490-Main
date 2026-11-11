@@ -2,10 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useActivities } from "./ActivityContext";
 import { useHousing } from "./HousingContext";
+import TripAPI from "../api/TripAPI";
 import "./ItinerarySidebar.css";
 
 const HOUR_HEIGHT = 72;
-const DAY_MINUTES = 24 * 60;
 const MAX_START_MINUTES = 22 * 60 + 45;
 const MAX_TIME_MINUTES = 23 * 60 + 45;
 
@@ -66,6 +66,37 @@ function addDays(dateString, amount) {
   return `${year}-${month}-${day}`;
 }
 
+function getSectionForDate(trip, dateString) {
+  if (!trip?.startDate || !dateString || !trip?.tripSections?.length) {
+    return null;
+  }
+
+  const start = new Date(`${trip.startDate}T12:00:00`);
+  const date = new Date(`${dateString}T12:00:00`);
+
+  const dayOffset = Math.round(
+    (date - start) / (1000 * 60 * 60 * 24)
+  );
+
+  if (dayOffset < 0 || dayOffset >= trip.days) {
+    return null;
+  }
+
+  let currentDay = 0;
+
+  for (const section of trip.tripSections) {
+    const sectionEnd = currentDay + section.days;
+
+    if (dayOffset < sectionEnd) {
+      return section;
+    }
+
+    currentDay = sectionEnd;
+  }
+
+  return null;
+}
+
 function getActivityEnd(activity) {
   const start = timeToMinutes(activity.startTime);
   const suppliedEnd = timeToMinutes(activity.endTime);
@@ -82,9 +113,8 @@ function getActivityEnd(activity) {
 function prepareEvents(activities, housing, currentDate) {
   const events = [];
 
-  // Activities
-  activities.forEach((activity) => {
-    if (activity.date !== currentDate) return;
+  (activities ?? []).forEach((activity) => {
+    if (!activity || activity.date !== currentDate) return;
 
     const start = timeToMinutes(activity.startTime);
     if (start === null) return;
@@ -95,21 +125,25 @@ function prepareEvents(activities, housing, currentDate) {
       id: `activity-${activity.id}`,
       type: "activity",
       activity,
-      title: activity.name || "Untitled activity",
+      title: activity.description?.name || "Untitled activity",
       start,
       end,
     });
   });
 
-  // Housing check-in and check-out
-  housing.forEach((booking) => {
+  (housing ?? []).forEach((booking) => {
+    if (!booking) return;
+
+    const bookingName = booking.description?.name;
+    const readableAddress = booking.location?.readableAddress;
+
     if (booking.checkInDate === currentDate) {
       const start = timeToMinutes(booking.checkInTime) ?? 15 * 60;
 
       events.push({
         id: `checkin-${booking.id}`,
         type: "checkin",
-        title: booking.name || booking.location || "Housing check-in",
+        title: bookingName || readableAddress || "Housing check-in",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -121,7 +155,7 @@ function prepareEvents(activities, housing, currentDate) {
       events.push({
         id: `checkout-${booking.id}`,
         type: "checkout",
-        title: booking.name || booking.location || "Housing check-out",
+        title: bookingName || readableAddress || "Housing check-out",
         start,
         end: Math.min(start + 30, MAX_TIME_MINUTES),
       });
@@ -174,7 +208,7 @@ function HourLabels() {
   );
 }
 
-function ItinerarySidebar({ selectedDate, onSelectDate }) {
+function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
   const navigate = useNavigate();
 
   const {
@@ -182,6 +216,7 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
     loading,
     error,
     updateActivity,
+    switchScheduleType,
   } = useActivities();
 
   const { housing } = useHousing();
@@ -189,27 +224,138 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
   const [dropError, setDropError] = useState("");
   const [dragPreview, setDragPreview] = useState(null);
 
+  const [editingSection, setEditingSection] = useState(false);
+  const [sectionName, setSectionName] = useState("");
+  const [sectionColor, setSectionColor] = useState("");
+  const [sectionSaveError, setSectionSaveError] = useState("");
+  const [savingSection, setSavingSection] = useState(false);
+
   const timelineScrollRef = useRef(null);
   const timelineRef = useRef(null);
   const dragRef = useRef(null);
 
-  // Scroll to 6 AM whenever the selected day changes.
+  const currentSection = getSectionForDate(trip, selectedDate);
+
   useEffect(() => {
     if (timelineScrollRef.current) {
       timelineScrollRef.current.scrollTop = HOUR_HEIGHT * 6;
     }
   }, [selectedDate]);
 
+  // Close the editor when navigating to a different section.
+  useEffect(() => {
+    setEditingSection(false);
+    setSectionSaveError("");
+  }, [currentSection?.id]);
+
   const events = assignLanes(
     prepareEvents(activities, housing, selectedDate)
   );
 
-  const unscheduledActivities = activities.filter(
-    (activity) => !activity.date
-  );
-
   function changeDay(amount) {
     onSelectDate(addDays(selectedDate, amount));
+  }
+
+  function startSectionEditing() {
+    if (!currentSection) return;
+
+    setSectionName(currentSection.name || "");
+    setSectionColor(currentSection.hexColor || "#6C8EBF");
+    setSectionSaveError("");
+    setEditingSection(true);
+  }
+
+  function cancelSectionEditing() {
+    setEditingSection(false);
+    setSectionSaveError("");
+  }
+
+  async function saveSectionChanges() {
+    if (!currentSection || !trip || !setTrip) return;
+
+    const trimmedName = sectionName.trim();
+    const trimmedColor = sectionColor.trim();
+
+    if (!trimmedName) {
+      setSectionSaveError("Section name cannot be empty.");
+      return;
+    }
+
+    if (!/^#[0-9A-Fa-f]{6}$/.test(trimmedColor)) {
+      setSectionSaveError("Enter a valid hex color, such as #6C8EBF.");
+      return;
+    }
+
+    const updatedSections = trip.tripSections.map((section) =>
+      section.id === currentSection.id
+        ? {
+            ...section,
+            name: trimmedName,
+            hexColor: trimmedColor,
+          }
+        : section
+    );
+
+    try {
+      setSavingSection(true);
+      setSectionSaveError("");
+
+      const updatedTrip = await TripAPI.update({
+        ...trip,
+        tripSections: updatedSections,
+      });
+
+      setTrip(updatedTrip);
+      setEditingSection(false);
+    } catch (error) {
+      console.error("Failed to update trip section:", error);
+      setSectionSaveError("Unable to save section changes.");
+    } finally {
+      setSavingSection(false);
+    }
+  }
+
+  async function removeCurrentSection() {
+    if (!currentSection || (trip.tripSections ?? []).length <= 1) {
+      return;
+    }
+
+    const sections = [...trip.tripSections];
+    const sectionIndex = sections.findIndex(
+      (section) => section.id === currentSection.id
+    );
+
+    if (sectionIndex === -1) return;
+
+    const removedSection = sections[sectionIndex];
+    const targetIndex = sectionIndex > 0 ? sectionIndex - 1 : 1;
+
+    sections[targetIndex] = {
+      ...sections[targetIndex],
+      days: sections[targetIndex].days + removedSection.days,
+    };
+
+    sections.splice(sectionIndex, 1);
+
+    try {
+      const updatedTrip = await TripAPI.update({
+        ...trip,
+        tripSections: sections,
+      });
+
+      setTrip(updatedTrip);
+    } catch (error) {
+      console.error("Failed to remove section:", error);
+    }
+  }
+
+  async function handleFixedDateChange(activity, useFixedDate) {
+    try {
+      await switchScheduleType(activity.id, useFixedDate);
+      setDropError("");
+    } catch {
+      setDropError("Unable to change activity scheduling type.");
+    }
   }
 
   function getEventStyle(event) {
@@ -378,7 +524,7 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
 
     if (!activityId) return;
 
-    const activity = activities.find(
+    const activity = (activities ?? []).find(
       (item) => String(item.id) === String(activityId)
     );
 
@@ -444,15 +590,96 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
         >
           &gt;
         </button>
+
+        <button
+          type="button"
+          className="itinerary-expand-button"
+          onClick={() => navigate("/Itinerary")}
+        >
+          Expand
+        </button>
       </div>
 
-      <button
-        type="button"
-        className="itinerary-expand-button"
-        onClick={() => navigate("/Itinerary")}
-      >
-        Expand Itinerary
-      </button>
+      {currentSection && (
+        <div className="itinerary-section-indicator">
+          {!editingSection ? (
+            <>
+              <span
+                className="itinerary-section-color"
+                style={{
+                  backgroundColor: currentSection.hexColor || "#6C8EBF",
+                }}
+              />
+
+              <button
+                type="button"
+                className="itinerary-section-name-button"
+                onClick={startSectionEditing}
+                title="Edit trip section"
+              >
+                {currentSection.name || "Unnamed section"}
+              </button>
+
+              <button
+                type="button"
+                className="remove-section-button"
+                onClick={removeCurrentSection}
+                disabled={(trip.tripSections ?? []).length <= 1}
+                title="Remove trip section"
+              >
+                ×
+              </button>
+            </>
+          ) : (
+            <div className="itinerary-section-editor">
+              <label>
+                <span>Section name</span>
+                <input
+                  type="text"
+                  value={sectionName}
+                  onChange={(event) => setSectionName(event.target.value)}
+                  placeholder="Section name"
+                />
+              </label>
+
+              <label>
+                <span>Hex color</span>
+                <input
+                  type="text"
+                  value={sectionColor}
+                  onChange={(event) => setSectionColor(event.target.value)}
+                  placeholder="#6C8EBF"
+                  maxLength={7}
+                />
+              </label>
+
+              <div className="itinerary-section-editor-buttons">
+                <button
+                  type="button"
+                  onClick={saveSectionChanges}
+                  disabled={savingSection}
+                >
+                  {savingSection ? "Saving..." : "Save"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={cancelSectionEditing}
+                  disabled={savingSection}
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {sectionSaveError && (
+                <p className="itinerary-section-error">
+                  {sectionSaveError}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {dropError && (
         <p className="itinerary-drop-error">{dropError}</p>
@@ -549,6 +776,26 @@ function ItinerarySidebar({ selectedDate, onSelectDate }) {
                     {formatTime(preview?.start ?? event.start)} –{" "}
                     {formatTime(preview?.end ?? event.end)}
                   </span>
+
+                  {isActivity && (
+                    <label
+                      className="itinerary-fixed-date-toggle"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={event.activity.fixedDate != null}
+                        onChange={(e) =>
+                          handleFixedDateChange(
+                            event.activity,
+                            e.target.checked
+                          )
+                        }
+                      />
+                      <span>Fixed Date</span>
+                    </label>
+                  )}
                 </div>
               );
             })}

@@ -1,4 +1,3 @@
-
 .activity-card {
   min-width: 0;
   overflow: hidden;
@@ -14,6 +13,11 @@
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #f3f4f6;
+  cursor: grab;
+}
+
+.activity-card-picture:active {
+  cursor: grabbing;
 }
 
 .activity-card-picture img {
@@ -31,18 +35,6 @@
   height: 100%;
   color: #6b7280;
   font-size: 0.85rem;
-}
-
-.activity-card-picture {
-  width: 100%;
-  aspect-ratio: 16 / 9;
-  overflow: hidden;
-  background: #f3f4f6;
-  cursor: grab;
-}
-
-.activity-card-picture:active {
-  cursor: grabbing;
 }
 
 /* Heading */
@@ -100,6 +92,38 @@
   overflow-wrap: anywhere;
 }
 
+/* Description */
+.activity-description-field {
+  min-width: 0;
+}
+
+.activity-description-value {
+  display: block;
+  width: 100%;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.activity-description-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.activity-description-form textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: 75px;
+  padding: 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-sizing: border-box;
+  font: inherit;
+  resize: vertical;
+}
+
+/* Editable fields */
 .activity-editable-field {
   display: flex;
   flex-wrap: wrap;
@@ -147,7 +171,14 @@
   resize: vertical;
 }
 
-/* Cost editor: amount and currency on one line */
+/* Save and cancel buttons */
+.activity-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Cost editor */
 .activity-cost-form {
   display: flex;
   align-items: center;
@@ -155,6 +186,13 @@
   gap: 6px;
   min-width: 0;
   flex: 1;
+}
+
+.activity-cost-inputs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
 }
 
 .activity-cost-form input {
@@ -177,6 +215,7 @@
   text-transform: uppercase;
 }
 
+/* Errors */
 .activity-card-error {
   margin: 0;
   padding: 0 12px 12px;

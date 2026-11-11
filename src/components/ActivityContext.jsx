@@ -8,12 +8,23 @@ export function ActivityProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  async function refreshActivities() {
+    try {
+      const data = await ActivityAPI.getAll();
+      setActivities(data);
+      setError("");
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }
+
   useEffect(() => {
     async function loadActivities() {
       try {
         setError("");
-        const data = await ActivityAPI.getAll();
-        setActivities(data);
+        await refreshActivities();
       } catch (err) {
         setError(err.message);
       } finally {
@@ -25,32 +36,36 @@ export function ActivityProvider({ children }) {
   }, []);
 
   async function addActivity(activity) {
-    try {
-      const created = await ActivityAPI.add(activity);
-      setActivities((current) => [...current, created]);
-      return created;
-    } catch (err) {
-      throw err;
-    }
+    const created = await ActivityAPI.add(activity);
+    setActivities((current) => [...current, created]);
+    return created;
   }
 
   async function updateActivity(updatedActivity) {
-    try {
-      const updated = await ActivityAPI.update(
-        updatedActivity.id,
-        updatedActivity
-      );
+    const updated = await ActivityAPI.update(
+      updatedActivity.id,
+      updatedActivity
+    );
 
-      setActivities((current) =>
-        current.map((activity) =>
-          activity.id === updated.id ? updated : activity
-        )
-      );
+    setActivities((current) =>
+      current.map((activity) =>
+        activity.id === updated.id ? updated : activity
+      )
+    );
 
-      return updated;
-    } catch (err) {
-      throw err;
-    }
+    return updated;
+  }
+
+  async function switchScheduleType(id, useFixedDate) {
+    const updated = await ActivityAPI.switchScheduleType(id, useFixedDate);
+
+    setActivities((current) =>
+      current.map((activity) =>
+        activity.id === updated.id ? updated : activity
+      )
+    );
+
+    return updated;
   }
 
   async function removeActivity(id) {
@@ -86,6 +101,8 @@ export function ActivityProvider({ children }) {
         addActivity,
         updateActivity,
         removeActivity,
+        switchScheduleType,
+        refreshActivities,
         getMapMarkers,
       }}
     >

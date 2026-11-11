@@ -1,4 +1,3 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -11,9 +10,21 @@ import com.yonder.backend.models.BudgetSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.bind.annotation.RequestMethod;
 
 @RestController
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(
+    origins = "http://localhost:5173",
+    allowedHeaders = "*",
+    methods = {
+        RequestMethod.GET,
+        RequestMethod.POST,
+        RequestMethod.PUT,
+        RequestMethod.PATCH,
+        RequestMethod.DELETE,
+        RequestMethod.OPTIONS
+    }
+)
 public class TripController {
     private final BudgetService budgetService;
     private final TripManager tripManager;
@@ -27,6 +38,23 @@ public class TripController {
     @GetMapping("/api/trip")
     public Trip getTrip() {
         return tripManager.getTrip();
+    }
+
+    @PutMapping("/api/trip")
+    public Trip updateTrip(@RequestBody Trip trip) {
+        if (trip.getDays() < 1) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Trip must be at least one day long"
+            );
+        }
+
+        if (trip.getStartDate() == null) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST, "Trip start date is required"
+            );
+        }
+
+        return tripManager.updateTrip(trip);
     }
 
     // ---------- Activities ----------
@@ -61,6 +89,24 @@ public class TripController {
                 HttpStatus.NOT_FOUND, "Activity not found"
             );
         }
+    }
+    @PatchMapping("/api/trip/activities/{id}/schedule")
+    public Activity switchActivityScheduleType(
+        @PathVariable int id,
+        @RequestParam boolean useFixedDate
+    ) {
+        Activity result = tripManager.switchActivityScheduleType(
+            id,
+            useFixedDate
+        );
+
+        if (result == null) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND, "Activity not found"
+            );
+        }
+
+        return result;
     }
 
     // ---------- Housing bookings ----------

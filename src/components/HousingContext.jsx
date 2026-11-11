@@ -14,12 +14,23 @@ export function HousingProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  async function refreshHousing() {
+    try {
+      const data = await HousingAPI.getAll();
+      setHousing(data);
+      setError("");
+      return data;
+    } catch (err) {
+      setError(err.message);
+      throw err;
+    }
+  }
+
   useEffect(() => {
     async function loadHousing() {
       try {
         setError("");
-        const data = await HousingAPI.getAll();
-        setHousing(data);
+        await refreshHousing();
       } catch (err) {
         setError(err.message);
       } finally {
@@ -32,9 +43,7 @@ export function HousingProvider({ children }) {
 
   async function addHousing(housingItem) {
     const created = await HousingAPI.add(housingItem);
-
     setHousing((current) => [...current, created]);
-
     return created;
   }
 
@@ -72,6 +81,7 @@ export function HousingProvider({ children }) {
         addHousing,
         updateHousing,
         removeHousing,
+        refreshHousing,
       }}
     >
       {children}

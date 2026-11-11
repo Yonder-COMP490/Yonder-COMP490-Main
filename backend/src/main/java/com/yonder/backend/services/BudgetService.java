@@ -5,6 +5,7 @@ import com.yonder.backend.models.BudgetEntry;
 import com.yonder.backend.models.BudgetItem;
 import com.yonder.backend.models.BudgetSummary;
 import com.yonder.backend.models.Cost;
+import com.yonder.backend.models.Description;
 import com.yonder.backend.models.HousingBooking;
 import com.yonder.backend.models.Trip;
 
@@ -128,7 +129,7 @@ public class BudgetService {
                 "Activities",
                 "Activity",
                 activity.getId(),
-                activity.getName(),
+                getDescriptionName(activity.getDescription()),
                 unitCost,
                 1,
                 "occurrences",
@@ -156,7 +157,7 @@ public class BudgetService {
                 "Housing",
                 "HousingBooking",
                 housing.getId(),
-                housing.getName(),
+                getDescriptionName(housing.getDescription()),
                 unitCost,
                 nights,
                 "nights",
@@ -191,6 +192,17 @@ public class BudgetService {
         }
 
         return entries;
+    }
+
+    /**
+     * Safely retrieves the name from a Description object.
+     */
+    private String getDescriptionName(Description description) {
+        if (description == null || description.getName() == null) {
+            return "";
+        }
+
+        return description.getName();
     }
 
     /**
