@@ -1,23 +1,34 @@
+
 const API_URL = "http://localhost:8080/api/trip";
 
 function serializeHousing(housing) {
-  const checkInDate = housing.checkInDate ?? null;
+  const description =
+    housing.description && typeof housing.description === "object"
+      ? housing.description
+      : {};
+
+  const location = housing.location ?? {};
+
+  const tripSectionId = housing.tripSectionId ?? null;
+  const usesTripSection = tripSectionId !== null;
+
+  const fixedCheckInDate = usesTripSection
+    ? null
+    : housing.fixedCheckInDate ?? housing.checkInDate ?? null;
+
   const checkOutDate = housing.checkOutDate ?? null;
 
   const calculatedNights =
-    checkInDate && checkOutDate
+    fixedCheckInDate && checkOutDate
       ? Math.max(
           0,
           Math.round(
             (Date.parse(`${checkOutDate}T00:00:00Z`) -
-              Date.parse(`${checkInDate}T00:00:00Z`)) /
+              Date.parse(`${fixedCheckInDate}T00:00:00Z`)) /
               86400000
           )
         )
       : 0;
-
-  const description = housing.description ?? {};
-  const location = housing.location ?? {};
 
   return {
     id: housing.id ?? 0,
@@ -26,7 +37,9 @@ function serializeHousing(housing) {
       name: description.name ?? housing.name ?? "",
       description:
         description.description ??
-        (typeof housing.description === "string" ? housing.description : ""),
+        (typeof housing.description === "string"
+          ? housing.description
+          : ""),
       notes: description.notes ?? housing.notes ?? "",
       picture: description.picture ?? housing.picture ?? null,
     },
@@ -39,15 +52,19 @@ function serializeHousing(housing) {
     },
 
     active: housing.active ?? true,
-    tripDay: housing.tripDay ?? null,
-    tripSectionId: housing.tripSectionId ?? null,
 
-    checkInDate,
+    tripSectionId,
+    fixedCheckInDate,
+
     checkInTime: housing.checkInTime ?? null,
-    checkOutDate,
     checkOutTime: housing.checkOutTime ?? null,
 
-    nights: housing.nights ?? calculatedNights,
+    // Only fixed-date bookings store their own nights.
+    ...(usesTripSection
+      ? {}
+      : {
+          nights: housing.nights ?? calculatedNights,
+        }),
 
     costPerDay: {
       lowerEnd: housing.costPerDay?.lowerEnd ?? 0,
@@ -75,7 +92,9 @@ class HousingAPI {
   async add(housing) {
     const response = await fetch(`${API_URL}/housing`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify(serializeHousing(housing)),
     });
 
@@ -92,7 +111,9 @@ class HousingAPI {
   async update(id, housing) {
     const response = await fetch(`${API_URL}/housing/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({
         ...serializeHousing(housing),
         id,

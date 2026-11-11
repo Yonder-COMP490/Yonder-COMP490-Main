@@ -1,3 +1,4 @@
+
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Component
 public class TripManager {
@@ -103,7 +105,9 @@ public class TripManager {
             if (trip.getActivities().get(i).getId() == id) {
                 updated.setId(id);
                 updated.attachToTrip(trip.getStartDate());
+
                 trip.getActivities().set(i, updated);
+
                 return updated;
             }
         }
@@ -113,7 +117,9 @@ public class TripManager {
 
     public boolean removeActivity(int id) {
         int previousSize = trip.getActivities().size();
+
         trip.removeActivity(id);
+
         return trip.getActivities().size() < previousSize;
     }
 
@@ -124,11 +130,19 @@ public class TripManager {
             .orElse(0) + 1;
     }
 
-    public Activity switchActivityScheduleType(int id, boolean useFixedDate) {
+    public Activity switchActivityScheduleType(
+        int id,
+        boolean useFixedDate
+    ) {
         for (Activity activity : trip.getActivities()) {
             if (activity.getId() == id) {
-                activity.switchScheduleType(useFixedDate, trip.getStartDate());
+                activity.switchScheduleType(
+                    useFixedDate,
+                    trip.getStartDate()
+                );
+
                 activity.attachToTrip(trip.getStartDate());
+
                 return activity;
             }
         }
@@ -141,6 +155,7 @@ public class TripManager {
     public HousingBooking addHousingBooking(HousingBooking housing) {
         housing.setId(nextHousingId());
         trip.addHousingBooking(housing);
+
         return housing;
     }
 
@@ -148,11 +163,19 @@ public class TripManager {
         int id,
         HousingBooking updated
     ) {
-        for (int i = 0; i < trip.getHousingBookings().size(); i++) {
-            if (trip.getHousingBookings().get(i).getId() == id) {
+        List<HousingBooking> housingBookings =
+            trip.getHousingBookings();
+
+        for (int i = 0; i < housingBookings.size(); i++) {
+            if (housingBookings.get(i).getId() == id) {
                 updated.setId(id);
-                updated.attachToTrip(trip.getStartDate());
-                trip.getHousingBookings().set(i, updated);
+
+                housingBookings.set(i, updated);
+
+                // Refresh the calculated dates and nights using
+                // the booking's assigned TripSection.
+                trip.setHousingBookings(housingBookings);
+
                 return updated;
             }
         }
@@ -162,7 +185,9 @@ public class TripManager {
 
     public boolean removeHousingBooking(int id) {
         int previousSize = trip.getHousingBookings().size();
+
         trip.removeHousingBooking(id);
+
         return trip.getHousingBookings().size() < previousSize;
     }
 
@@ -178,6 +203,7 @@ public class TripManager {
     public BudgetItem addBudgetItem(BudgetItem item) {
         item.setId(nextBudgetItemId());
         trip.addBudgetItem(item);
+
         return item;
     }
 
@@ -185,7 +211,9 @@ public class TripManager {
         for (int i = 0; i < trip.getBudgetItems().size(); i++) {
             if (trip.getBudgetItems().get(i).getId() == id) {
                 updated.setId(id);
+
                 trip.getBudgetItems().set(i, updated);
+
                 return updated;
             }
         }
@@ -195,7 +223,9 @@ public class TripManager {
 
     public boolean removeBudgetItem(int id) {
         int previousSize = trip.getBudgetItems().size();
+
         trip.removeBudgetItem(id);
+
         return trip.getBudgetItems().size() < previousSize;
     }
 

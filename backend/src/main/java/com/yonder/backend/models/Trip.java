@@ -12,8 +12,7 @@ public class Trip {
     private int days;
     private String preferredCurrency;
 
-    //private List<Transportation> transportation; (future)
-    // TripSection is a new addition
+    // private List<Transportation> transportation; (future)
     private List<TripSection> tripSections;
     private List<Activity> activities;
     private List<HousingBooking> housingBookings;
@@ -41,6 +40,7 @@ public class Trip {
         String preferredCurrency
     ) {
         this();
+
         this.id = id;
         this.name = name;
         this.startDate = startDate;
@@ -49,6 +49,8 @@ public class Trip {
         if (preferredCurrency != null) {
             this.preferredCurrency = preferredCurrency;
         }
+
+        refreshScheduledDates();
     }
 
     // ---------- Basic trip fields ----------
@@ -91,6 +93,7 @@ public class Trip {
 
         this.days = days;
         normalizeTripSections();
+        refreshScheduledDates();
     }
 
     public String getPreferredCurrency() {
@@ -106,6 +109,8 @@ public class Trip {
     // ---------- Trip sections ----------
 
     public List<TripSection> getTripSections() {
+        // Refresh in case a section was modified directly.
+        refreshScheduledDates();
         return tripSections;
     }
 
@@ -115,6 +120,7 @@ public class Trip {
             : new ArrayList<>();
 
         normalizeTripSections();
+        refreshScheduledDates();
     }
 
     /**
@@ -162,6 +168,8 @@ public class Trip {
 
         tripSections.add(longestIndex + 1, newSection);
 
+        refreshScheduledDates();
+
         return newSection;
     }
 
@@ -187,6 +195,8 @@ public class Trip {
                 );
 
                 tripSections.remove(i);
+
+                refreshScheduledDates();
                 return;
             }
         }
@@ -269,7 +279,10 @@ public class Trip {
             .orElse(0) + 1;
     }
 
-    public void setDaysAndTripSections(int days, List<TripSection> tripSections) {
+    public void setDaysAndTripSections(
+        int days,
+        List<TripSection> tripSections
+    ) {
         if (days < 1) {
             throw new IllegalArgumentException(
                 "A trip must be at least one day long."
@@ -282,7 +295,9 @@ public class Trip {
             : new ArrayList<>();
 
         normalizeTripSections();
+        refreshScheduledDates();
     }
+
     // ---------- Activities ----------
 
     public List<Activity> getActivities() {
@@ -291,7 +306,9 @@ public class Trip {
 
     public void setActivities(List<Activity> activities) {
         this.activities = activities != null
-            ? activities : new ArrayList<>();
+            ? activities
+            : new ArrayList<>();
+
         refreshScheduledDates();
     }
 
@@ -309,24 +326,73 @@ public class Trip {
     // ---------- Housing bookings ----------
 
     public List<HousingBooking> getHousingBookings() {
+        // Ensures dates and nights reflect the current section order
+        // and durations, including direct section modifications.
+        refreshHousingSchedules();
         return housingBookings;
     }
 
     public void setHousingBookings(List<HousingBooking> housingBookings) {
         this.housingBookings = housingBookings != null
-            ? housingBookings : new ArrayList<>();
-        refreshScheduledDates();
+            ? housingBookings
+            : new ArrayList<>();
+
+        refreshHousingSchedules();
     }
 
     public void addHousingBooking(HousingBooking housing) {
         if (housing != null) {
             housingBookings.add(housing);
-            housing.attachToTrip(startDate);
+            refreshHousingSchedules();
         }
     }
 
     public void removeHousingBooking(int housingId) {
         housingBookings.removeIf(housing -> housing.getId() == housingId);
+    }
+
+    /**
+     * Finds the assigned section and supplies its calculated
+     * start date and duration to the housing booking.
+     */
+    private void refreshHousingSchedules() {
+        if (housingBookings == null) {
+            return;
+        }
+
+        for (HousingBooking housing : housingBookings) {
+            Integer sectionId = housing.getTripSectionId();
+
+            if (sectionId == null) {
+                housing.attachToTrip(null, 0);
+                continue;
+            }
+
+            LocalDate sectionStartDate = startDate;
+            TripSection assignedSection = null;
+
+            for (TripSection section : tripSections) {
+                if (section.getId() == sectionId) {
+                    assignedSection = section;
+                    break;
+                }
+
+                if (sectionStartDate != null) {
+                    sectionStartDate = sectionStartDate.plusDays(
+                        section.getDays()
+                    );
+                }
+            }
+
+            if (assignedSection == null) {
+                housing.attachToTrip(null, 0);
+            } else {
+                housing.attachToTrip(
+                    sectionStartDate,
+                    assignedSection.getDays()
+                );
+            }
+        }
     }
 
     // ---------- Budget items ----------
@@ -337,7 +403,8 @@ public class Trip {
 
     public void setBudgetItems(List<BudgetItem> budgetItems) {
         this.budgetItems = budgetItems != null
-            ? budgetItems : new ArrayList<>();
+            ? budgetItems
+            : new ArrayList<>();
     }
 
     public void addBudgetItem(BudgetItem item) {
@@ -358,7 +425,8 @@ public class Trip {
 
     public void setPointsOfInterest(List<PointOfInterest> pointsOfInterest) {
         this.pointsOfInterest = pointsOfInterest != null
-            ? pointsOfInterest : new ArrayList<>();
+            ? pointsOfInterest
+            : new ArrayList<>();
     }
 
     public void addPointOfInterest(PointOfInterest point) {
@@ -380,10 +448,6 @@ public class Trip {
             );
         }
 
-        if (housingBookings != null) {
-            housingBookings.forEach(
-                housing -> housing.attachToTrip(startDate)
-            );
-        }
+        refreshHousingSchedules();
     }
 }
