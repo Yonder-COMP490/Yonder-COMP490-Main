@@ -10,14 +10,13 @@ Maven for Java is included in the Extension Pack for Java. VS Code can run Maven
 Extentions installed:
 -Extension Pack for Java
 -SQLTools - (by Matheus Teixeira)
--PostgreSQL - (by Microsoft)
+-PostgreSQL - (by Chris Kolkman)
 
 ## Backend database setup
 
 ### Local versions
 
 - Java: Eclipse Temurin OpenJDK 25
-- PostgreSQL: 18.6 Windows x64 installer
 - PostgreSQL JDBC driver: 42.7.13 (pgJDBC)
 
 The PostgreSQL installer installs the database server and related tools. The JDBC driver is a separate Java dependency; it must be on the Java project's classpath for Java code to connect to PostgreSQL. pgJDBC 42.7.13 supports Java 8 and newer and PostgreSQL 8.4 and newer. Driver testing is currently limited to PostgreSQL 9.1 and newer.
@@ -76,18 +75,19 @@ Alternatively, use the Maven for Java extension in VS Code to run the `test` goa
 
 ## Connection details
 
-The default PostgreSQL port is `5432`. The local JDBC URL is configured in `.env` using this format:
-
-```text
-jdbc:postgresql://localhost:5432/DATABASE_NAME
-```
-
-Replace `yonder` with the database name you created if it differs. The PostgreSQL server must be running and accept connections before the Java application can start.
-
-The driver is discovered automatically when its JAR is on the classpath; modern Java applications do not need to call `Class.forName("org.postgresql.Driver")`.
+I will give database credentials in Person.(Not good to store credentials in a shared file.)
 
 
-Added swagger UI to see the endpoints in the web, yet to upload the readme about it. http://localhost:8080/swagger-ui/index.html 
+-------------
+Added swagger UI to see the endpoints in the web. http://localhost:8080/swagger-ui/index.html 
 
 "email": "test@example.com",
   "password": "secret123"
+
+-------------
+In a new terminal in backend run : .\mvnw.cmd spring-boot:run
+
+In another terminal run: npm.cmd run dev
+
+
+SELECT current_database(), inet_server_addr(); --> run in the SQL query in the PostgreSQL extention query editor to verify connection to online database if needed.

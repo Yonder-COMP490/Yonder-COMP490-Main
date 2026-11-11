@@ -170,3 +170,35 @@ print("\nBaseline MAE: ", round(baseline_mae, 2))
 print("Total predictions: ", len(baseline_errors))
 # _______
 
+# Experiment: simulate a new user with 5 known preferences
+test_user = test_users.iloc[0].copy()
+
+# Select 5 categories to keep
+known_categories = [
+	"beaches",
+	"museums",
+	"parks",
+	"restaurants",
+	"dance_clubs"
+]
+
+# Create a new user profile with unknown ratings
+new_user = pd.Series(float("nan"), index=test_users.columns)
+
+# Copy only the known ratings
+print("test_user type:", type(test_user))
+print("test_user value:", test_user)
+for category in known_categories:
+	new_user[category] = test_user[category]
+
+print("\nKnown user preferences: ")
+print(new_user.dropna())
+
+# Predict one unknown category
+category = "art_galleries"
+
+predicted = predict_rating(new_user, category)
+actual = test_user[category]
+
+print("\nPredicted rating for", category, ":", predicted)
+print("Actual rating: ", actual)

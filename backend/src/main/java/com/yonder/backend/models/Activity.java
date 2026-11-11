@@ -8,7 +8,7 @@ import java.time.temporal.ChronoUnit;
 public class Activity {
     private int id;
 
-    private boolean active = true;
+    private boolean active = false;
     private Integer tripDay;
     private LocalDate fixedDate;
 
