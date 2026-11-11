@@ -40,6 +40,7 @@ function serializeHousing(housing) {
 
     active: housing.active ?? true,
     tripDay: housing.tripDay ?? null,
+    tripSectionId: housing.tripSectionId ?? null,
 
     checkInDate,
     checkInTime: housing.checkInTime ?? null,

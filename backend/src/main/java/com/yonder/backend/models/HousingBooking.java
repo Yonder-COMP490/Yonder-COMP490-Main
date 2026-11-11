@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
+
 public class HousingBooking {
     private int id;
 
     private boolean active = true;
     private Integer tripDay;
     private LocalDate fixedCheckInDate;
+    private Integer tripSectionId;
 
     private LocalTime checkInTime;
     private LocalTime checkOutTime;
@@ -203,5 +205,13 @@ public class HousingBooking {
         }
 
         return costPerDay.multiply(nights);
+    }
+
+    public Integer getTripSectionId() {
+        return tripSectionId;
+    }
+
+    public void setTripSectionId(Integer tripSectionId) {
+        this.tripSectionId = tripSectionId;
     }
 }
