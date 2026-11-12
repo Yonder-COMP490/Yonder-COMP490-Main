@@ -1,6 +1,6 @@
 /**
  * a) Module name: Maps page
- * b) Date: 9/25/2026 (last updated 11/9/2026)
+ * b) Date: 9/25/2026
  * c) Programmer: Alejandro Rivera
  * d) Description: Shows hotels on a Google Map as price bubbles. Has a popup card,
  *    price and rating filters, drag-map search and a "Check availability" button.
@@ -20,8 +20,7 @@
  * f) Data structures: an array of hotel objects (places), and a Set of hotel ids
  *    the user already clicked (visitedIds) so those pins turn grey.
  * g) Algorithm: distanceKm() uses a simple flat-map distance formula to check if the
- *    map moved more than 1.5 km before searching again. It's simpler than the full
- *    Haversine formula and accurate enough for short distances.
+ *    map moved more than 1.5 km before searching again.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
