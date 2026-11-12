@@ -1,3 +1,28 @@
+/**
+ * a) Module name: Maps page
+ * b) Date: 9/25/2026 (last updated 11/9/2026)
+ * c) Programmer: Alejandro Rivera
+ * d) Description: Shows hotels on a Google Map as price bubbles. Has a popup card,
+ *    price and rating filters, drag-map search and a "Check availability" button.
+ * e) Important functions:
+ *    fetchHotels(query, checkIn, checkOut)
+ *      Input: search text (like "hotels in San Diego") and trip dates
+ *      Output: hotel results (JSON) from our backend
+ *    pickHotelInfo(data, searchedIn)
+ *      Input: SerpApi hotel JSON and the place searched
+ *      Output: a list of simple hotel objects (name, price, rating, location)
+ *    passesFilters(place, maxPrice, minRating)
+ *      Input: one hotel and the filter values
+ *      Output: true to show the hotel, false to hide it
+ *    bookingLink(place)
+ *      Input: one hotel
+ *      Output: the hotel's website, or a Google search link if it has none
+ * f) Data structures: an array of hotel objects (places), and a Set of hotel ids
+ *    the user already clicked (visitedIds) so those pins turn grey.
+ * g) Algorithm: distanceKm() uses a simple flat-map distance formula to check if the
+ *    map moved more than 1.5 km before searching again. It's simpler than the full
+ *    Haversine formula and accurate enough for short distances.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";

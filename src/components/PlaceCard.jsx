@@ -1,3 +1,14 @@
+/**
+ * a) Module name: PlaceCard
+ * b) Date: 10/19/2026
+ * c) Programmer: Alejandro Rivera
+ * d) Description: One hotel card in the list next to the map.
+ * e) Important functions:
+ *    PlaceCard({ place, selected, onHover, onClick })
+ *      Input: place (hotel info), selected (true to highlight),
+ *        onHover and onClick (what to do on hover and click)
+ *      Output: a card with the hotel's picture, name, rating and price per night
+ */
 // one card in the hotel list on the maps page
 // called PlaceCard so we can reuse it for restaurants and stuff later
 // selected = highlight this card, onHover / onClick = what to do on hover / click
