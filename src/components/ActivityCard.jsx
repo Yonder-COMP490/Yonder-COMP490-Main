@@ -1,6 +1,23 @@
+/**
+ * Component name: ActivityCard
+ * Date: 09/20/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Displays an activity card with editable activity information.
+ * Supports editing the activity name, description, cost, and notes, as well
+ * as expanding activity details and dragging activities into the itinerary.
+ */
 import { useEffect, useState } from "react";
 import "./ActivityCard.css";
 
+/**
+ * Displays an individual activity and provides controls for viewing
+ * and editing its information.
+ *
+ * @param {Object} props - The component properties.
+ * @param {Object} props.activity - The activity being displayed.
+ * @param {Function} props.onSave - Callback used to save activity changes.
+ * @returns {JSX.Element} The rendered activity card.
+ */
 function ActivityCard({ activity, onSave }) {
   const description = activity.description ?? {};
 
@@ -32,6 +49,12 @@ function ActivityCard({ activity, onSave }) {
     setNotes(currentDescription.notes ?? "");
   }, [activity]);
 
+  /**
+   * Formats a cost into a single amount or a lower-to-upper range.
+   *
+   * @param {Object|null} cost - The cost object containing lower and upper values.
+   * @returns {string} The formatted cost amount, or an empty string if no cost exists.
+   */
   function formatCostAmount(cost) {
     if (!cost) return "";
 
@@ -41,6 +64,11 @@ function ActivityCard({ activity, onSave }) {
     return lower === upper ? `${lower}` : `${lower}-${upper}`;
   }
 
+  /**
+   * Formats the activity's cost for display, including its currency.
+   *
+   * @returns {string} The formatted cost or "Add cost" if no cost is available.
+   */
   function formatCost() {
     if (!activity.cost) return "Add cost";
 
@@ -51,6 +79,14 @@ function ActivityCard({ activity, onSave }) {
     return `${amount} ${activity.cost.currency || "USD"}`;
   }
 
+  /**
+   * Saves changes to the activity using the onSave callback.
+   *
+   * Updates the saving and error states and exits editing mode when successful.
+   *
+   * @param {Object} changes - The activity properties to update.
+   * @returns {Promise<boolean>} True if saving succeeds, otherwise false.
+   */
   async function saveChanges(changes) {
     if (!onSave) {
       setError("Saving is not configured for this activity.");
@@ -76,6 +112,14 @@ function ActivityCard({ activity, onSave }) {
     }
   }
 
+  /**
+   * Creates an activity update object containing modified description fields.
+   *
+   * Preserves existing description properties while applying the supplied changes.
+   *
+   * @param {Object} changes - The description properties to update.
+   * @returns {Object} An activity update object containing the updated description.
+   */
   function getDescriptionChanges(changes) {
     return {
       description: {
@@ -85,6 +129,14 @@ function ActivityCard({ activity, onSave }) {
     };
   }
 
+  /**
+   * Validates and saves the activity's name.
+   *
+   * Trims whitespace and prevents saving an empty name.
+   *
+   * @param {Event} event - The form submission event.
+   * @returns {Promise<void>}
+   */
   async function saveName(event) {
     event.preventDefault();
 
@@ -97,6 +149,12 @@ function ActivityCard({ activity, onSave }) {
     );
   }
 
+  /**
+   * Saves the activity's description after trimming surrounding whitespace.
+   *
+   * @param {Event} event - The form submission event.
+   * @returns {Promise<void>}
+   */
   async function saveDescription(event) {
     event.preventDefault();
 
@@ -107,6 +165,15 @@ function ActivityCard({ activity, onSave }) {
     );
   }
 
+  /**
+   * Validates and saves the activity's cost and currency.
+   *
+   * Accepts either a single amount or a lower-to-upper cost range.
+   * Ensures the upper amount is not less than the lower amount.
+   *
+   * @param {Event} event - The form submission event.
+   * @returns {Promise<void>}
+   */
   async function saveCost(event) {
     event.preventDefault();
 
@@ -145,6 +212,12 @@ function ActivityCard({ activity, onSave }) {
     }
   }
 
+  /**
+   * Saves the activity's notes.
+   *
+   * @param {Event} event - The form submission event.
+   * @returns {Promise<void>}
+   */
   async function saveNotes(event) {
     event.preventDefault();
 
@@ -153,6 +226,11 @@ function ActivityCard({ activity, onSave }) {
     );
   }
 
+  /**
+   * Cancels the current editing operation and restores the original activity values.
+   *
+   * Resets all editable fields and clears the editing and error states.
+   */
   function cancelEditing() {
     const currentDescription = activity.description ?? {};
 
@@ -166,6 +244,14 @@ function ActivityCard({ activity, onSave }) {
     setError("");
   }
 
+  /**
+   * Formats the activity's scheduling information for display.
+   *
+   * Prioritizes a fixed date, then a trip-day assignment, and otherwise
+   * indicates that the activity has not been scheduled.
+   *
+   * @returns {string} The formatted scheduling information.
+   */
   function formatDate() {
     if (activity.fixedDate || activity.date) {
       return `Date: ${activity.fixedDate || activity.date}`;
