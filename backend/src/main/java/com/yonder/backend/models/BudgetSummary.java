@@ -3,7 +3,14 @@ package com.yonder.backend.models;
 import java.util.ArrayList;
 import java.util.List;
 
-// Temporary Object. Built when needed to be displayed then discarded
+/**
+ * Class name: BudgetSummary
+ * Date: 10/22/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Temporary object used to organize and store calculated budget
+ * totals and individual budget entries for display. Created when needed and
+ * discarded when no longer required.
+ */
 public class BudgetSummary {
     private Cost activityTotal;
     private Cost housingTotal;
