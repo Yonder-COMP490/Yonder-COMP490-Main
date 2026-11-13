@@ -14,6 +14,14 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class name: BudgetService
+ * Date: 10/22/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Calculates budget totals and generates a detailed budget summary
+ * for a trip. Combines costs from activities, housing bookings, and daily budget
+ * items without modifying or storing the original trip data.
+ */
 @Service
 public class BudgetService {
 

@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from "react";
-import { useOutletContext } from "react-router-dom";
 import BudgetAPI from "../api/BudgetAPI";
 import "./Budget.css";
 
@@ -9,9 +8,7 @@ function formatCost(cost) {
   if (!cost) return "$0";
 
   const lower = Number(cost.lowerEnd ?? cost.amount ?? 0);
-  const upper = Number(
-    cost.upperEnd ?? cost.amount ?? cost.lowerEnd ?? 0
-  );
+  const upper = Number(cost.upperEnd ?? cost.amount ?? cost.lowerEnd ?? 0);
   const currency = cost.currency || "USD";
 
   const formatter = new Intl.NumberFormat("en-US", {
@@ -28,9 +25,6 @@ function formatCost(cost) {
 }
 
 function Budget() {
-  // Provided by TripDashboard through React Router's Outlet.
-  const { tripId, trip } = useOutletContext();
-
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -51,61 +45,25 @@ function Budget() {
 
   const [saving, setSaving] = useState(false);
 
-  // Reload the budget after adding, updating, or deleting an item.
   async function refreshBudget() {
     try {
       setError("");
-
-      const data = await BudgetAPI.getSummary(tripId);
-
+      const data = await BudgetAPI.getSummary();
       setSummary(data);
     } catch (err) {
       setError(err.message || "Failed to load the budget.");
     }
   }
 
-  // Load the selected trip's budget.
-  // Reload automatically when the trip ID changes.
   useEffect(() => {
-    let cancelled = false;
-
     async function loadBudget() {
       setLoading(true);
-      setSummary(null);
-      setError("");
-
-      // Reset the daily-item form when switching trips.
-      setEditingItemId(null);
-      setAddingDailyItem(false);
-      setDailyName("");
-      setDailyCost("");
-      setDailyDays("");
-
-      try {
-        const data = await BudgetAPI.getSummary(tripId);
-
-        if (!cancelled) {
-          setSummary(data);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(
-            err.message || "Failed to load the budget."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      }
+      await refreshBudget();
+      setLoading(false);
     }
 
     loadBudget();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tripId]);
+  }, []);
 
   function toggleSection(section) {
     setExpandedSections((previous) => ({
@@ -127,16 +85,12 @@ function Budget() {
     setAddingDailyItem(true);
   }
 
-  // BudgetEntry uses sourceId/sourceType, not the
-  // original budget item's id.
+  // BudgetEntry uses sourceId/sourceType, not the original item's id.
+  // The API's daily entries refer to BudgetItem objects.
   function startEditingDailyItem(entry) {
     setDailyName(entry.name || "");
-    setDailyCost(
-      String(entry.unitCost?.lowerEnd ?? 0)
-    );
-    setDailyDays(
-      String(entry.quantity ?? 1)
-    );
+    setDailyCost(String(entry.unitCost?.lowerEnd ?? 0));
+    setDailyDays(String(entry.quantity ?? 1));
 
     setEditingItemId(entry.sourceId);
     setAddingDailyItem(false);
@@ -152,11 +106,7 @@ function Budget() {
       return;
     }
 
-    if (
-      dailyCost === "" ||
-      !Number.isFinite(cost) ||
-      cost < 0
-    ) {
+    if (dailyCost === "" || !Number.isFinite(cost) || cost < 0) {
       setError("Please enter a valid cost.");
       return;
     }
@@ -166,9 +116,7 @@ function Budget() {
       !Number.isInteger(days) ||
       days < 1
     ) {
-      setError(
-        "Days must be a whole number greater than zero."
-      );
+      setError("Days must be a whole number greater than zero.");
       return;
     }
 
@@ -177,10 +125,7 @@ function Budget() {
       cost: {
         lowerEnd: cost,
         upperEnd: cost,
-        currency:
-          trip?.preferredCurrency ||
-          summary?.totalCost?.currency ||
-          "USD",
+        currency: summary?.totalCost?.currency || "USD",
       },
       days,
     };
@@ -190,32 +135,22 @@ function Budget() {
       setError("");
 
       if (editingItemId !== null) {
-        await BudgetAPI.update(
-          editingItemId,
-          item,
-          tripId
-        );
+        await BudgetAPI.update(editingItemId, item);
       } else {
-        await BudgetAPI.add(item, tripId);
+        await BudgetAPI.add(item);
       }
 
       resetDailyForm();
       await refreshBudget();
     } catch (err) {
-      setError(
-        err.message || "Failed to save the budget item."
-      );
+      setError(err.message || "Failed to save the budget item.");
     } finally {
       setSaving(false);
     }
   }
 
   async function handleDeleteDailyItem(itemId) {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this budget item?"
-      )
-    ) {
+    if (!window.confirm("Are you sure you want to delete this budget item?")) {
       return;
     }
 
@@ -223,16 +158,14 @@ function Budget() {
       setSaving(true);
       setError("");
 
-      await BudgetAPI.remove(itemId, tripId);
+      await BudgetAPI.remove(itemId);
       await refreshBudget();
 
       if (editingItemId === itemId) {
         resetDailyForm();
       }
     } catch (err) {
-      setError(
-        err.message || "Failed to delete the budget item."
-      );
+      setError(err.message || "Failed to delete the budget item.");
     } finally {
       setSaving(false);
     }
@@ -251,25 +184,21 @@ function Budget() {
     return (
       <div className="budget-page">
         <h1 className="budget-title">Budget</h1>
-
         <p className="budget-error">
           {error || "Unable to load the budget."}
         </p>
-
-        <button
-          onClick={async () => {
-            setLoading(true);
-            await refreshBudget();
-            setLoading(false);
-          }}
-        >
+        <button onClick={async () => {
+          setLoading(true);
+          await refreshBudget();
+          setLoading(false);
+        }}>
           Retry
         </button>
       </div>
     );
   }
 
-  // The Java API returns a single flat entries array.
+  // The Java API returns one flat entries array.
   const entries = summary.entries ?? [];
 
   const activities = entries.filter(
@@ -330,7 +259,6 @@ function Budget() {
                 <span className="budget-item-name">
                   {entry.name}
                 </span>
-
                 <span className="budget-item-cost">
                   {formatCost(entry.totalCost)}
                 </span>
@@ -372,7 +300,6 @@ function Budget() {
                 <span className="budget-item-name">
                   {entry.name}
                 </span>
-
                 <span className="budget-item-cost">
                   {formatCost(entry.totalCost)}
                 </span>
@@ -414,7 +341,6 @@ function Budget() {
                 <span className="budget-item-name">
                   {entry.name}
                 </span>
-
                 <span className="budget-item-cost">
                   {formatCost(entry.totalCost)}
                 </span>
@@ -454,7 +380,8 @@ function Budget() {
                 </span>
 
                 <span className="budget-item-cost">
-                  {formatCost(entry.totalCost)}{" "}
+                  {formatCost(entry.totalCost)}
+                  {" "}
                   ({entry.quantity} {entry.unit} ×{" "}
                   {formatCost(entry.unitCost)})
                 </span>
@@ -462,9 +389,7 @@ function Budget() {
                 <div className="budget-item-actions">
                   <button
                     type="button"
-                    onClick={() =>
-                      startEditingDailyItem(entry)
-                    }
+                    onClick={() => startEditingDailyItem(entry)}
                     disabled={saving}
                   >
                     Edit
@@ -472,9 +397,7 @@ function Budget() {
 
                   <button
                     type="button"
-                    onClick={() =>
-                      handleDeleteDailyItem(entry.sourceId)
-                    }
+                    onClick={() => handleDeleteDailyItem(entry.sourceId)}
                     disabled={saving}
                   >
                     Delete
@@ -483,27 +406,23 @@ function Budget() {
               </div>
             ))}
 
-            {!addingDailyItem &&
-              editingItemId === null && (
-                <button
-                  className="budget-add-button"
-                  onClick={startAddingDailyItem}
-                  disabled={saving}
-                >
-                  + Add Daily Item
-                </button>
-              )}
+            {!addingDailyItem && editingItemId === null && (
+              <button
+                className="budget-add-button"
+                onClick={startAddingDailyItem}
+                disabled={saving}
+              >
+                + Add Daily Item
+              </button>
+            )}
 
-            {(addingDailyItem ||
-              editingItemId !== null) && (
+            {(addingDailyItem || editingItemId !== null) && (
               <div className="budget-add-form">
                 <input
                   type="text"
                   placeholder="Name"
                   value={dailyName}
-                  onChange={(event) =>
-                    setDailyName(event.target.value)
-                  }
+                  onChange={(event) => setDailyName(event.target.value)}
                 />
 
                 <input
@@ -512,9 +431,7 @@ function Budget() {
                   min="0"
                   step="0.01"
                   value={dailyCost}
-                  onChange={(event) =>
-                    setDailyCost(event.target.value)
-                  }
+                  onChange={(event) => setDailyCost(event.target.value)}
                 />
 
                 <input
@@ -523,9 +440,7 @@ function Budget() {
                   min="1"
                   step="1"
                   value={dailyDays}
-                  onChange={(event) =>
-                    setDailyDays(event.target.value)
-                  }
+                  onChange={(event) => setDailyDays(event.target.value)}
                 />
 
                 <button
@@ -556,9 +471,7 @@ function Budget() {
       {/* Total */}
       <div className="budget-total">
         <span>Total</span>
-        <span>
-          {formatCost(summary.totalCost)}
-        </span>
+        <span>{formatCost(summary.totalCost)}</span>
       </div>
     </div>
   );

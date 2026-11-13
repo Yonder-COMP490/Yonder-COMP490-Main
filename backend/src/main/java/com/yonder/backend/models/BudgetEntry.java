@@ -1,6 +1,13 @@
 package com.yonder.backend.models;
 
-// Temporary Object. Built when needed to be displayed then discarded
+/**
+ * Class name: BudgetEntry
+ * Date: 10/22/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Temporary object representing an individual expense in a
+ * budget summary. Stores the expense category, source object reference,
+ * name, unit cost, quantity, and calculated total cost for display.
+ */
 public class BudgetEntry {
     private String category;
 

@@ -3,6 +3,12 @@ package com.yonder.backend.models;
 
 import java.math.BigDecimal;
 
+/**
+ * Class name: Cost
+ * Date: 10/11/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: This class provides a way to have a cost with an upper and lower estimate and can represent multiple currencies
+ */
 public class Cost {
     private BigDecimal lowerEnd;
     private BigDecimal upperEnd;

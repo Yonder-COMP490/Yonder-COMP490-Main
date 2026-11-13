@@ -5,6 +5,15 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * Class name: Activity
+ * Date: 10/11/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Represents an activity associated with a trip. Stores
+ * descriptive information, location, cost, and start and end times.
+ * Supports both fixed-date scheduling and scheduling based on a specific
+ * trip day. Also tracks whether the activity is active in the itinerary.
+ */
 public class Activity {
     private int id;
 
@@ -14,7 +23,7 @@ public class Activity {
 
     private LocalTime startTime;
     private LocalTime endTime;
-
+    
     private Description description;
     private Location location;
     private Cost cost;
@@ -91,6 +100,20 @@ public class Activity {
         }
     }
 
+    /**
+     * Switches the activity between fixed-date scheduling and trip-day
+     * scheduling while preserving its current effective date. Calculates
+     * the corresponding trip day when switching to trip-day scheduling.
+     *
+     * @param useFixedDate true to switch to fixed-date scheduling,
+     * false to switch to trip-day scheduling
+     * @param tripStartDate the starting date of the trip, required when
+     * converting to trip-day scheduling
+     * @throws IllegalStateException if the activity does not have an
+     * existing effective date to preserve
+     * @throws IllegalArgumentException if the trip start date is missing
+     * when switching to trip-day scheduling
+     */
     public void switchScheduleType(boolean useFixedDate, LocalDate tripStartDate) {
         // Already using the requested scheduling type.
         if (useFixedDate && fixedDate != null) {
@@ -145,7 +168,14 @@ public class Activity {
         }
     }
 
-    // Backwards-compatible date getter for React.
+    /**
+     * Returns the activity's effective scheduled date. Uses the fixed date
+     * when fixed-date scheduling is active, or calculates the date using
+     * the trip start date and assigned trip day.
+     *
+     * @return the effective scheduled date, or null if the date cannot
+     * be determined
+     */
     public LocalDate getDate() {
         if (fixedDate != null) {
             return fixedDate;
@@ -158,11 +188,22 @@ public class Activity {
         return null;
     }
 
-    // Setting a date selects fixed-date scheduling.
+    /**
+     * Sets the activity's scheduled date using fixed-date scheduling.
+     *
+     * @param date the fixed scheduled date
+     */
     public void setDate(LocalDate date) {
         setFixedDate(date);
     }
 
+    /**
+     * Attaches the activity to its parent trip by supplying the trip's
+     * starting date. This date is used to calculate the activity's
+     * effective scheduled date when trip-day scheduling is active.
+     *
+     * @param tripStartDate the starting date of the trip
+     */
     public void attachToTrip(LocalDate tripStartDate) {
         this.tripStartDate = tripStartDate;
     }
@@ -183,6 +224,13 @@ public class Activity {
         this.endTime = endTime;
     }
 
+    /**
+     * Calculates the duration of the activity using its start and end times.
+     * If the end time occurs before the start time, the activity is assumed
+     * to continue into the following day.
+     *
+     * @return the activity duration, or null if either time is missing
+     */
     public Duration getDuration() {
         if (startTime == null || endTime == null) {
             return null;

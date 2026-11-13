@@ -1,7 +1,13 @@
-
+/**
+ * Component name: Home
+ * Date: 11/02/2026
+ * Programmer: Andrew Garcia
+ * Description: Displays the Yonder home page, including user information,
+ * the current trip dashboard link, and suggested travel destinations.
+ * Retrieves user and trip information from the backend.
+ */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import CreateTripForm from "../components/CreateTripForm";
 import "./Home.css";
 
 const API_BASE = "http://localhost:8080/api";
@@ -41,6 +47,12 @@ const suggestions = [
   },
 ];
 
+/**
+ * Selects a destination image based on the trip name.
+ *
+ * @param {Object} trip - The trip used to determine the destination image.
+ * @returns {string} The URL of the selected trip image.
+ */
 function getTripImage(trip) {
   const name = (trip.name || "").toLowerCase();
 
@@ -55,6 +67,13 @@ function getTripImage(trip) {
   return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=85";
 }
 
+/**
+ * Formats a trip's start and end dates into a readable date range.
+ *
+ * @param {string} startDate - The trip's starting date.
+ * @param {?string} endDate - The trip's ending date.
+ * @returns {string} The formatted date range, or a message if dates are unset.
+ */
 function formatTripDates(startDate, endDate) {
   if (!startDate) return "Dates not set";
 
@@ -66,21 +85,27 @@ function formatTripDates(startDate, endDate) {
     });
 
   return endDate
-    ? `${format(startDate)} - ${format(endDate)}`
+    ? `${format(startDate)} – ${format(endDate)}`
     : format(startDate);
 }
 
+/**
+ * Component name: Home
+ * Description: Renders the main Yonder landing page. Loads the user's
+ * information and current trip from the backend, displays trip details,
+ * provides navigation to the dashboard and profile, and showcases
+ * suggested travel destinations.
+ *
+ * @returns {JSX.Element} The Yonder home page.
+ */
 function Home() {
   const [username, setUsername] = useState("");
-  const [trips, setTrips] = useState([]);
+  const [trip, setTrip] = useState(null);
   const [tripLoading, setTripLoading] = useState(true);
   const [tripError, setTripError] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [createTripOpen, setCreateTripOpen] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
     async function loadUserInfo() {
       try {
         const response = await fetch(`${API_BASE}/userinfo`);
@@ -91,8 +116,7 @@ function Home() {
         if (!text.trim()) return;
 
         const userInfo = JSON.parse(text);
-
-        if (!cancelled && userInfo?.username) {
+        if (userInfo?.username) {
           setUsername(userInfo.username);
         }
       } catch (error) {
@@ -100,68 +124,27 @@ function Home() {
       }
     }
 
-    async function loadTrips() {
+    async function loadTrip() {
       try {
-        const response = await fetch(`${API_BASE}/trips`);
+        const response = await fetch(`${API_BASE}/trip`);
 
         if (!response.ok) {
           throw new Error(`Trip request failed (${response.status})`);
         }
 
         const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("Unexpected trip response format.");
-        }
-
-        if (!cancelled) {
-          setTrips(data);
-          setTripError("");
-        }
+        setTrip(data && data.id != null ? data : null);
       } catch (error) {
-        if (!cancelled) {
-          setTripError(
-            "Unable to load trips. Check the backend connection."
-          );
-        }
-
-        console.error("Could not load trips:", error);
+        setTripError("Unable to load trips. Check the backend connection.");
+        console.error("Could not load trip:", error);
       } finally {
-        if (!cancelled) {
-          setTripLoading(false);
-        }
+        setTripLoading(false);
       }
     }
 
     loadUserInfo();
-    loadTrips();
-
-    return () => {
-      cancelled = true;
-    };
+    loadTrip();
   }, []);
-
-  useEffect(() => {
-    if (!createTripOpen) return;
-
-    function handleEscape(event) {
-      if (event.key === "Escape") {
-        setCreateTripOpen(false);
-      }
-    }
-
-    window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
-  }, [createTripOpen]);
-
-  function handleTripCreated(newTrip) {
-    setTrips((previousTrips) => [...previousTrips, newTrip]);
-    setTripError("");
-    setCreateTripOpen(false);
-  }
 
   const displayName = username || "Traveler";
 
@@ -240,79 +223,60 @@ function Home() {
           {tripLoading ? (
             <p className="home-loading">Loading your trips...</p>
           ) : (
-            <>
-              <div className="home-trips-grid">
-                {trips.map((trip) => (
-                  <Link
-                    key={trip.id}
-                    to={`/dashboard?tripId=${trip.id}`}
-                    className="home-trip-card"
-                    aria-label={`Open ${trip.name} dashboard`}
-                  >
-                    <div className="home-trip-image">
-                      <img
-                        src={getTripImage(trip)}
-                        alt={`${trip.name} destination`}
-                        loading="lazy"
-                      />
+            <div className="home-trips-grid">
+              {trip && (
+                <Link
+                  to="/dashboard"
+                  className="home-trip-card"
+                  aria-label={`Open ${trip.name} dashboard`}
+                >
+                  <div className="home-trip-image">
+                    <img
+                      src={getTripImage(trip)}
+                      alt={`${trip.name} destination`}
+                    />
+                    <span className="home-trip-status">
+                      Itinerary in progress
+                    </span>
+                  </div>
 
-                      <span className="home-trip-status">
-                        Itinerary in progress
+                  <div className="home-trip-information">
+                    <div className="home-trip-title-row">
+                      <h3>{trip.name}</h3>
+                      <span aria-hidden="true">↗</span>
+                    </div>
+
+                    <p>
+                      {formatTripDates(trip.startDate, trip.endDate)}
+                    </p>
+
+                    <div className="home-trip-details">
+                      <span>
+                        {trip.activities?.length ?? 0} activities
+                      </span>
+                      <span>
+                        {trip.housingBookings?.length ?? 0} stays
                       </span>
                     </div>
-
-                    <div className="home-trip-information">
-                      <div className="home-trip-title-row">
-                        <h3>{trip.name}</h3>
-                        <span aria-hidden="true">↗</span>
-                      </div>
-
-                      <p>
-                        {formatTripDates(
-                          trip.startDate,
-                          trip.endDate
-                        )}
-                      </p>
-
-                      <div className="home-trip-details">
-                        <span>
-                          {trip.activities?.length ?? 0} activities
-                        </span>
-                        <span>
-                          {trip.housingBookings?.length ?? 0} stays
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-
-                <button
-                  type="button"
-                  className="home-create-trip"
-                  aria-label="Plan a new trip"
-                  onClick={() => setCreateTripOpen(true)}
-                >
-                  <div className="home-create-icon">+</div>
-
-                  <h3>Plan a new trip</h3>
-
-                  <p>
-                    Every great adventure starts with a little idea.
-                  </p>
-
-                  <span className="home-coming-soon">
-                    Start planning
-                  </span>
-                </button>
-              </div>
-
-              {trips.length === 0 && !tripError && (
-                <p className="home-empty">
-                  You don't have any trips yet. Create your first
-                  adventure!
-                </p>
+                  </div>
+                </Link>
               )}
-            </>
+
+              <div className="home-create-trip" aria-label="Plan a new trip">
+                <div className="home-create-icon">+</div>
+                <h3>Plan a new trip</h3>
+                <p>Every great adventure starts with a little idea.</p>
+                <span className="home-coming-soon">
+                  Trip creation coming soon
+                </span>
+              </div>
+            </div>
+          )}
+
+          {!tripLoading && !trip && !tripError && (
+            <p className="home-empty">
+              You don't have any trips yet.
+            </p>
           )}
         </section>
 
@@ -365,38 +329,6 @@ function Home() {
         <span>© {new Date().getFullYear()} Yonder</span>
         <span>A little planning goes a long way.</span>
       </footer>
-
-      {createTripOpen && (
-        <div
-          className="home-modal-backdrop"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget) {
-              setCreateTripOpen(false);
-            }
-          }}
-        >
-          <div
-            className="home-modal-content"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Create a new trip"
-          >
-            <button
-              type="button"
-              className="home-modal-close"
-              aria-label="Close create trip form"
-              onClick={() => setCreateTripOpen(false)}
-            >
-              ×
-            </button>
-
-            <CreateTripForm
-              onCreated={handleTripCreated}
-              onCancel={() => setCreateTripOpen(false)}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

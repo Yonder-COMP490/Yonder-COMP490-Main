@@ -1,7 +1,19 @@
-
+/**
+ * Component name: HousingCard
+ * Date: 09/26/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Displays and manages a housing booking, including its name,
+ * description, schedule, check-in and check-out times, cost, and notes.
+ */
 import { useEffect, useState } from "react";
 import "./HousingCard.css";
 
+/**
+ * Formats a cost range into a readable string.
+ *
+ * @param {Object|null} cost - The cost object containing lower and upper amounts.
+ * @returns {string} The formatted cost range, or an empty string if no cost exists.
+ */
 function formatCostAmount(cost) {
   if (!cost) return "";
 
@@ -11,6 +23,13 @@ function formatCostAmount(cost) {
   return lower === upper ? `${lower}` : `${lower}-${upper}`;
 }
 
+/**
+ * Calculates the number of nights between two dates.
+ *
+ * @param {string} checkInDate - The check-in date.
+ * @param {string} checkOutDate - The check-out date.
+ * @returns {number} The number of nights between the dates.
+ */
 function calculateNights(checkInDate, checkOutDate) {
   if (!checkInDate || !checkOutDate) return 0;
 
@@ -20,6 +39,12 @@ function calculateNights(checkInDate, checkOutDate) {
   return Math.max(0, Math.round((checkOut - checkIn) / 86400000));
 }
 
+/**
+ * Formats a date for display by removing the year.
+ *
+ * @param {string} date - The date in YYYY-MM-DD format.
+ * @returns {string} The formatted date or "Not set".
+ */
 function formatDate(date) {
   if (!date || date === "Not set") return "Not set";
 
@@ -28,6 +53,12 @@ function formatDate(date) {
   return month && day ? `${month}-${day}` : date;
 }
 
+/**
+ * Converts a 24-hour time into a 12-hour time with AM/PM.
+ *
+ * @param {string} time - The time in HH:mm format.
+ * @returns {string} The formatted time or "Not set".
+ */
 function formatTime(time) {
   if (!time) return "Not set";
 
@@ -38,6 +69,18 @@ function formatTime(time) {
   return `${displayHours}:${String(minutes).padStart(2, "0")} ${suffix}`;
 }
 
+/**
+ * Displays a housing booking and provides controls for editing its details.
+ *
+ * Maintains local editing state and saves changes through the provided
+ * callback.
+ *
+ * @param {Object} props - The component properties.
+ * @param {Object} props.housing - The housing booking being displayed.
+ * @param {Array<Object>} props.tripSections - The available trip sections.
+ * @param {Function} props.onSave - Callback used to save housing changes.
+ * @returns {JSX.Element} The housing booking card.
+ */
 function HousingCard({ housing, tripSections = [], onSave }) {
   const description = housing.description ?? {};
 
@@ -98,6 +141,12 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     setCheckOutTime(housing.checkOutTime ?? "");
   }, [housing]);
 
+  /**
+   * Saves changes to the housing booking and manages saving and error states.
+   *
+   * @param {Object} changes - The housing properties to update.
+   * @returns {Promise<boolean>} Whether the save operation succeeded.
+   */
   async function saveChanges(changes) {
     if (!onSave) {
       setError("Saving is not configured for this housing booking.");
@@ -123,6 +172,14 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     }
   }
 
+  /**
+   * Creates an update object containing modified description properties.
+   *
+   * Preserves existing description fields that are not being changed.
+   *
+   * @param {Object} changes - The description properties to modify.
+   * @returns {Object} The housing update object containing the merged description.
+   */
   function getDescriptionChanges(changes) {
     return {
       description: {
@@ -132,6 +189,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     };
   }
 
+  /**
+   * Validates and saves the housing booking's name.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveName(event) {
     event.preventDefault();
 
@@ -141,6 +203,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     await saveChanges(getDescriptionChanges({ name: trimmedName }));
   }
 
+  /**
+   * Saves the housing booking's description.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveDescription(event) {
     event.preventDefault();
 
@@ -151,12 +218,25 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     );
   }
 
+  /**
+   * Saves the housing booking's notes.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveNotes(event) {
     event.preventDefault();
 
     await saveChanges(getDescriptionChanges({ notes }));
   }
 
+  /**
+   * Validates and saves the housing booking's daily cost range and currency.
+   *
+   * Ensures the cost is correctly formatted and the maximum is not less
+   * than the minimum.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveCost(event) {
     event.preventDefault();
 
@@ -186,6 +266,13 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     });
   }
 
+  /**
+   * Validates and saves a fixed check-in date and number of nights.
+   *
+   * Clears the trip section assignment when using a fixed schedule.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveFixedSchedule(event) {
     event.preventDefault();
 
@@ -208,6 +295,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     });
   }
 
+  /**
+   * Saves the check-in and check-out times.
+   *
+   * @param {Event} event - The form submission event.
+   */
   async function saveTimes(event) {
     event.preventDefault();
 
@@ -217,6 +309,14 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     });
   }
 
+  /**
+   * Changes the housing booking's trip section assignment.
+   *
+   * Assigns fixed dates when no section is selected, or clears the fixed
+   * check-in date when a trip section is selected.
+   *
+   * @param {Event} event - The selection change event.
+   */
   async function changeTripSection(event) {
     const value = event.target.value;
 
@@ -248,6 +348,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     });
   }
 
+  /**
+   * Discards unsaved changes and restores the housing booking's current values.
+   *
+   * Resets all editing fields and clears any displayed error.
+   */
   function cancelEditing() {
     const currentDescription = housing.description ?? {};
 
@@ -274,6 +379,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     setError("");
   }
 
+  /**
+   * Formats the housing booking's daily cost for display.
+   *
+   * @returns {string} The formatted cost and currency, or "Add cost".
+   */
   function formatCost() {
     if (!housing.costPerDay) return "Add cost";
 
@@ -284,6 +394,11 @@ function HousingCard({ housing, tripSections = [], onSave }) {
     return `${amount} ${housing.costPerDay.currency || "USD"}`;
   }
 
+  /**
+   * Gets the name of the assigned trip section or identifies the schedule as fixed.
+   *
+   * @returns {string} The trip section name or "Fixed dates".
+   */
   function formatSchedule() {
     if (housing.tripSectionId != null) {
       const section = tripSections.find(
