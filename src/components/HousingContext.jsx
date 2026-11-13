@@ -42,56 +42,30 @@ export function HousingProvider({ children }) {
    */
   async function refreshHousing() {
     try {
-      const data = await HousingAPI.getAll(tripId);
-
+      const data = await HousingAPI.getAll();
       setHousing(data);
       setError("");
-
       return data;
     } catch (err) {
-      setError(
-        err.message || "Failed to load housing bookings."
-      );
+      setError(err.message);
       throw err;
     }
   }
 
-  /**
-   * Loads the selected trip's housing when the trip changes.
-   */
   useEffect(() => {
-    let cancelled = false;
-
     async function loadHousing() {
-      setLoading(true);
-      setHousing([]);
-      setError("");
-
       try {
-        const data = await HousingAPI.getAll(tripId);
-
-        if (!cancelled) {
-          setHousing(data);
-        }
+        setError("");
+        await refreshHousing();
       } catch (err) {
-        if (!cancelled) {
-          setError(
-            err.message || "Failed to load housing bookings."
-          );
-        }
+        setError(err.message);
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     }
 
     loadHousing();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [tripId]);
+  }, []);
 
   /**
    * Creates a housing booking in the backend and adds it to shared state.
@@ -101,16 +75,8 @@ export function HousingProvider({ children }) {
    * @throws {Error} If the creation request fails.
    */
   async function addHousing(housingItem) {
-    const created = await HousingAPI.add(
-      housingItem,
-      tripId
-    );
-
-    setHousing((current) => [
-      ...current,
-      created,
-    ]);
-
+    const created = await HousingAPI.add(housingItem);
+    setHousing((current) => [...current, created]);
     return created;
   }
 
@@ -125,8 +91,7 @@ export function HousingProvider({ children }) {
   async function updateHousing(updatedHousing) {
     const updated = await HousingAPI.update(
       updatedHousing.id,
-      updatedHousing,
-      tripId
+      updatedHousing
     );
 
     setHousing((current) =>
@@ -148,7 +113,7 @@ export function HousingProvider({ children }) {
    * @throws {Error} If the deletion request fails.
    */
   async function removeHousing(id) {
-    await HousingAPI.remove(id, tripId);
+    await HousingAPI.remove(id);
 
     setHousing((current) =>
       current.filter((housingItem) => housingItem.id !== id)
@@ -158,7 +123,6 @@ export function HousingProvider({ children }) {
   return (
     <HousingContext.Provider
       value={{
-        tripId,
         housing,
         loading,
         error,

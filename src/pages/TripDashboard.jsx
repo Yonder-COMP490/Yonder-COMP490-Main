@@ -6,18 +6,11 @@
  * page content, and the itinerary sidebar. Loads trip information from the API
  * and shares trip data and date-selection functions with child routes.
  */
-
 import { useEffect, useState } from "react";
-import {
-  NavLink,
-  Outlet,
-  useLocation,
-} from "react-router-dom";
-
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import ItinerarySidebar from "../components/ItinerarySidebar";
+import TripAPI from "../api/TripAPI";
 import "./TripDashboard.css";
-
-const API_BASE = "http://localhost:8080/api";
 
 const tabs = [
   { label: "Calendar", path: "/Calendar" },
@@ -51,129 +44,53 @@ function getTodayString() {
  * @returns {JSX.Element} The dashboard layout with navigation and page content.
  */
 export default function TripDashboard() {
-  const location = useLocation();
-
-  // Read the selected trip from the URL.
-  // Example: /Calendar?tripId=2
-  const params = new URLSearchParams(location.search);
-  const requestedTripId = Number(params.get("tripId") || 1);
-
-  const tripId =
-    Number.isInteger(requestedTripId) &&
-    requestedTripId > 0
-      ? requestedTripId
-      : 1;
-
-  // Preserve the selected trip when navigating between tabs.
-  const tripQuery = `?tripId=${tripId}`;
-
   const [trip, setTrip] = useState(null);
-  const [tripLoading, setTripLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(getTodayString);
   const [tripError, setTripError] = useState("");
 
-  const [selectedDate, setSelectedDate] =
-    useState(getTodayString);
+  const location = useLocation();
 
-  // Hide the sidebar on the full-width Itinerary page.
-  const isItineraryPage =
-    location.pathname.toLowerCase() === "/itinerary";
-
-  /**
-   * Loads the selected trip whenever its ID changes.
-   *
-   * Clears the previous trip to prevent displaying
-   * outdated data while loading another trip.
-   */
   useEffect(() => {
-    let cancelled = false;
-
     async function loadTrip() {
-      setTripLoading(true);
-      setTrip(null);
-      setTripError("");
-
       try {
-        const response = await fetch(
-          `${API_BASE}/trips/${tripId}`
-        );
+        const loadedTrip = await TripAPI.get();
 
-        if (!response.ok) {
-          throw new Error(
-            `Unable to load trip (${response.status}).`
-          );
+        setTrip(loadedTrip);
+
+        if (loadedTrip.startDate) {
+          setSelectedDate(loadedTrip.startDate);
         }
 
-        const loadedTrip = await response.json();
-
-        if (!cancelled) {
-          setTrip(loadedTrip);
-
-          // Open the calendar on the selected trip's
-          // starting date.
-          setSelectedDate(
-            loadedTrip.startDate || getTodayString()
-          );
-
-          setTripError("");
-        }
+        setTripError("");
       } catch (error) {
-        console.error(
-          "Unable to load selected trip:",
-          error
-        );
-
-        if (!cancelled) {
-          setTripError(
-            error.message ||
-              "Unable to load trip information."
-          );
-        }
-      } finally {
-        if (!cancelled) {
-          setTripLoading(false);
-        }
+        console.error("Unable to load trip:", error);
+        setTripError("Unable to load trip information.");
       }
     }
 
     loadTrip();
+  }, []);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [tripId]);
+  const isItineraryPage = location.pathname === "/Itinerary";
 
-  /**
-   * Updates the currently selected calendar date.
-   */
   function selectDate(date) {
     setSelectedDate(date);
   }
 
   return (
     <div className="trip-dashboard">
-      {/* Dashboard header */}
       <header className="dashboard-header">
         <h1>Yonder</h1>
-
-        <span>
-          {tripLoading
-            ? "Loading trip..."
-            : trip
-              ? trip.name
-              : "Trip Planner"}
-        </span>
+        <span>Trip Planner</span>
       </header>
 
-      {/* Trip-specific navigation */}
       <nav className="dashboard-tabs">
         {tabs.map((tab) => (
           <NavLink
             key={tab.path}
-            to={`${tab.path}${tripQuery}`}
+            to={tab.path}
             className={({ isActive }) =>
-              `dashboard-tab ${
-                isActive ? "active" : ""
-              }`
+              `dashboard-tab ${isActive ? "active" : ""}`
             }
           >
             {tab.label}
@@ -181,62 +98,40 @@ export default function TripDashboard() {
         ))}
       </nav>
 
-      {/* Error message */}
-      {tripError && (
-        <p
-          role="alert"
-          className="trip-error"
-        >
-          {tripError}
-        </p>
-      )}
-
-      {/* Loading state */}
-      {tripLoading && (
-        <div className="dashboard-body">
-          <main className="dashboard-content">
-            <p>Loading trip information...</p>
-          </main>
-        </div>
-      )}
-
-      {/* Trip dashboard content */}
-      {!tripLoading && trip && (
-        <div
-          className={`dashboard-body ${
-            isItineraryPage
-              ? "dashboard-body-full"
-              : ""
-          }`}
-        >
-          <main className="dashboard-content">
-            <Outlet
-              context={{
-                selectedDate,
-                selectDate,
-                trip,
-                setTrip,
-                tripId,
-              }}
-            />
-          </main>
-
-          {/* Sidebar hidden on the Itinerary page */}
-          {!isItineraryPage && (
-            <aside
-              className="dashboard-itinerary"
-              aria-label="Trip itinerary"
-            >
-              <ItinerarySidebar
-                selectedDate={selectedDate}
-                onSelectDate={selectDate}
-                trip={trip}
-                setTrip={setTrip}
-              />
-            </aside>
+      <div
+        className={`dashboard-body ${
+          isItineraryPage ? "dashboard-body-full" : ""
+        }`}
+      >
+        <main className="dashboard-content">
+          {tripError && (
+            <p className="trip-error">{tripError}</p>
           )}
-        </div>
-      )}
+
+          <Outlet
+            context={{
+              selectedDate,
+              selectDate,
+              trip,
+              setTrip,
+            }}
+          />
+        </main>
+
+        {!isItineraryPage && (
+          <aside
+            className="dashboard-itinerary"
+            aria-label="Trip itinerary"
+          >
+            <ItinerarySidebar
+              selectedDate={selectedDate}
+              onSelectDate={selectDate}
+              trip={trip}
+              setTrip={setTrip}
+            />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

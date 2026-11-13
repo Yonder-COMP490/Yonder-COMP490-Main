@@ -6,17 +6,7 @@
  * and creating, updating, and deleting individual budget items.
  * Serializes budget item data before sending it to the backend.
  */
-const API_BASE = "http://localhost:8080/api/trips";
-
-function tripUrl(tripId) {
-  const id = Number(tripId);
-
-  if (!Number.isInteger(id) || id < 1) {
-    throw new Error("A valid trip ID is required.");
-  }
-
-  return `${API_BASE}/${id}`;
-}
+const API_URL = "http://localhost:8080/api/trip";
 
 /**
  * Converts a budget item into the format expected by the backend.
@@ -33,10 +23,7 @@ function serializeBudgetItem(item) {
     name: item.name,
     cost: {
       lowerEnd: item.cost?.lowerEnd ?? 0,
-      upperEnd:
-        item.cost?.upperEnd ??
-        item.cost?.lowerEnd ??
-        0,
+      upperEnd: item.cost?.upperEnd ?? item.cost?.lowerEnd ?? 0,
       currency: item.cost?.currency ?? "USD",
     },
     days: item.days ?? 1,
@@ -53,13 +40,8 @@ class BudgetAPI {
    * @returns {Promise<Object>} A promise containing the budget summary.
    * @throws {Error} If the request fails.
    */
-  /**
-   * Retrieves the calculated budget for a selected trip.
-   */
-  async getSummary(tripId = 1) {
-    const response = await fetch(
-      `${tripUrl(tripId)}/budget`
-    );
+  async getSummary() {
+    const response = await fetch(`${API_URL}/budget`);
 
     if (!response.ok) {
       const details = await response.text();
@@ -68,7 +50,7 @@ class BudgetAPI {
       );
     }
 
-    return response.json();
+    return await response.json();
   }
 
   /**
@@ -80,20 +62,14 @@ class BudgetAPI {
    * @returns {Promise<Object>} A promise containing the created budget item.
    * @throws {Error} If the creation request fails.
    */
-  /**
-   * Adds a daily budget item to a selected trip.
-   */
-  async add(item, tripId = 1) {
-    const response = await fetch(
-      `${tripUrl(tripId)}/budget-items`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(serializeBudgetItem(item)),
-      }
-    );
+  async add(item) {
+    const response = await fetch(`${API_URL}/budget-items`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(serializeBudgetItem(item)),
+    });
 
     if (!response.ok) {
       const details = await response.text();
@@ -102,7 +78,7 @@ class BudgetAPI {
       );
     }
 
-    return response.json();
+    return await response.json();
   }
 
   /**
@@ -113,23 +89,17 @@ class BudgetAPI {
    * @returns {Promise<Object>} A promise containing the updated budget item.
    * @throws {Error} If the update request fails.
    */
-  /**
-   * Updates a budget item belonging to a selected trip.
-   */
-  async update(id, item, tripId = 1) {
-    const response = await fetch(
-      `${tripUrl(tripId)}/budget-items/${id}`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...serializeBudgetItem(item),
-          id,
-        }),
-      }
-    );
+  async update(id, item) {
+    const response = await fetch(`${API_URL}/budget-items/${id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...serializeBudgetItem(item),
+        id,
+      }),
+    });
 
     if (!response.ok) {
       const details = await response.text();
@@ -138,7 +108,7 @@ class BudgetAPI {
       );
     }
 
-    return response.json();
+    return await response.json();
   }
 
   /**
@@ -148,16 +118,10 @@ class BudgetAPI {
    * @returns {Promise<void>} A promise that resolves when deletion succeeds.
    * @throws {Error} If the deletion request fails.
    */
-  /**
-   * Deletes a budget item from a selected trip.
-   */
-  async remove(id, tripId = 1) {
-    const response = await fetch(
-      `${tripUrl(tripId)}/budget-items/${id}`,
-      {
-        method: "DELETE",
-      }
-    );
+  async remove(id) {
+    const response = await fetch(`${API_URL}/budget-items/${id}`, {
+      method: "DELETE",
+    });
 
     if (!response.ok) {
       const details = await response.text();

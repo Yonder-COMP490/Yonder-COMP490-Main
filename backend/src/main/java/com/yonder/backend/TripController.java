@@ -1,26 +1,14 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
 import com.yonder.backend.models.BudgetItem;
-import com.yonder.backend.models.BudgetSummary;
 import com.yonder.backend.models.HousingBooking;
 import com.yonder.backend.models.Trip;
 import com.yonder.backend.services.BudgetService;
+import com.yonder.backend.models.BudgetSummary;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
@@ -46,54 +34,40 @@ import org.springframework.web.server.ResponseStatusException;
     }
 )
 public class TripController {
-
-    private final TripManager tripManager;
     private final BudgetService budgetService;
+    private final TripManager tripManager;
 
-    public TripController(
-        TripManager tripManager,
-        BudgetService budgetService
-    ) {
+    public TripController(TripManager tripManager, BudgetService budgetService)
+    {
         this.tripManager = tripManager;
         this.budgetService = budgetService;
     }
 
-    // ============================================================
-    // LEGACY TRIP ENDPOINTS
-    // Preserved for compatibility with the existing application.
-    // These endpoints operate on the original sample trip.
-    // ============================================================
-
-    /**
-     * Retrieves the original sample trip.
-     *
-     * @return sample trip
-     */
     @GetMapping("/api/trip")
     public Trip getTrip() {
         return tripManager.getTrip();
     }
 
     /**
-     * Updates the original sample trip, including its
-     * duration and trip sections.
+     * Updates the current trip using the provided trip information.
+     * Validates the trip duration and starting date before applying changes.
      *
-     * @param trip updated trip information
-     * @return updated sample trip
+     * @param trip the trip containing the updated information
+     * @return the updated trip
+     * @throws ResponseStatusException with BAD_REQUEST if the trip duration
+     * is less than one day or the starting date is missing
      */
     @PutMapping("/api/trip")
     public Trip updateTrip(@RequestBody Trip trip) {
         if (trip.getDays() < 1) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Trip must be at least one day long"
+                HttpStatus.BAD_REQUEST, "Trip must be at least one day long"
             );
         }
 
         if (trip.getStartDate() == null) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Trip start date is required"
+                HttpStatus.BAD_REQUEST, "Trip start date is required"
             );
         }
 
@@ -110,9 +84,7 @@ public class TripController {
      */
     @PostMapping("/api/trip/activities")
     @ResponseStatus(HttpStatus.CREATED)
-    public Activity addActivity(
-        @RequestBody Activity activity
-    ) {
+    public Activity addActivity(@RequestBody Activity activity) {
         return tripManager.addActivity(activity);
     }
 
@@ -130,19 +102,15 @@ public class TripController {
         @PathVariable int id,
         @RequestBody Activity activity
     ) {
-        Activity updated = tripManager.updateActivity(
-            id,
-            activity
-        );
+        Activity result = tripManager.updateActivity(id, activity);
 
-        if (updated == null) {
+        if (result == null) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Activity not found"
+                HttpStatus.NOT_FOUND, "Activity not found"
             );
         }
 
-        return updated;
+        return result;
     }
 
     /**
@@ -157,8 +125,7 @@ public class TripController {
     public void removeActivity(@PathVariable int id) {
         if (!tripManager.removeActivity(id)) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Activity not found"
+                HttpStatus.NOT_FOUND, "Activity not found"
             );
         }
     }
@@ -185,8 +152,7 @@ public class TripController {
 
         if (result == null) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Activity not found"
+                HttpStatus.NOT_FOUND, "Activity not found"
             );
         }
 
@@ -223,17 +189,16 @@ public class TripController {
         @PathVariable int id,
         @RequestBody HousingBooking housing
     ) {
-        HousingBooking updated =
+        HousingBooking result =
             tripManager.updateHousingBooking(id, housing);
 
-        if (updated == null) {
+        if (result == null) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Housing booking not found"
+                HttpStatus.NOT_FOUND, "Housing booking not found"
             );
         }
 
-        return updated;
+        return result;
     }
 
     /**
@@ -248,8 +213,7 @@ public class TripController {
     public void removeHousingBooking(@PathVariable int id) {
         if (!tripManager.removeHousingBooking(id)) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Housing booking not found"
+                HttpStatus.NOT_FOUND, "Housing booking not found"
             );
         }
     }
@@ -264,9 +228,7 @@ public class TripController {
     */
     @PostMapping("/api/trip/budget-items")
     @ResponseStatus(HttpStatus.CREATED)
-    public BudgetItem addBudgetItem(
-        @RequestBody BudgetItem item
-    ) {
+    public BudgetItem addBudgetItem(@RequestBody BudgetItem item) {
         return tripManager.addBudgetItem(item);
     }
 
@@ -284,19 +246,15 @@ public class TripController {
         @PathVariable int id,
         @RequestBody BudgetItem item
     ) {
-        BudgetItem updated = tripManager.updateBudgetItem(
-            id,
-            item
-        );
+        BudgetItem result = tripManager.updateBudgetItem(id, item);
 
-        if (updated == null) {
+        if (result == null) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Budget item not found"
+                HttpStatus.NOT_FOUND, "Budget item not found"
             );
         }
 
-        return updated;
+        return result;
     }
 
     /**
@@ -311,8 +269,7 @@ public class TripController {
     public void removeBudgetItem(@PathVariable int id) {
         if (!tripManager.removeBudgetItem(id)) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Budget item not found"
+                HttpStatus.NOT_FOUND, "Budget item not found"
             );
         }
     }

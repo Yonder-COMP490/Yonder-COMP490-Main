@@ -13,34 +13,31 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
+
+/**
+ * Class name: TripManager
+ * Date: 10/12/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Manages the trip and its associated data, including activities,
+ * housing bookings, and budget items. Handles creating, updating, and removing
+ * trip objects, as well as generating unique identifiers for newly added
+ * objects. Acts as the primary interface between the trip data and controller.
+ */
 @Component
 public class TripManager {
 
-    // Original sample trip, retained for backward compatibility.
     private final Trip trip;
-
-    // All trips stored in memory, indexed by their unique IDs.
-    private final Map<Integer, Trip> trips = new LinkedHashMap<>();
 
     public TripManager() {
         trip = createSampleTrip();
-        trips.put(trip.getId(), trip);
     }
-
-    // ============================================================
-    // SAMPLE TRIP
-    // ============================================================
-
     /**
-     * Creates the original Japan sample trip using the updated
-     * Description, Location, and Trip models.
+     * Creates and initializes a sample trip with example activities and
+     * housing bookings for development and testing purposes.
      *
-     * @return the sample trip
+     * @return the newly created sample trip
      */
     private Trip createSampleTrip() {
         Trip newTrip = new Trip(
@@ -93,27 +90,18 @@ public class TripManager {
         return newTrip;
     }
 
-    // ============================================================
-    // LEGACY TRIP MANAGEMENT
-    // ============================================================
-
-    /**
-     * Returns the original sample trip.
-     *
-     * @return the sample trip
-     */
     public Trip getTrip() {
         return trip;
     }
-
     /**
-     * Updates the original sample trip while preserving
-     * its assigned activities, housing, and budget items.
+     * Updates the current trip's basic information, duration, and trip sections.
+     * Preserves the existing trip object and its associated activities,
+     * housing bookings, and budget items.
      *
-     * @param updated updated trip details
-     * @return the updated sample trip
+     * @param updated the trip containing the updated information
+     * @return the updated trip
      */
-    public synchronized Trip updateTrip(Trip updated) {
+    public Trip updateTrip(Trip updated) {
         trip.setName(updated.getName());
         trip.setStartDate(updated.getStartDate());
         trip.setPreferredCurrency(updated.getPreferredCurrency());
@@ -126,85 +114,12 @@ public class TripManager {
         return trip;
     }
 
-    // ============================================================
-    // MULTI-TRIP MANAGEMENT
-    // ============================================================
-
+    // ---------- Activities ----------
     /**
-     * Returns all trips currently stored in memory.
+     * Assigns a unique identifier to an activity and adds it to the trip.
      *
-     * @return list of trips
-     */
-    public synchronized List<Trip> getTrips() {
-        return new ArrayList<>(trips.values());
-    }
-
-    /**
-     * Retrieves a trip by its unique identifier.
-     *
-     * @param id trip ID
-     * @return matching trip or null
-     */
-    public synchronized Trip getTripById(int id) {
-        return trips.get(id);
-    }
-
-    /**
-     * Creates a new trip and assigns its unique identifier.
-     *
-     * The updated Trip model uses a duration in days
-     * rather than storing an end date.
-     *
-     * @param requested requested trip information
-     * @return newly created trip
-     */
-    public synchronized Trip createTrip(Trip requested) {
-        if (requested == null ||
-            requested.getName() == null ||
-            requested.getName().isBlank()) {
-
-            throw new IllegalArgumentException(
-                "Trip name is required."
-            );
-        }
-
-        if (requested.getStartDate() == null) {
-            throw new IllegalArgumentException(
-                "Trip start date is required."
-            );
-        }
-
-        if (requested.getDays() < 1) {
-            throw new IllegalArgumentException(
-                "Trip duration must be at least one day."
-            );
-        }
-
-        int nextId = trips.keySet()
-            .stream()
-            .mapToInt(Integer::intValue)
-            .max()
-            .orElse(0) + 1;
-
-        Trip newTrip = new Trip(
-            nextId,
-            requested.getName().trim(),
-            requested.getStartDate(),
-            requested.getDays(),
-            requested.getPreferredCurrency()
-        );
-
-        trips.put(newTrip.getId(), newTrip);
-
-        return newTrip;
-    }
-
-    // ============================================================
-    // LEGACY ACTIVITY METHODS
-    // ============================================================
-
-    /**
-     * Adds an activity to the original sample trip.
+     * @param activity the activity to add
+     * @return the newly added activity
      */
     public Activity addActivity(Activity activity) {
         activity.setId(nextActivityId());
@@ -213,7 +128,13 @@ public class TripManager {
     }
 
     /**
-     * Updates an activity in the original sample trip.
+     * Finds and replaces an existing activity with the updated activity.
+     * Preserves the original identifier and attaches the updated activity
+     * to the current trip's starting date.
+     *
+     * @param id the identifier of the activity to update
+     * @param updated the activity containing the updated information
+     * @return the updated activity, or null if no matching activity exists
      */
     public Activity updateActivity(int id, Activity updated) {
         for (int i = 0; i < trip.getActivities().size(); i++) {
@@ -222,6 +143,7 @@ public class TripManager {
                 updated.attachToTrip(trip.getStartDate());
 
                 trip.getActivities().set(i, updated);
+
                 return updated;
             }
         }
@@ -230,8 +152,12 @@ public class TripManager {
     }
 
     /**
-     * Removes an activity from the original sample trip.
+     * Removes the activity with the specified identifier from the trip.
+     *
+     * @param id the identifier of the activity to remove
+     * @return true if an activity was removed, false if no matching activity exists
      */
+
     public boolean removeActivity(int id) {
         int previousSize = trip.getActivities().size();
 
@@ -247,18 +173,21 @@ public class TripManager {
      * @return the next available activity identifier
      */
     private int nextActivityId() {
-        return trip.getActivities()
-            .stream()
+        return trip.getActivities().stream()
             .mapToInt(Activity::getId)
             .max()
             .orElse(0) + 1;
     }
 
     /**
-     * Changes the scheduling mode of an activity in
-     * the original sample trip.
+     * Finds an activity and switches its scheduling method between
+     * fixed-date scheduling and trip-day scheduling. Uses the current
+     * trip's starting date when converting between scheduling methods.
      *
-     * Preserves the scheduling feature added on main.
+     * @param id the identifier of the activity to update
+     * @param useFixedDate true to use fixed-date scheduling,
+     * false to use trip-day scheduling
+     * @return the updated activity, or null if no matching activity exists
      */
     public Activity switchActivityScheduleType(
         int id,
@@ -280,87 +209,14 @@ public class TripManager {
         return null;
     }
 
-    // ============================================================
-    // TRIP-SPECIFIC ACTIVITY METHODS
-    // ============================================================
-
+    // ---------- Housing bookings ----------
     /**
-     * Adds an activity to the selected trip.
+     * Assigns a unique identifier to a housing booking and adds it to the trip.
+     *
+     * @param housing the housing booking to add
+     * @return the newly added housing booking
      */
-    public synchronized Activity addActivity(
-        int tripId,
-        Activity activity
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int nextId = selectedTrip.getActivities()
-            .stream()
-            .mapToInt(Activity::getId)
-            .max()
-            .orElse(0) + 1;
-
-        activity.setId(nextId);
-        selectedTrip.addActivity(activity);
-
-        return activity;
-    }
-
-    /**
-     * Updates an activity belonging to the selected trip.
-     */
-    public synchronized Activity updateActivity(
-        int tripId,
-        int activityId,
-        Activity updated
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        List<Activity> activities = selectedTrip.getActivities();
-
-        for (int i = 0; i < activities.size(); i++) {
-            if (activities.get(i).getId() == activityId) {
-                updated.setId(activityId);
-                updated.attachToTrip(
-                    selectedTrip.getStartDate()
-                );
-
-                activities.set(i, updated);
-
-                return updated;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Removes an activity from the selected trip.
-     */
-    public synchronized boolean removeActivity(
-        int tripId,
-        int activityId
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int previousSize =
-            selectedTrip.getActivities().size();
-
-        selectedTrip.removeActivity(activityId);
-
-        return selectedTrip.getActivities().size()
-            < previousSize;
-    }
-
-    // ============================================================
-    // LEGACY HOUSING METHODS
-    // ============================================================
-
-    /**
-     * Adds a housing booking to the original sample trip.
-     */
-    public HousingBooking addHousingBooking(
-        HousingBooking housing
-    ) {
+    public HousingBooking addHousingBooking(HousingBooking housing) {
         housing.setId(nextHousingId());
         trip.addHousingBooking(housing);
 
@@ -368,25 +224,30 @@ public class TripManager {
     }
 
     /**
-     * Updates a housing booking in the original sample trip.
+     * Finds and replaces an existing housing booking with the updated booking.
+     * Preserves the original identifier and refreshes its calculated schedule
+     * using the booking's assigned trip section.
      *
-     * Calling setHousingBookings refreshes schedules
-     * based on the assigned TripSection.
+     * @param id the identifier of the housing booking to update
+     * @param updated the housing booking containing the updated information
+     * @return the updated housing booking, or null if no matching booking exists
      */
     public HousingBooking updateHousingBooking(
         int id,
         HousingBooking updated
     ) {
-        List<HousingBooking> bookings =
+        List<HousingBooking> housingBookings =
             trip.getHousingBookings();
 
-        for (int i = 0; i < bookings.size(); i++) {
-            if (bookings.get(i).getId() == id) {
+        for (int i = 0; i < housingBookings.size(); i++) {
+            if (housingBookings.get(i).getId() == id) {
                 updated.setId(id);
 
-                bookings.set(i, updated);
+                housingBookings.set(i, updated);
 
-                trip.setHousingBookings(bookings);
+                // Refresh the calculated dates and nights using
+                // the booking's assigned TripSection.
+                trip.setHousingBookings(housingBookings);
 
                 return updated;
             }
@@ -396,16 +257,17 @@ public class TripManager {
     }
 
     /**
-     * Removes a housing booking from the sample trip.
+     * Removes the housing booking with the specified identifier from the trip.
+     *
+     * @param id the identifier of the housing booking to remove
+     * @return true if a booking was removed, false if no matching booking exists
      */
     public boolean removeHousingBooking(int id) {
-        int previousSize =
-            trip.getHousingBookings().size();
+        int previousSize = trip.getHousingBookings().size();
 
         trip.removeHousingBooking(id);
 
-        return trip.getHousingBookings().size()
-            < previousSize;
+        return trip.getHousingBookings().size() < previousSize;
     }
 
     /**
@@ -415,93 +277,18 @@ public class TripManager {
      * @return the next available housing booking identifier
      */
     private int nextHousingId() {
-        return trip.getHousingBookings()
-            .stream()
+        return trip.getHousingBookings().stream()
             .mapToInt(HousingBooking::getId)
             .max()
             .orElse(0) + 1;
     }
 
-    // ============================================================
-    // TRIP-SPECIFIC HOUSING METHODS
-    // ============================================================
-
+    // ---------- Budget items ----------
     /**
-     * Adds a housing booking to the selected trip.
-     */
-    public synchronized HousingBooking addHousingBooking(
-        int tripId,
-        HousingBooking housing
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int nextId = selectedTrip.getHousingBookings()
-            .stream()
-            .mapToInt(HousingBooking::getId)
-            .max()
-            .orElse(0) + 1;
-
-        housing.setId(nextId);
-        selectedTrip.addHousingBooking(housing);
-
-        return housing;
-    }
-
-    /**
-     * Updates a housing booking belonging to a selected trip.
+     * Assigns a unique identifier to a budget item and adds it to the trip.
      *
-     * Uses the updated Trip model to recalculate
-     * section-based check-in dates and durations.
-     */
-    public synchronized HousingBooking updateHousingBooking(
-        int tripId,
-        int housingId,
-        HousingBooking updated
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        List<HousingBooking> bookings =
-            selectedTrip.getHousingBookings();
-
-        for (int i = 0; i < bookings.size(); i++) {
-            if (bookings.get(i).getId() == housingId) {
-                updated.setId(housingId);
-
-                bookings.set(i, updated);
-
-                selectedTrip.setHousingBookings(bookings);
-
-                return updated;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Removes a housing booking from the selected trip.
-     */
-    public synchronized boolean removeHousingBooking(
-        int tripId,
-        int housingId
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int previousSize =
-            selectedTrip.getHousingBookings().size();
-
-        selectedTrip.removeHousingBooking(housingId);
-
-        return selectedTrip.getHousingBookings().size()
-            < previousSize;
-    }
-
-    // ============================================================
-    // LEGACY BUDGET METHODS
-    // ============================================================
-
-    /**
-     * Adds a budget item to the original sample trip.
+     * @param item the budget item to add
+     * @return the newly added budget item
      */
     public BudgetItem addBudgetItem(BudgetItem item) {
         item.setId(nextBudgetItemId());
@@ -511,12 +298,14 @@ public class TripManager {
     }
 
     /**
-     * Updates a budget item in the original sample trip.
+     * Finds and replaces an existing budget item with the updated item.
+     * Preserves the original identifier.
+     *
+     * @param id the identifier of the budget item to update
+     * @param updated the budget item containing the updated information
+     * @return the updated budget item, or null if no matching item exists
      */
-    public BudgetItem updateBudgetItem(
-        int id,
-        BudgetItem updated
-    ) {
+    public BudgetItem updateBudgetItem(int id, BudgetItem updated) {
         for (int i = 0; i < trip.getBudgetItems().size(); i++) {
             if (trip.getBudgetItems().get(i).getId() == id) {
                 updated.setId(id);
@@ -531,7 +320,10 @@ public class TripManager {
     }
 
     /**
-     * Removes a budget item from the original sample trip.
+     * Removes the budget item with the specified identifier from the trip.
+     *
+     * @param id the identifier of the budget item to remove
+     * @return true if a budget item was removed, false if no matching item exists
      */
     public boolean removeBudgetItem(int id) {
         int previousSize = trip.getBudgetItems().size();
@@ -548,101 +340,9 @@ public class TripManager {
      * @return the next available budget item identifier
      */
     private int nextBudgetItemId() {
-        return trip.getBudgetItems()
-            .stream()
+        return trip.getBudgetItems().stream()
             .mapToInt(BudgetItem::getId)
             .max()
             .orElse(0) + 1;
-    }
-
-    // ============================================================
-    // TRIP-SPECIFIC BUDGET METHODS
-    // ============================================================
-
-    /**
-     * Adds a budget item to the selected trip.
-     */
-    public synchronized BudgetItem addBudgetItem(
-        int tripId,
-        BudgetItem item
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int nextId = selectedTrip.getBudgetItems()
-            .stream()
-            .mapToInt(BudgetItem::getId)
-            .max()
-            .orElse(0) + 1;
-
-        item.setId(nextId);
-        selectedTrip.addBudgetItem(item);
-
-        return item;
-    }
-
-    /**
-     * Updates a budget item belonging to the selected trip.
-     */
-    public synchronized BudgetItem updateBudgetItem(
-        int tripId,
-        int itemId,
-        BudgetItem updated
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        List<BudgetItem> items =
-            selectedTrip.getBudgetItems();
-
-        for (int i = 0; i < items.size(); i++) {
-            if (items.get(i).getId() == itemId) {
-                updated.setId(itemId);
-
-                items.set(i, updated);
-
-                return updated;
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Removes a budget item from the selected trip.
-     */
-    public synchronized boolean removeBudgetItem(
-        int tripId,
-        int itemId
-    ) {
-        Trip selectedTrip = requireTrip(tripId);
-
-        int previousSize =
-            selectedTrip.getBudgetItems().size();
-
-        selectedTrip.removeBudgetItem(itemId);
-
-        return selectedTrip.getBudgetItems().size()
-            < previousSize;
-    }
-
-    // ============================================================
-    // SHARED HELPERS
-    // ============================================================
-
-    /**
-     * Returns an existing trip or throws an exception.
-     *
-     * @param tripId selected trip ID
-     * @return matching trip
-     */
-    private Trip requireTrip(int tripId) {
-        Trip selectedTrip = trips.get(tripId);
-
-        if (selectedTrip == null) {
-            throw new IllegalArgumentException(
-                "Trip not found: " + tripId
-            );
-        }
-
-        return selectedTrip;
     }
 }
