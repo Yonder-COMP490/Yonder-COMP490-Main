@@ -1,6 +1,23 @@
-
+/**
+ * Class name: HousingAPI
+ * Date: 10/14/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Handles API requests for retrieving, creating, updating,
+ * and deleting housing bookings. Serializes housing data to match the
+ * backend model and supports both trip-section and fixed-date scheduling.
+ */
 const API_URL = "http://localhost:8080/api/trip";
 
+/**
+ * Converts a housing booking into the format expected by the backend.
+ *
+ * Handles nested description and location objects, determines the
+ * appropriate scheduling fields, calculates nights for fixed-date
+ * bookings when necessary, and supplies default cost values.
+ *
+ * @param {Object} housing - The housing booking to serialize.
+ * @returns {Object} The formatted housing booking data.
+ */
 function serializeHousing(housing) {
   const description =
     housing.description && typeof housing.description === "object"
@@ -78,6 +95,12 @@ function serializeHousing(housing) {
 }
 
 class HousingAPI {
+  /**
+   * Retrieves all housing bookings associated with the current trip.
+   *
+   * @returns {Promise<Array>} A promise containing the housing bookings.
+   * @throws {Error} If the request fails.
+   */
   async getAll() {
     const response = await fetch(API_URL);
 
@@ -89,6 +112,15 @@ class HousingAPI {
     return trip.housingBookings ?? [];
   }
 
+  /**
+   * Creates a new housing booking in the backend.
+   *
+   * Serializes the supplied booking before sending it.
+   *
+   * @param {Object} housing - The housing booking to create.
+   * @returns {Promise<Object>} A promise containing the created booking.
+   * @throws {Error} If the creation request fails.
+   */
   async add(housing) {
     const response = await fetch(`${API_URL}/housing`, {
       method: "POST",
@@ -108,6 +140,17 @@ class HousingAPI {
     return await response.json();
   }
 
+  /**
+   * Updates an existing housing booking.
+   *
+   * Uses the supplied ID to identify the booking and serializes
+   * the updated booking data before sending it.
+   *
+   * @param {number} id - The ID of the housing booking to update.
+   * @param {Object} housing - The updated housing booking data.
+   * @returns {Promise<Object>} A promise containing the updated booking.
+   * @throws {Error} If the update request fails.
+   */
   async update(id, housing) {
     const response = await fetch(`${API_URL}/housing/${id}`, {
       method: "PUT",
@@ -130,6 +173,13 @@ class HousingAPI {
     return await response.json();
   }
 
+  /**
+   * Deletes a housing booking from the backend.
+   *
+   * @param {number} id - The ID of the housing booking to delete.
+   * @returns {Promise<void>} A promise that resolves when deletion succeeds.
+   * @throws {Error} If the deletion request fails.
+   */
   async remove(id) {
     const response = await fetch(`${API_URL}/housing/${id}`, {
       method: "DELETE",
