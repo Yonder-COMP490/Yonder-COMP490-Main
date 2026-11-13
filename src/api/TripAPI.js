@@ -1,6 +1,22 @@
-
+/**
+ * Class name: TripAPI
+ * Date: 11/6/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Handles API requests for retrieving and updating the
+ * current trip. Serializes trip data, including its trip sections,
+ * before sending updates to the backend.
+ */
 const API_URL = "http://localhost:8080/api/trip";
 
+/**
+ * Converts a trip object into the format expected by the backend.
+ *
+ * Includes the trip's basic information and its associated trip sections.
+ * Missing section coordinates are converted to null.
+ *
+ * @param {Object} trip - The trip object to serialize.
+ * @returns {Object} The formatted trip data.
+ */
 function serializeTrip(trip) {
   return {
     id: trip.id,
@@ -21,6 +37,12 @@ function serializeTrip(trip) {
 }
 
 class TripAPI {
+/**
+ * Retrieves the current trip from the backend.
+ *
+ * @returns {Promise<Object>} A promise containing the trip data.
+ * @throws {Error} If the request fails.
+ */
   async get() {
     const response = await fetch(API_URL);
 
@@ -31,6 +53,15 @@ class TripAPI {
     return await response.json();
   }
 
+/**
+   * Updates the current trip in the backend.
+   *
+   * Serializes the supplied trip before sending it.
+   *
+   * @param {Object} trip - The updated trip information.
+   * @returns {Promise<Object>} A promise containing the updated trip.
+   * @throws {Error} If the update request fails.
+   */
   async update(trip) {
     const response = await fetch(API_URL, {
       method: "PUT",

@@ -1,4 +1,10 @@
-
+/**
+ * Component name: Activities
+ * Date: 09/20/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Displays the activities for the current trip and provides
+ * functionality for adding and updating activities.
+ */
 import { Link } from "react-router-dom";
 
 import ActivityCard from "../components/ActivityCard";
@@ -7,6 +13,15 @@ import { useActivities } from "../components/ActivityContext";
 
 import "./Activities.css";
 
+/**
+ * Displays the activities page using shared activity data from ActivityContext.
+ *
+ * Shows a loading message while activities are being retrieved and displays
+ * any loading errors. Renders an ActivityCard for each activity and an
+ * ActivityForm for adding new activities.
+ *
+ * @returns {JSX.Element} The activities page.
+ */
 function Activities() {
   const {
     activities,
@@ -20,10 +35,22 @@ function Activities() {
     return <p>Loading activities...</p>;
   }
 
+  /**
+   * Creates a new activity using the activity context.
+   *
+   * @param {Object} activity - The activity to add.
+   * @returns {Promise<void>} A promise that resolves when the activity is added.
+   */
   async function handleAdd(activity) {
     await addActivity(activity);
   }
 
+  /**
+   * Updates an existing activity using the activity context.
+   *
+   * @param {Object} activity - The updated activity data.
+   * @returns {Promise<void>} A promise that resolves when the activity is updated.
+   */
   async function handleUpdate(activity) {
     await updateActivity(activity);
   }

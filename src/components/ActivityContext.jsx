@@ -1,4 +1,12 @@
-
+/**
+ * Class name: ActivityContext
+ * Date: 09/20/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Manages shared activity data and operations throughout the
+ * application. Provides activity state, loading and error information,
+ * and functions for creating, updating, deleting, refreshing, and
+ * retrieving map marker data for activities.
+ */
 import {
   createContext,
   useContext,
@@ -192,6 +200,12 @@ export function ActivityProvider({ children, tripId = 1 }) {
   );
 }
 
+/**
+ * Provides access to the shared activity context.
+ *
+ * @returns {Object} The activity context containing activity data,
+ * loading and error states, and activity management functions.
+ */
 export function useActivities() {
   return useContext(ActivityContext);
 }

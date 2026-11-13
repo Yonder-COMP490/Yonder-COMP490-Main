@@ -1,5 +1,11 @@
 package com.yonder.backend.models;
 
+/**
+ * Class name: Description
+ * Date: 11/6/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: This class serves as a way to normalize shared information across many of the trip models
+ */
 public class Description {
     private String name;
     private String description;

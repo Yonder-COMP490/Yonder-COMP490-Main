@@ -5,6 +5,15 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Class name: Trip
+ * Date: 10/11/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Represents a trip and manages its basic information, duration,
+ * trip sections, activities, housing bookings, budget items, and points of
+ * interest. Also manages scheduling and date synchronization for trip-related
+ * objects.
+ */
 public class Trip {
     private int id;
     private String name;
@@ -19,6 +28,10 @@ public class Trip {
     private List<BudgetItem> budgetItems;
     private List<PointOfInterest> pointsOfInterest;
 
+    /**
+     * Creates a default trip with USD as its preferred currency, a duration of
+     * one day, and a default trip section. Initializes all trip-related lists.
+     */
     public Trip() {
         preferredCurrency = "USD";
         days = 1;

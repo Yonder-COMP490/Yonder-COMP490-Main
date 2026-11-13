@@ -1,4 +1,3 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -26,6 +25,15 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+/**
+ * Provides REST endpoints for the original sample trip and for multiple
+ * independently managed trips, including their activities, housing, and budgets.
+ * Delegates changes to TripManager and summaries to BudgetService.
+ *
+ * @author R. Sommerhauser
+ * @author A. Garcia
+ * @version 1.0
+ */
 @RestController
 @CrossOrigin(
     origins = "http://localhost:5173",
@@ -69,11 +77,13 @@ public class TripController {
     }
 
     /**
-     * Updates the original sample trip, including its
-     * duration and trip sections.
+     * Updates the current trip using the provided trip information.
+     * Validates the trip duration and starting date before applying changes.
      *
-     * @param trip updated trip information
-     * @return updated sample trip
+     * @param trip the trip containing the updated information
+     * @return the updated trip
+     * @throws ResponseStatusException with BAD_REQUEST if the trip duration
+     * is less than one day or the starting date is missing
      */
     @PutMapping("/api/trip")
     public Trip updateTrip(@RequestBody Trip trip) {
@@ -99,10 +109,10 @@ public class TripController {
     // ============================================================
 
     /**
-     * Adds an activity to the original sample trip.
+     * Creates a new activity and adds it to the current trip.
      *
-     * @param activity activity information
-     * @return created activity
+     * @param activity the activity to add
+     * @return the newly created activity
      */
     @PostMapping("/api/trip/activities")
     @ResponseStatus(HttpStatus.CREATED)
@@ -113,11 +123,13 @@ public class TripController {
     }
 
     /**
-     * Updates an activity in the original sample trip.
+     * Updates an existing activity using the provided activity information.
      *
-     * @param id activity ID
-     * @param activity updated activity data
-     * @return updated activity
+     * @param id the identifier of the activity to update
+     * @param activity the updated activity information
+     * @return the updated activity
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
      */
     @PutMapping("/api/trip/activities/{id}")
     public Activity updateActivity(
@@ -140,9 +152,11 @@ public class TripController {
     }
 
     /**
-     * Removes an activity from the original sample trip.
+     * Removes an activity from the current trip.
      *
-     * @param id activity ID
+     * @param id the identifier of the activity to remove
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
      */
     @DeleteMapping("/api/trip/activities/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -156,14 +170,14 @@ public class TripController {
     }
 
     /**
-     * Switches an activity between fixed-date and
-     * relative scheduling.
+     * Switches an activity between fixed-date scheduling and trip-day scheduling.
      *
-     * Preserves the scheduling functionality from main.
-     *
-     * @param id activity ID
-     * @param useFixedDate whether to use a fixed date
-     * @return updated activity
+     * @param id the identifier of the activity to update
+     * @param useFixedDate true to use fixed-date scheduling,
+     * false to use trip-day scheduling
+     * @return the updated activity
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
      */
     @PatchMapping("/api/trip/activities/{id}/schedule")
     public Activity switchActivityScheduleType(
@@ -190,10 +204,10 @@ public class TripController {
     // ============================================================
 
     /**
-     * Adds a housing booking to the original sample trip.
+     * Creates a new housing booking and adds it to the current trip.
      *
-     * @param housing housing booking information
-     * @return created housing booking
+     * @param housing the housing booking to add
+     * @return the newly created housing booking
      */
     @PostMapping("/api/trip/housing")
     @ResponseStatus(HttpStatus.CREATED)
@@ -204,11 +218,13 @@ public class TripController {
     }
 
     /**
-     * Updates a housing booking in the original sample trip.
+     * Updates an existing housing booking using the provided booking information.
      *
-     * @param id housing booking ID
-     * @param housing updated booking information
-     * @return updated housing booking
+     * @param id the identifier of the housing booking to update
+     * @param housing the updated housing booking information
+     * @return the updated housing booking
+     * @throws ResponseStatusException with NOT_FOUND if the housing booking
+     * does not exist
      */
     @PutMapping("/api/trip/housing/{id}")
     public HousingBooking updateHousingBooking(
@@ -229,9 +245,11 @@ public class TripController {
     }
 
     /**
-     * Removes a housing booking from the sample trip.
+     * Removes a housing booking from the current trip.
      *
-     * @param id housing booking ID
+     * @param id the identifier of the housing booking to remove
+     * @throws ResponseStatusException with NOT_FOUND if the housing booking
+     * does not exist
      */
     @DeleteMapping("/api/trip/housing/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -249,9 +267,11 @@ public class TripController {
     // ============================================================
 
     /**
-     * Retrieves the budget summary for the sample trip.
+     * Generates and retrieves a budget summary for the current trip.
+     * Delegates the calculation of expense totals and budget entries
+     * to the BudgetService.
      *
-     * @return calculated budget summary
+     * @return the calculated budget summary
      */
     @GetMapping("/api/trip/budget")
     public BudgetSummary getBudgetSummary() {
@@ -261,11 +281,11 @@ public class TripController {
     }
 
     /**
-     * Adds a budget item to the original sample trip.
+     * Creates a new budget item and adds it to the current trip.
      *
-     * @param item budget item
-     * @return created budget item
-     */
+     * @param item the budget item to add
+     * @return the newly created budget item
+    */
     @PostMapping("/api/trip/budget-items")
     @ResponseStatus(HttpStatus.CREATED)
     public BudgetItem addBudgetItem(
@@ -275,11 +295,13 @@ public class TripController {
     }
 
     /**
-     * Updates a budget item in the original sample trip.
+     * Updates an existing budget item using the provided item information.
      *
-     * @param id budget item ID
-     * @param item updated budget item
-     * @return updated budget item
+     * @param id the identifier of the budget item to update
+     * @param item the updated budget item information
+     * @return the updated budget item
+     * @throws ResponseStatusException with NOT_FOUND if the budget item
+     * does not exist
      */
     @PutMapping("/api/trip/budget-items/{id}")
     public BudgetItem updateBudgetItem(
@@ -302,9 +324,11 @@ public class TripController {
     }
 
     /**
-     * Removes a budget item from the original sample trip.
+     * Removes a budget item from the current trip.
      *
-     * @param id budget item ID
+     * @param id the identifier of the budget item to remove
+     * @throws ResponseStatusException with NOT_FOUND if the budget item
+     * does not exist
      */
     @DeleteMapping("/api/trip/budget-items/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

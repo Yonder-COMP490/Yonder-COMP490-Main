@@ -1,4 +1,11 @@
-
+/**
+ * Class name: ActivityAPI
+ * Date: 10/12/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Handles API requests for retrieving, creating, updating,
+ * and deleting trip activities. Also supports switching an activity
+ * between trip-day and fixed-date scheduling.
+ */
 const API_BASE = "http://localhost:8080/api/trips";
 
 // Legacy endpoint retained for existing scheduling functionality.

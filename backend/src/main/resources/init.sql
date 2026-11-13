@@ -1,9 +1,31 @@
-/*This is intended to bea  scrip to run one time to create the tables for the database. Should the database be lost, this could be used to set it up again(tables, not contents.) */
 
-/*Open pgAdmin and connect to the PostgreSQL server. (if still locallly hosted)
-Select the database Yonder(create if you dont have it).
-Right click on the database and select "Open Query Tool".
-Open init.sql in the Query Tool and execute it (usually with F5.)*/
+/*
+ * Module name: Database Initialization Script (init.sql)
+ * Date: 11/09/2026
+ * Programmer: Christian Bartle
+ *
+ * Description: Defines the PostgreSQL tables used by the Yonder backend:
+ * users, contact_info, profiles, costs, trips, activities, budgetItem,
+ * pointOfInterest, and housingBooking. This script is intended to be run once to
+ * create the tables for the database. If the database is lost, this script can be
+ * used to set it up again (tables only, not contents, that would requiere a
+ * separate backup).
+ *
+ * Important operations:
+ * - Creates each table if it does not already exist.
+ * - Defines primary keys, generated IDs, columns, and foreign-key
+ *   relationships between related records.
+ * - Uses ON DELETE CASCADE on selected relationships so dependent records
+ *   are deleted when their referenced parent is deleted.
+ *
+ * Data structures:
+ * - Defines relational tables and columns for user accounts,
+ *   profiles, trips, activities, costs, budget items, points of interest,
+ *   housing bookings, and contact information.
+ *
+ */
+
+/*This is intended to be a script to be ran one time to create the tables for the database. Should the database be lost, this could also be used to set it up again(tables, not contents.) */
 
 -- 1. Create Users Table
 CREATE TABLE IF NOT EXISTS users ( -- if not exists prevents that running the set up overwrites the current table if it already exists.

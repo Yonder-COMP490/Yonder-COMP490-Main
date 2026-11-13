@@ -1,4 +1,11 @@
-
+/**
+ * Class name: BudgetAPI
+ * Date: 10/23/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Handles API requests for retrieving budget summaries
+ * and creating, updating, and deleting individual budget items.
+ * Serializes budget item data before sending it to the backend.
+ */
 const API_BASE = "http://localhost:8080/api/trips";
 
 function tripUrl(tripId) {
@@ -11,6 +18,15 @@ function tripUrl(tripId) {
   return `${API_BASE}/${id}`;
 }
 
+/**
+ * Converts a budget item into the format expected by the backend.
+ *
+ * Supplies default values for missing IDs, costs, currencies,
+ * and durations.
+ *
+ * @param {Object} item - The budget item to serialize.
+ * @returns {Object} The formatted budget item data.
+ */
 function serializeBudgetItem(item) {
   return {
     id: item.id ?? 0,

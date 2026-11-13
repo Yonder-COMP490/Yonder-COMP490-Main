@@ -1,4 +1,13 @@
-
+/**
+ * Component name: App
+ * Date: 09/09/2026
+ * Programmer: Tatiana Cherbaeva
+ * Description: Defines the application's routing structure and shared context
+ * providers. Wraps the application in activity and housing providers, configures
+ * page routes, and displays the AI assistant across all routes.
+ *
+ * @returns {JSX.Element} The application router and its configured pages.
+ */
 import {
   BrowserRouter,
   Routes,
