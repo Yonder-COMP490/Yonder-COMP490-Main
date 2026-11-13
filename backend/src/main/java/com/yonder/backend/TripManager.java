@@ -1,4 +1,3 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -17,7 +16,17 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Class name: TripManager
+ * Date: 10/12/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Manages trips and their associated activities, housing bookings,
+ * and budget items. Maintains an in-memory collection of trips indexed by
+ * unique identifiers and provides operations for creating, retrieving,
+ * updating, and deleting trip-related data. Retains legacy methods for
+ * managing the original sample trip alongside trip-specific operations
+ * for supporting multiple trips.
+ */
 @Component
 public class TripManager {
 
