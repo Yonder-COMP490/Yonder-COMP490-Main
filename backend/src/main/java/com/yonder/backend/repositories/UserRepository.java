@@ -44,7 +44,7 @@ public class UserRepository {
     }
 
     public Optional<User> findByEmail(String email) {
-        String sql = "SELECT * FROM users WHERE email = ?";
+        String sql = "SELECT * FROM users WHERE email = ?"; // ? is a placeholder for the next line, where it is replaced by the given email in the function parameter.
         List<User> users = jdbcTemplate.query(sql, (rs, rowNum) -> {
             User user = new User();
             user.setUserId(rs.getLong("user_id"));
