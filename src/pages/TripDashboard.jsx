@@ -19,6 +19,14 @@ const tabs = [
   { label: "Maps", path: "/maps" },
 ];
 
+/**
+ * Returns the current local date in YYYY-MM-DD format.
+ *
+ * Uses the device's local date instead of UTC to prevent
+ * the selected calendar day from shifting across time zones.
+ *
+ * @returns {string} Current local date.
+ */
 function getTodayString() {
   const today = new Date();
   const year = today.getFullYear();
@@ -28,6 +36,24 @@ function getTodayString() {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Displays the dashboard for a selected trip in Yonder.
+ *
+ * Retrieves the trip ID from the URL and loads the corresponding
+ * trip information from the backend. Maintains the selected
+ * calendar date and shares trip-specific data with nested pages
+ * through React Router's Outlet context.
+ *
+ * Preserves the selected trip ID when navigating between
+ * dashboard tabs and displays the itinerary sidebar except
+ * when viewing the full-width Itinerary page.
+ *
+ * @component
+ * @returns {JSX.Element} The trip dashboard interface.
+ *
+ * @author A. Garcia
+ * @version 1.0
+ */
 export default function TripDashboard() {
   const location = useLocation();
 
@@ -59,8 +85,13 @@ export default function TripDashboard() {
   /**
    * Loads the selected trip whenever its ID changes.
    *
-   * Clears the previous trip to prevent displaying
-   * outdated data while loading another trip.
+   * Clears the previous trip before retrieving updated data
+   * from GET /api/trips/{tripId}. Initializes the calendar
+   * to the trip's start date after a successful response.
+   *
+   * Uses a cancellation flag to prevent outdated asynchronous
+   * responses from updating state after the component unmounts
+   * or the selected trip changes.
    */
   useEffect(() => {
     let cancelled = false;
@@ -121,7 +152,11 @@ export default function TripDashboard() {
   }, [tripId]);
 
   /**
-   * Updates the currently selected calendar date.
+   * Updates the date shared by the dashboard's nested pages
+   * and itinerary sidebar.
+   *
+   * @param {string} date - Selected date in YYYY-MM-DD format.
+   * @returns {void}
    */
   function selectDate(date) {
     setSelectedDate(date);

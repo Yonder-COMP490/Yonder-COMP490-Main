@@ -23,6 +23,14 @@ import AIAssistant from "./components/AIAssistant";
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
 
+/**
+ * Redirects the dashboard's base route to the Calendar page.
+ *
+ * Preserves the URL query parameters, including the selected
+ * trip ID, so navigation does not switch to another trip.
+ *
+ * @returns {JSX.Element} A redirect to the Calendar route.
+ */
 function DashboardRedirect() {
   const location = useLocation();
 
@@ -37,6 +45,23 @@ function DashboardRedirect() {
   );
 }
 
+/**
+ * Provides trip-specific activity and housing data to
+ * child components.
+ *
+ * Extracts the trip ID from the URL query parameters and
+ * defaults to trip 1 when no valid ID is provided.
+ *
+ * Uses trip-specific React keys to remount the Context
+ * providers when the selected trip changes, preventing
+ * data from a previous trip from remaining in the new
+ * trip's state.
+ *
+ * @param {Object} props - Component properties.
+ * @param {React.ReactNode} props.children - Components
+ * that require access to trip-specific Context providers.
+ * @returns {JSX.Element} Nested activity and housing providers.
+ */
 function TripScopedProviders({ children }) {
   const location = useLocation();
 
@@ -57,6 +82,16 @@ function TripScopedProviders({ children }) {
   );
 }
 
+/**
+ * Defines the application's page routes and shared components.
+ *
+ * Groups the trip management pages under TripDashboard so
+ * they share dashboard navigation and trip-specific state.
+ * Wraps routes in trip-scoped providers and renders the
+ * AI assistant alongside the application routes.
+ *
+ * @returns {JSX.Element} Application routes and shared providers.
+ */
 function AppRoutes() {
   return (
     <TripScopedProviders>
@@ -90,6 +125,18 @@ function AppRoutes() {
   );
 }
 
+/**
+ * Initializes the Yonder application with React Router.
+ *
+ * Provides browser-based navigation to all application
+ * routes through the AppRoutes component.
+ *
+ * @component
+ * @returns {JSX.Element} The application's root component.
+ *
+ * @author A. Garcia
+ * @version 1.0
+ */
 export default function App() {
   return (
     <BrowserRouter>
