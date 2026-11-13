@@ -7,108 +7,101 @@
  * and functions for creating, updating, deleting, refreshing, and
  * retrieving map marker data for activities.
  */
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import ActivityAPI from "../api/ActivityAPI";
 
 const ActivityContext = createContext();
 
-/**
- * Provides activity data and management functions to child components.
- *
- * Loads activities from the backend when mounted and maintains the shared
- * activity state through React Context.
- *
- * @param {Object} props - The component properties.
- * @param {React.ReactNode} props.children - The child components receiving
- * access to the activity context.
- * @returns {JSX.Element} The ActivityContext provider containing its children.
- */
-export function ActivityProvider({ children }) {
+export function ActivityProvider({ children, tripId = 1 }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   /**
-   * Retrieves map marker data for all activities with valid coordinates.
-   *
-   * @returns {Array} The map markers generated from activities.
-   */
-  function getMapMarkers() {
-    return activities
-      .filter(
-        (activity) =>
-          activity.location?.latitude != null &&
-          activity.location?.longitude != null
-      )
-      .map((activity) => ({
-        id: activity.id,
-        name: activity.name,
-        latitude: activity.location.latitude,
-        longitude: activity.location.longitude,
-      }));
-  }
-  
-  /**
-   * Retrieves the latest activities from the backend and updates the shared state.
-   *
-   * Clears the current error when successful and stores the error message
-   * if the request fails.
-   *
-   * @returns {Promise<Array>} The refreshed list of activities.
-   * @throws {Error} If the request fails.
+   * Reloads activities belonging to the selected trip.
    */
   async function refreshActivities() {
     try {
-      const data = await ActivityAPI.getAll();
+      const data = await ActivityAPI.getAll(tripId);
+
       setActivities(data);
       setError("");
+
       return data;
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to load activities.");
       throw err;
     }
   }
 
+  /**
+   * Loads the correct activities whenever the trip changes.
+   */
   useEffect(() => {
+    let cancelled = false;
+
     async function loadActivities() {
+      setLoading(true);
+      setActivities([]);
+      setError("");
+
       try {
-        setError("");
-        await refreshActivities();
+        const data = await ActivityAPI.getAll(tripId);
+
+        if (!cancelled) {
+          setActivities(data);
+        }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) {
+          setError(
+            err.message || "Failed to load activities."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadActivities();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
 
   /**
-   * Creates a new activity in the backend and adds it to the shared activity state.
-   *
-   * @param {Object} activity - The activity to create.
-   * @returns {Promise<Object>} The newly created activity.
-   * @throws {Error} If the creation request fails.
+   * Creates an activity for the selected trip.
    */
   async function addActivity(activity) {
-    const created = await ActivityAPI.add(activity);
-    setActivities((current) => [...current, created]);
+    const created = await ActivityAPI.add(
+      activity,
+      tripId
+    );
+
+    setActivities((current) => [
+      ...current,
+      created,
+    ]);
+
     return created;
   }
 
   /**
-   * Updates an existing activity in the backend and replaces its entry
-   * in the shared activity state.
-   *
-   * @param {Object} updatedActivity - The updated activity data, including its ID.
-   * @returns {Promise<Object>} The updated activity returned by the backend.
-   * @throws {Error} If the update request fails.
+   * Updates an activity belonging to the selected trip.
    */
   async function updateActivity(updatedActivity) {
     const updated = await ActivityAPI.update(
       updatedActivity.id,
-      updatedActivity
+      updatedActivity,
+      tripId
     );
 
     setActivities((current) =>
@@ -121,18 +114,17 @@ export function ActivityProvider({ children }) {
   }
 
   /**
-   * Switches an activity between trip-day and fixed-date scheduling.
+   * Changes the activity's scheduling mode.
    *
-   * Updates the activity in the backend and replaces its entry
-   * in the shared activity state.
-   *
-   * @param {number} id - The ID of the activity to modify.
-   * @param {boolean} useFixedDate - Whether the activity should use a fixed date.
-   * @returns {Promise<Object>} The updated activity returned by the backend.
-   * @throws {Error} If the schedule cannot be switched.
+   * The current backend supports this operation
+   * through the legacy endpoint for trip 1.
    */
   async function switchScheduleType(id, useFixedDate) {
-    const updated = await ActivityAPI.switchScheduleType(id, useFixedDate);
+    const updated = await ActivityAPI.switchScheduleType(
+      id,
+      useFixedDate,
+      tripId
+    );
 
     setActivities((current) =>
       current.map((activity) =>
@@ -144,23 +136,54 @@ export function ActivityProvider({ children }) {
   }
 
   /**
-   * Deletes an activity from the backend and removes it from the shared state.
-   *
-   * @param {number} id - The ID of the activity to delete.
-   * @returns {Promise<void>} A promise that resolves when deletion succeeds.
-   * @throws {Error} If the deletion request fails.
+   * Deletes an activity from the selected trip.
    */
   async function removeActivity(id) {
-    await ActivityAPI.remove(id);
+    await ActivityAPI.remove(id, tripId);
 
     setActivities((current) =>
       current.filter((activity) => activity.id !== id)
     );
   }
 
+  /**
+   * Converts activities with coordinates into map markers.
+   */
+  function getMapMarkers() {
+    return activities
+      .filter((activity) => {
+        const latitude =
+          activity.location?.latitude ??
+          activity.latitude;
+
+        const longitude =
+          activity.location?.longitude ??
+          activity.longitude;
+
+        return latitude != null && longitude != null;
+      })
+      .map((activity) => ({
+        id: activity.id,
+        type: "activity",
+        name:
+          activity.description?.name ??
+          activity.name ??
+          "Activity",
+        latitude: Number(
+          activity.location?.latitude ??
+          activity.latitude
+        ),
+        longitude: Number(
+          activity.location?.longitude ??
+          activity.longitude
+        ),
+      }));
+  }
+
   return (
     <ActivityContext.Provider
       value={{
+        tripId,
         activities,
         loading,
         error,

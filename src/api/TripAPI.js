@@ -53,7 +53,7 @@ class TripAPI {
     return await response.json();
   }
 
-  /**
+/**
    * Updates the current trip in the backend.
    *
    * Serializes the supplied trip before sending it.
