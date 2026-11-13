@@ -6,8 +6,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import com.yonder.backend.dto.AuthResponse;
 import com.yonder.backend.dto.LoginRequest;
 import com.yonder.backend.dto.RegisterRequest;
+import com.yonder.backend.models.Profile;
 import com.yonder.backend.models.User;
+import com.yonder.backend.repositories.ProfileRepository;
 import com.yonder.backend.repositories.UserRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Class name: AuthService
@@ -16,25 +19,27 @@ import com.yonder.backend.repositories.UserRepository;
  * 
  * Description: Handles user registration and login, including checking
  * credentials and encoding passwords. Uses UserRepository.java to access user
- * records in the database.
+ * records in the database, and it uses profileRepository.java to create a profile 
+ * entry in the profile table when creating an user.
  *
- * Fnctions:
+ * Functions:
  * - register(RegisterRequest): Accepts registration details, checks that the
  *   email is present and not already registered, encodes the password, saves
  *   the user, and returns an AuthResponse with the result, user ID, and
- *   creation timestamp. It Throws IllegalArgumentException for a missing or
+ *   creation timestamp. It also creates an entry in the profile table, as each user
+ *   has its own profile. It Throws IllegalArgumentException for a missing or
  *   already-used email. We will most likely remove the creation timestamp from the 
  *   response, as it is not needed by the front end, it was just for testing.
  * 
  * - login(LoginRequest): Accepts an email and password, looks up the user,
  *   verifies the password against its stored hash, and returns an
  *   AuthResponse(on success). Throws IllegalArgumentException if the user
- *   is missing from the User table(No user with that email exists in the database)  
+ *   is not in User table(No existing user with the email)  
  *   or if the password does not match with the stored hash. 
  *
  * Data structures: Uses RegisterRequest and LoginRequest, DTOs(Data transfer 
  * Objects) for input, User for user data, and AuthResponse for output. 
- * UserRepository returns an Optional<User> when searching by email.
+ * userRepository returns an Optional<User> when searching by email. 
  * 
  * Algorithm: 
  * - Registration checks if an user inputed an email(not empty) and if it did put an 
@@ -43,6 +48,10 @@ import com.yonder.backend.repositories.UserRepository;
  *  email and password hash, and then saves it to the database, returning an 
  *  AuthResponse with the result. The password is encoded using hashing before 
  *  saving it to the database, so no original password is stored. 
+ *  When creating an User, we also create a profile, even tough most fields are 
+ *  empty as it doesnt ask the user to create his profile yet. The point of doing so 
+ *  its so each user in the database has its own corresponding profile row in the 
+ *  database, linked by using the users ID as a foreign ket.
  *  
  * - Login retrieves the user and asks PasswordEncoder
  *  to compare the submitted password with the stored hash; 
@@ -57,13 +66,17 @@ import com.yonder.backend.repositories.UserRepository;
 @Service 
 public class AuthService {
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final PasswordEncoder encryptPassword;
 
-    public AuthService(UserRepository userRepository, PasswordEncoder encryptPassword) {
+    public AuthService(UserRepository userRepository, ProfileRepository profileRepository,
+            PasswordEncoder encryptPassword) {
         this.userRepository = userRepository;
+        this.profileRepository = profileRepository;
         this.encryptPassword = encryptPassword;
     }
 
+    @Transactional
     public AuthResponse register(RegisterRequest request){
         if(request.getEmail() == null || request.getEmail().isBlank()){
             throw new IllegalArgumentException("Email is requiered");
@@ -80,7 +93,11 @@ public class AuthService {
         user.setPasswordHash(encryptPassword.encode(request.getPassword()));
         user = userRepository.save(user);
 
-        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt());
+        //When a user is created, a profile should also be created for that user and introduced into the database profile table. Since the registration doesnt ask for any profile related information, the profile object is created with most fields null exept for the UserId.
+        Profile profile = new Profile(user.getUserId(), null, null, null, null);
+        profileRepository.save(profile);
+
+        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt()); //Created at on the return is just for testing purposes
     }
 
     public AuthResponse login(LoginRequest request) {
