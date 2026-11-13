@@ -6,8 +6,6 @@
  * page content, and the itinerary sidebar. Loads trip information from the API
  * and shares trip data and date-selection functions with child routes.
  */
-
-import { useEffect, useState } from "react";
 import {
   NavLink,
   Outlet,
