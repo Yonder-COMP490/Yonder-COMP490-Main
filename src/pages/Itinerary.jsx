@@ -1,3 +1,11 @@
+/**
+ * Component name: Itinerary
+ * Date: 11/05/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Displays a seven-day itinerary with scheduled activities and
+ * housing events. Supports dragging activities between dates, moving them
+ * along the timeline, and resizing their scheduled durations.
+ */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
@@ -10,6 +18,13 @@ const MAX_START_MINUTES = 22 * 60 + 45;
 const MAX_TIME_MINUTES = 23 * 60 + 45;
 const DAY_COUNT = 7;
 
+/**
+ * Adds a specified number of days to a date string.
+ *
+ * @param {string} dateString - The starting date in YYYY-MM-DD format.
+ * @param {number} amount - The number of days to add.
+ * @returns {string} The resulting date in YYYY-MM-DD format.
+ */
 function addDays(dateString, amount) {
   const date = new Date(`${dateString}T12:00:00`);
   date.setDate(date.getDate() + amount);
@@ -21,6 +36,15 @@ function addDays(dateString, amount) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Formats a date string for display using the specified date options.
+ *
+ * @param {string} dateString - The date in YYYY-MM-DD format.
+ * @param {Object} [options={}] - Optional formatting settings.
+ * @param {string} [options.weekday] - The weekday format.
+ * @param {string} [options.month] - The month format.
+ * @returns {string} The formatted date, or an empty string if no date is provided.
+ */
 function formatDate(dateString, options = {}) {
   if (!dateString) return "";
 
@@ -33,6 +57,12 @@ function formatDate(dateString, options = {}) {
   });
 }
 
+/**
+ * Converts a time string into the number of minutes since midnight.
+ *
+ * @param {string} time - The time in HH:mm format.
+ * @returns {?number} The number of minutes, or null if the time is invalid.
+ */
 function timeToMinutes(time) {
   if (!time) return null;
 
@@ -45,6 +75,13 @@ function timeToMinutes(time) {
   return hours * 60 + minutes;
 }
 
+/**
+ * Converts minutes since midnight into a time string rounded to the nearest
+ * 15-minute interval and constrained to the allowed timeline range.
+ *
+ * @param {number} minutes - The number of minutes since midnight.
+ * @returns {string} The resulting time in HH:mm format.
+ */
 function minutesToTime(minutes) {
   const safeMinutes = Math.max(
     0,
@@ -57,6 +94,12 @@ function minutesToTime(minutes) {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 }
 
+/**
+ * Converts minutes since midnight into a readable 12-hour time.
+ *
+ * @param {number} minutes - The number of minutes since midnight.
+ * @returns {string} The formatted time with an AM or PM suffix.
+ */
 function formatTime(minutes) {
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
@@ -66,6 +109,14 @@ function formatTime(minutes) {
   return `${displayHour}:${String(mins).padStart(2, "0")} ${suffix}`;
 }
 
+/**
+ * Determines an activity's ending time. Uses its supplied end time when valid,
+ * otherwise defaults to one hour after its start time.
+ *
+ * @param {Object} activity - The activity to evaluate.
+ * @returns {?number} The ending time in minutes since midnight, or null if
+ * the activity has no valid start time.
+ */
 function getActivityEnd(activity) {
   const start = timeToMinutes(activity.startTime);
   const suppliedEnd = timeToMinutes(activity.endTime);
@@ -79,6 +130,13 @@ function getActivityEnd(activity) {
   return Math.min(start + 60, MAX_TIME_MINUTES);
 }
 
+/**
+ * Creates timeline events for activities scheduled on a specific date.
+ *
+ * @param {Array<Object>} activities - The activities to filter.
+ * @param {string} date - The date to retrieve activities for.
+ * @returns {Array<Object>} The activity events with their titles and times.
+ */
 function getActivityEvents(activities, date) {
   return activities
     .filter(
@@ -102,6 +160,14 @@ function getActivityEvents(activities, date) {
     });
 }
 
+/**
+ * Creates timeline events for housing check-ins and check-outs occurring
+ * on a specific date.
+ *
+ * @param {Array<Object>} housing - The housing bookings to evaluate.
+ * @param {string} date - The date to retrieve housing events for.
+ * @returns {Array<Object>} The matching check-in and check-out events.
+ */
 function getHousingEvents(housing, date) {
   const events = [];
 
@@ -139,6 +205,13 @@ function getHousingEvents(housing, date) {
   return events;
 }
 
+/**
+ * Assigns horizontal lanes to timeline events so overlapping events can be
+ * displayed side by side.
+ *
+ * @param {Array<Object>} events - The timeline events to arrange.
+ * @returns {Array<Object>} The sorted events with lane and laneCount properties.
+ */
 function assignLanes(events) {
   const sorted = [...events].sort((a, b) => a.start - b.start);
   const laneEnds = [];
@@ -171,7 +244,13 @@ function assignLanes(events) {
 
   return sorted;
 }
-
+/**
+ * Component name: HourLabels
+ * Description: Renders the hourly labels displayed alongside the weekly
+ * itinerary timeline.
+ *
+ * @returns {JSX.Element} The hourly timeline labels.
+ */
 function HourLabels() {
   return (
     <div className="week-hour-labels">
@@ -184,6 +263,14 @@ function HourLabels() {
   );
 }
 
+/**
+ * Component name: Itinerary
+ * Description: Displays a seven-day scheduling grid using the selected trip
+ * date, activities, and housing bookings. Handles activity dragging,
+ * repositioning, resizing, and adding activities to the itinerary.
+ *
+ * @returns {JSX.Element} The expanded weekly itinerary.
+ */
 export default function Itinerary() {
   const { selectedDate, selectDate } = useOutletContext();
 
@@ -236,6 +323,12 @@ export default function Itinerary() {
     }
   }, []);
 
+  /**
+   * Shifts the displayed seven-day window and updates the selected date
+   * by the same number of days.
+   *
+   * @param {number} amount - The number of days to shift the window.
+   */
   function shiftWindow(amount) {
     const nextStart = addDays(windowStart, amount);
 
@@ -247,6 +340,12 @@ export default function Itinerary() {
     selectDate(date);
   }
 
+  /**
+   * Retrieves and arranges all activity and housing events for a specific date.
+   *
+   * @param {string} date - The date to retrieve events for.
+   * @returns {Array<Object>} The sorted timeline events with assigned lanes.
+   */
   function getEventsForDate(date) {
     return assignLanes([
       ...getActivityEvents(validActivities, date),
@@ -254,6 +353,14 @@ export default function Itinerary() {
     ]);
   }
 
+  /**
+   * Calculates the positioning and dimensions of a timeline event.
+   * Uses preview times when the event is being dragged or resized.
+   *
+   * @param {Object} event - The timeline event to position.
+   * @param {?Object} preview - Optional temporary timing information.
+   * @returns {Object} CSS positioning and sizing properties for the event.
+   */
   function getEventStyle(event, preview) {
     const start = preview?.start ?? event.start;
     const end = preview?.end ?? event.end;
@@ -270,6 +377,14 @@ export default function Itinerary() {
     };
   }
 
+  /**
+   * Initializes an activity drag or resize operation and registers the
+   * necessary pointer event listeners.
+   *
+   * @param {React.PointerEvent} pointerEvent - The pointer event that started the operation.
+   * @param {Object} activity - The activity being moved or resized.
+   * @param {string} [mode="move"] - The operation mode: move, resize-start, or resize-end.
+   */
   function startActivityDrag(pointerEvent, activity, mode = "move") {
     if (pointerEvent.button !== 0) return;
 
@@ -306,6 +421,13 @@ export default function Itinerary() {
     window.addEventListener("pointercancel", handlePointerCancel);
   }
 
+  /**
+   * Updates the temporary activity schedule while the pointer moves.
+   * Calculates the new start and end times based on the pointer's vertical
+   * movement and the current drag mode.
+   *
+   * @param {PointerEvent} pointerEvent - The pointer movement event.
+   */
   function handlePointerMove(pointerEvent) {
     const drag = dragRef.current;
     if (!drag) return;
@@ -363,6 +485,14 @@ export default function Itinerary() {
     });
   }
 
+  /**
+   * Determines which day column an activity was dropped into by checking
+   * the pointer position against the visible day areas.
+   *
+   * @param {PointerEvent} pointerEvent - The pointer release event.
+   * @param {string} fallbackDate - The original activity date if no column matches.
+   * @returns {string} The date corresponding to the drop location.
+   */
   function getDropDate(pointerEvent, fallbackDate) {
     for (const date of dates) {
       const element = dayAreaRefs.current[date];
@@ -384,6 +514,13 @@ export default function Itinerary() {
     return fallbackDate;
   }
 
+  /**
+   * Completes an activity drag or resize operation and saves the updated
+   * schedule through the activity context.
+   *
+   * @param {PointerEvent} pointerEvent - The pointer release event.
+   * @returns {Promise<void>}
+   */
   async function handlePointerUp(pointerEvent) {
     const drag = dragRef.current;
     if (!drag) return;
@@ -417,6 +554,10 @@ export default function Itinerary() {
     clearDrag();
   }
 
+  /**
+   * Resets the current drag operation, removes the drag preview, and unregisters
+   * the pointer event listeners.
+   */
   function clearDrag() {
     dragRef.current = null;
     setDragPreview(null);
@@ -426,11 +567,25 @@ export default function Itinerary() {
     window.removeEventListener("pointercancel", handlePointerCancel);
   }
 
+  /**
+   * Allows activities to be dropped into a timeline day column.
+   *
+   * @param {React.DragEvent<HTMLDivElement>} event - The drag-over event.
+   */
   function handleDragOver(event) {
     event.preventDefault();
     event.dataTransfer.dropEffect = "copy";
   }
 
+  /**
+   * Handles dropping an activity from another component onto a timeline day.
+   * Calculates its starting time from the drop position, assigns a default
+   * one-hour duration, and saves the updated activity.
+   *
+   * @param {React.DragEvent<HTMLDivElement>} event - The drop event.
+   * @param {string} date - The date of the timeline column receiving the activity.
+   * @returns {Promise<void>}
+   */
   async function handleDrop(event, date) {
     event.preventDefault();
 
