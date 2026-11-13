@@ -13,15 +13,6 @@ import com.yonder.backend.repositories.UserRepository;
  * Class name: AuthService
  * Date: 10/21/2026
  * Programmer: Christian Bartle
- * Description: Handles user registration and login, including checking
- * credentials and encoding passwords. Uses UserRepository.java to access user
- * records in the database.
- */
-
-/**
- * Class name: AuthService
- * Date: 10/21/2026
- * Programmer: Christian Bartle
  * 
  * Description: Handles user registration and login, including checking
  * credentials and encoding passwords. Uses UserRepository.java to access user
