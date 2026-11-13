@@ -1,14 +1,4 @@
-/**
- * Class name: ActivityContext
- * Date: 09/20/2026
- * Programmer: Ryan Sommerhauser
- * Description: Provides shared activity state and management operations
- * throughout the application for the selected trip. Loads and refreshes
- * activities when the selected trip changes and provides functions for
- * creating, updating, deleting, and changing the scheduling mode of
- * activities. Also provides loading and error states and generates
- * map marker data from activities with location coordinates.
- */
+
 import {
   createContext,
   useContext,
