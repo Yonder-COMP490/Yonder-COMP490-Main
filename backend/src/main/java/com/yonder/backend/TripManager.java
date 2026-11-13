@@ -166,6 +166,7 @@ public class TripManager {
      *
      * @param requested requested trip information
      * @return newly created trip
+     * @throws IllegalArgumentException if the trip name, start date, or duration is invalid
      */
     public synchronized Trip createTrip(Trip requested) {
         if (requested == null ||
@@ -304,7 +305,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds an activity to the selected trip.
+     * Adds an activity to the specified trip.
+     * Assigns an identifier unique within that trip's activity collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param activity the activity to add
+     * @return the newly added activity
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized Activity addActivity(
         int tripId,
@@ -325,7 +332,14 @@ public class TripManager {
     }
 
     /**
-     * Updates an activity belonging to the selected trip.
+     * Replaces an activity in the specified trip while preserving its identifier.
+     * Reattaches the updated activity to the selected trip's starting date.
+     *
+     * @param tripId the identifier of the trip
+     * @param activityId the identifier of the activity to update
+     * @param updated the replacement activity
+     * @return the updated activity, or null if the activity does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized Activity updateActivity(
         int tripId,
@@ -353,7 +367,12 @@ public class TripManager {
     }
 
     /**
-     * Removes an activity from the selected trip.
+     * Removes an activity from the specified trip without affecting other trips.
+     *
+     * @param tripId the identifier of the trip
+     * @param activityId the identifier of the activity to remove
+     * @return true if an activity was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeActivity(
         int tripId,
@@ -449,7 +468,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a housing booking to the selected trip.
+     * Adds a housing booking to the specified trip.
+     * Assigns an identifier unique within that trip's housing collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param housing the housing booking to add
+     * @return the newly added housing booking
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized HousingBooking addHousingBooking(
         int tripId,
@@ -470,10 +495,15 @@ public class TripManager {
     }
 
     /**
-     * Updates a housing booking belonging to a selected trip.
+     * Replaces a housing booking in the specified trip while retaining its ID.
+     * Updates the trip's housing collection through the Trip model, which
+     * recalculates section-based booking dates and durations as applicable.
      *
-     * Uses the updated Trip model to recalculate
-     * section-based check-in dates and durations.
+     * @param tripId the identifier of the trip
+     * @param housingId the identifier of the booking to update
+     * @param updated the replacement housing booking
+     * @return the updated booking, or null if the booking does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized HousingBooking updateHousingBooking(
         int tripId,
@@ -501,7 +531,12 @@ public class TripManager {
     }
 
     /**
-     * Removes a housing booking from the selected trip.
+     * Removes a housing booking from the specified trip.
+     *
+     * @param tripId the identifier of the trip
+     * @param housingId the identifier of the booking to remove
+     * @return true if a booking was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeHousingBooking(
         int tripId,
@@ -587,7 +622,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a budget item to the selected trip.
+     * Adds a budget item to the specified trip.
+     * Assigns an identifier unique within that trip's budget collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param item the budget item to add
+     * @return the newly added budget item
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized BudgetItem addBudgetItem(
         int tripId,
@@ -608,7 +649,13 @@ public class TripManager {
     }
 
     /**
-     * Updates a budget item belonging to the selected trip.
+     * Replaces a budget item in the specified trip while preserving its ID.
+     *
+     * @param tripId the identifier of the trip
+     * @param itemId the identifier of the budget item to update
+     * @param updated the replacement budget item
+     * @return the updated item, or null if the budget item does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized BudgetItem updateBudgetItem(
         int tripId,
@@ -634,7 +681,12 @@ public class TripManager {
     }
 
     /**
-     * Removes a budget item from the selected trip.
+     * Removes a budget item from the specified trip.
+     *
+     * @param tripId the identifier of the trip
+     * @param itemId the identifier of the budget item to remove
+     * @return true if the item was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeBudgetItem(
         int tripId,
@@ -660,6 +712,7 @@ public class TripManager {
      *
      * @param tripId selected trip ID
      * @return matching trip
+     * @throws IllegalArgumentException if the trip does not exist
      */
     private Trip requireTrip(int tripId) {
         Trip selectedTrip = trips.get(tripId);
