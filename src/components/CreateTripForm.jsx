@@ -21,6 +21,7 @@ const API_BASE = "http://localhost:8080/api";
  *
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-11-12
  */
 export default function CreateTripForm({ onCreated, onCancel }) {
   const [name, setName] = useState("");

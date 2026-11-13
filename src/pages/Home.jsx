@@ -101,6 +101,7 @@ function formatTripDates(startDate, endDate) {
  * @component
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-09-16
  */
 function Home() {
   const [username, setUsername] = useState("");

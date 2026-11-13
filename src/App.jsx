@@ -145,6 +145,7 @@ function AppRoutes() {
  *
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-09-16
  */
 export default function App() {
   return (

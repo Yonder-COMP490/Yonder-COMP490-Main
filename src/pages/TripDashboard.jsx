@@ -53,6 +53,7 @@ function getTodayString() {
  *
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-10-26
  */
 export default function TripDashboard() {
   const location = useLocation();

@@ -48,6 +48,7 @@ function formatCost(cost) {
  * @author R. Sommerhauser
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-09-23
  */
 function Budget() {
   // Provided by TripDashboard through React Router's Outlet.

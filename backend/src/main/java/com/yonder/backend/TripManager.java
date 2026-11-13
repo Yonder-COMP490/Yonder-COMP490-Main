@@ -25,6 +25,7 @@ import java.util.Map;
  * @author R. Sommerhauser
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-10-12
  */
 @Component
 public class TripManager {

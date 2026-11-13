@@ -8,8 +8,25 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Handles the legacy backend's {@code GET /api/health} endpoint.
+ * Responds with a JSON status payload when the server is running,
+ * and rejects other HTTP methods with status 405 and an Allow header.
+ *
+ * @author A. Garcia
+ * @version 1.0
+ * @since 2026-10-21
+ */
 public class HealthHandler implements HttpHandler {
 
+    /**
+     * Processes a health-check request and writes the response.
+     * Permits GET requests, returns HTTP 200 with a JSON body,
+     * and responds with HTTP 405 for unsupported methods.
+     *
+     * @param exchange the current HTTP request and response exchange
+     * @throws IOException if the response cannot be written
+     */
     @Override
     public void handle(HttpExchange exchange) throws IOException {
 

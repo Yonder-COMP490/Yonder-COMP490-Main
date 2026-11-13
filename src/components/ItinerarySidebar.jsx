@@ -1,10 +1,12 @@
 /**
- * Component name: ItinerarySidebar
- * Date: 10/26/2026
- * Programmer: Andrew Garica and Ryan Sommerhauser
- * Description: Displays the selected day's itinerary in a sidebar timeline.
- * Supports activity scheduling, dragging, resizing, fixed-date switching,
- * and editing or removing trip sections.
+ * Displays a selected day's itinerary as an interactive sidebar timeline.
+ * Supports navigation between dates, activity dragging and resizing,
+ * fixed-date scheduling, housing events, and trip-section management.
+ *
+ * @author A. Garcia
+ * @author R. Sommerhauser
+ * @version 1.0
+ * @since 2026-10-26
  */
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -301,6 +303,7 @@ function HourLabels() {
  * @param {Object} props.trip - The current trip and its trip sections.
  * @param {Function} props.setTrip - Updates the current trip.
  * @returns {JSX.Element} The itinerary sidebar.
+ * @since 2026-10-26
  */
 function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
   const navigate = useNavigate();
@@ -346,6 +349,12 @@ function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
     prepareEvents(activities, housing, selectedDate)
   );
 
+  /**
+   * Moves the sidebar's selected date forward or backward by a given
+   * number of days using the date-selection callback from the dashboard.
+   *
+   * @param {number} amount - Number of days to move; negative for previous days.
+   */
   function changeDay(amount) {
     onSelectDate(addDays(selectedDate, amount));
   }
@@ -645,6 +654,10 @@ function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
     clearDrag();
   }
 
+  /**
+   * Cancels an active pointer drag or resize without saving the preview.
+   * Clears the drag state and unregisters the pointer listeners.
+   */
   function handlePointerCancel() {
     clearDrag();
   }
