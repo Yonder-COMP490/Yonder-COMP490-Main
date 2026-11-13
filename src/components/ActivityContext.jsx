@@ -29,6 +29,26 @@ export function ActivityProvider({ children }) {
   const [error, setError] = useState("");
 
   /**
+   * Retrieves map marker data for all activities with valid coordinates.
+   *
+   * @returns {Array} The map markers generated from activities.
+   */
+  function getMapMarkers() {
+    return activities
+      .filter(
+        (activity) =>
+          activity.location?.latitude != null &&
+          activity.location?.longitude != null
+      )
+      .map((activity) => ({
+        id: activity.id,
+        name: activity.name,
+        latitude: activity.location.latitude,
+        longitude: activity.location.longitude,
+      }));
+  }
+  
+  /**
    * Retrieves the latest activities from the backend and updates the shared state.
    *
    * Clears the current error when successful and stores the error message
