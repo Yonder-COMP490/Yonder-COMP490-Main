@@ -1,15 +1,17 @@
 package com.yonder.backend.models;
 
+import java.time.LocalDateTime;
+
 public class User {
     private Long userId;
     private String email;
     private String passwordHash;
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     public User() {
     }
 
-    public User(long userId, String email, String passwordHash, String createdAt) {
+    public User(long userId, String email, String passwordHash, LocalDateTime createdAt) {
         this.userId = userId;
         this.email = email;
         this.passwordHash = passwordHash;
@@ -37,10 +39,10 @@ public class User {
         this.passwordHash = passwordHash;
     }
 
-    public String getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 

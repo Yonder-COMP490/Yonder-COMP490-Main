@@ -1,25 +1,28 @@
 
 package com.yonder.backend.models;
 
-public class GreaterLocation {
+public class TripSection {
     private int id;
     private String name;
+    private int days;
     private String hexColor;
     private Double latitude;
     private Double longitude;
 
-    public GreaterLocation() {
+    public TripSection() {
     }
 
-    public GreaterLocation(
+    public TripSection(
         int id,
         String name,
+        int days,
         String hexColor,
         Double latitude,
         Double longitude
     ) {
         this.id = id;
         this.name = name;
+        this.days = days;
         this.hexColor = hexColor;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -30,6 +33,9 @@ public class GreaterLocation {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public int getDays() { return days; }
+    public void setDays(int days) { this.days = days; }
 
     public String getHexColor() { return hexColor; }
     public void setHexColor(String hexColor) { this.hexColor = hexColor; }

@@ -8,8 +8,17 @@ import org.springframework.web.client.RestClient;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
-// gets hotels for the maps page
-// the serpapi key stays here so it's not in react
+/**
+ * a) Class name: HotelController
+ * b) Date: 10/26/2026
+ * c) Programmer: Alejandro Rivera
+ * d) Description: Gets hotels for the Maps page from the SerpApi Google Hotels API.
+ *    Keeps the SerpApi key on the server so it is not in React.
+ * e) Important functions:
+ *    getHotels(q, check_in_date, check_out_date)
+ *      Input: search text, check-in date, check-out date
+ *      Output: hotel results as a JSON string
+ */
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
 public class HotelController {

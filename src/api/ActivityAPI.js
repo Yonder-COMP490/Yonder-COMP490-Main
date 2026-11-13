@@ -1,24 +1,69 @@
 
 const API_BASE = "http://localhost:8080/api/trips";
 
+// Legacy endpoint retained for existing scheduling functionality.
+const LEGACY_API_URL = "http://localhost:8080/api/trip";
+
 function tripUrl(tripId) {
-  if (!Number.isInteger(tripId) || tripId < 1) {
+  const id = Number(tripId);
+
+  if (!Number.isInteger(id) || id < 1) {
     throw new Error("A valid trip ID is required.");
   }
 
-  return `${API_BASE}/${tripId}`;
+  return `${API_BASE}/${id}`;
 }
 
+/**
+ * Converts frontend activity data into the structure
+ * expected by the Java backend.
+ */
 function serializeActivity(activity) {
+  const description =
+    activity.description &&
+    typeof activity.description === "object"
+      ? activity.description
+      : {};
+
+  const location = activity.location ?? {};
+
   return {
     id: activity.id ?? 0,
-    name: activity.name,
-    picture: activity.picture ?? null,
+
+    description: {
+      name: description.name ?? activity.name ?? "",
+      description:
+        description.description ??
+        (typeof activity.description === "string"
+          ? activity.description
+          : ""),
+      notes: description.notes ?? activity.notes ?? "",
+      picture: description.picture ?? activity.picture ?? null,
+    },
+
+    location: {
+      readableAddress:
+        location.readableAddress ??
+        activity.readableAddress ??
+        null,
+      latitude:
+        location.latitude ??
+        activity.latitude ??
+        null,
+      longitude:
+        location.longitude ??
+        activity.longitude ??
+        null,
+    },
+
     active: activity.active ?? true,
+
     tripDay: activity.tripDay ?? null,
     date: activity.date ?? null,
+
     startTime: activity.startTime ?? null,
     endTime: activity.endTime ?? null,
+
     cost: {
       lowerEnd: activity.cost?.lowerEnd ?? 0,
       upperEnd:
@@ -27,14 +72,13 @@ function serializeActivity(activity) {
         0,
       currency: activity.cost?.currency ?? "USD",
     },
-    notes: activity.notes ?? "",
-    readableAddress: activity.readableAddress ?? null,
-    latitude: activity.latitude ?? null,
-    longitude: activity.longitude ?? null,
   };
 }
 
 class ActivityAPI {
+  /**
+   * Retrieves activities belonging to a selected trip.
+   */
   async getAll(tripId = 1) {
     const response = await fetch(tripUrl(tripId));
 
@@ -48,18 +92,24 @@ class ActivityAPI {
     return trip.activities ?? [];
   }
 
+  /**
+   * Adds an activity to a selected trip.
+   */
   async add(activity, tripId = 1) {
     const response = await fetch(
       `${tripUrl(tripId)}/activities`,
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(serializeActivity(activity)),
       }
     );
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to add activity (${response.status}): ${details}`
       );
@@ -68,12 +118,17 @@ class ActivityAPI {
     return response.json();
   }
 
+  /**
+   * Updates an activity belonging to a selected trip.
+   */
   async update(id, activity, tripId = 1) {
     const response = await fetch(
       `${tripUrl(tripId)}/activities/${id}`,
       {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           ...serializeActivity(activity),
           id,
@@ -83,6 +138,7 @@ class ActivityAPI {
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to update activity (${response.status}): ${details}`
       );
@@ -91,17 +147,56 @@ class ActivityAPI {
     return response.json();
   }
 
+  /**
+   * Deletes an activity from a selected trip.
+   */
   async remove(id, tripId = 1) {
     const response = await fetch(
       `${tripUrl(tripId)}/activities/${id}`,
-      { method: "DELETE" }
+      {
+        method: "DELETE",
+      }
     );
 
     if (!response.ok) {
+      const details = await response.text();
+
       throw new Error(
-        `Failed to remove activity (${response.status}).`
+        `Failed to remove activity (${response.status}): ${details}`
       );
     }
+  }
+
+  /**
+   * Changes an activity's scheduling mode.
+   *
+   * This legacy endpoint currently applies to the
+   * original sample trip only.
+   */
+  async switchScheduleType(id, useFixedDate, tripId = 1) {
+    if (Number(tripId) !== 1) {
+      throw new Error(
+        "Switching activity schedule types is not yet supported for additional trips."
+      );
+    }
+
+    const response = await fetch(
+      `${LEGACY_API_URL}/activities/${id}/schedule` +
+        `?useFixedDate=${useFixedDate}`,
+      {
+        method: "PATCH",
+      }
+    );
+
+    if (!response.ok) {
+      const details = await response.text();
+
+      throw new Error(
+        `Failed to switch activity schedule (${response.status}): ${details}`
+      );
+    }
+
+    return response.json();
   }
 }
 
