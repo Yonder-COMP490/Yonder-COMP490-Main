@@ -23,7 +23,7 @@ public class Activity {
 
     private LocalTime startTime;
     private LocalTime endTime;
-    
+
     private Description description;
     private Location location;
     private Cost cost;

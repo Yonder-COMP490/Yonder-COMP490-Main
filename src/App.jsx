@@ -1,3 +1,4 @@
+
 /**
  * Component name: App
  * Date: 09/09/2026
@@ -8,7 +9,13 @@
  *
  * @returns {JSX.Element} The application router and its configured pages.
  */
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  useLocation,
+} from "react-router-dom";
 
 import Home from "./pages/Home";
 import TripDashboard from "./pages/TripDashboard";
@@ -22,39 +29,81 @@ import UserInfo from "./pages/UserInfo";
 import Itinerary from "./pages/Itinerary";
 import BackendTest from "./components/BackendTest";
 import AIAssistant from "./components/AIAssistant";
+
 import { ActivityProvider } from "./components/ActivityContext";
 import { HousingProvider } from "./components/HousingContext";
 
-function App() {
+function DashboardRedirect() {
+  const location = useLocation();
+
   return (
-    <ActivityProvider>
-      <HousingProvider>
-        <BrowserRouter> 
-          <Routes>
-            <Route path="/" element={<Home />} />
+    <Navigate
+      to={{
+        pathname: "/Calendar",
+        search: location.search,
+      }}
+      replace
+    />
+  );
+}
 
-            <Route element={<TripDashboard />}>
-              <Route
-                path="/dashboard"
-                element={<Navigate to="/Calendar" replace />}
-              />
-              <Route path="/Calendar" element={<Calendar />} />
-              <Route path="/Activities" element={<Activities />} />
-              <Route path="/Housing" element={<Housing />} />
-              <Route path="/Budget" element={<Budget />} />
-              <Route path="/maps" element={<Maps />} />
-              <Route path="/Itinerary" element={<Itinerary />} />
-            </Route>
+function TripScopedProviders({ children }) {
+  const location = useLocation();
 
-            <Route path="/page3" element={<Page3 />} />
-            <Route path="/userinfo" element={<UserInfo />} />
-            <Route path="/backend-test" element={<BackendTest />} />
-          </Routes>
-          <AIAssistant />
-        </BrowserRouter>
+  const params = new URLSearchParams(location.search);
+  const requestedId = Number(params.get("tripId") || 1);
+
+  const tripId =
+    Number.isInteger(requestedId) && requestedId > 0
+      ? requestedId
+      : 1;
+
+  return (
+    <ActivityProvider key={`activity-${tripId}`} tripId={tripId}>
+      <HousingProvider key={`housing-${tripId}`} tripId={tripId}>
+        {children}
       </HousingProvider>
     </ActivityProvider>
   );
 }
 
-export default App;
+function AppRoutes() {
+  return (
+    <TripScopedProviders>
+      <Routes>
+        <Route path="/" element={<Home />} />
+
+        <Route element={<TripDashboard />}>
+          <Route
+            path="/dashboard"
+            element={<DashboardRedirect />}
+          />
+
+          <Route path="/Calendar" element={<Calendar />} />
+          <Route path="/Activities" element={<Activities />} />
+          <Route path="/Housing" element={<Housing />} />
+          <Route path="/Budget" element={<Budget />} />
+          <Route path="/maps" element={<Maps />} />
+          <Route path="/Itinerary" element={<Itinerary />} />
+        </Route>
+
+        <Route path="/page3" element={<Page3 />} />
+        <Route path="/userinfo" element={<UserInfo />} />
+        <Route
+          path="/backend-test"
+          element={<BackendTest />}
+        />
+      </Routes>
+
+      <AIAssistant />
+    </TripScopedProviders>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppRoutes />
+    </BrowserRouter>
+  );
+}

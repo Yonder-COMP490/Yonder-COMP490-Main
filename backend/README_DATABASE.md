@@ -79,7 +79,7 @@ I will give database credentials in Person.(Not good to store credentials in a s
 
 
 -------------
-Added swagger UI to see the endpoints in the web. http://localhost:8080/swagger-ui/index.html 
+Added swagger UI to see the endpoints in the web. http://localhost:8080/swagger-ui/index.html
 
 "email": "test@example.com",
   "password": "secret123"
