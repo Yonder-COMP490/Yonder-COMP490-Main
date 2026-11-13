@@ -1,5 +1,13 @@
 
-const API_URL = "http://localhost:8080/api/trip";
+const API_BASE = "http://localhost:8080/api/trips";
+
+function tripUrl(tripId) {
+  if (!Number.isInteger(tripId) || tripId < 1) {
+    throw new Error("A valid trip ID is required.");
+  }
+
+  return `${API_BASE}/${tripId}`;
+}
 
 function serializeHousing(housing) {
   const checkInDate = housing.checkInDate ?? null;
@@ -44,23 +52,28 @@ function serializeHousing(housing) {
 }
 
 class HousingAPI {
-  async getAll() {
-    const response = await fetch(API_URL);
+  async getAll(tripId = 1) {
+    const response = await fetch(tripUrl(tripId));
 
     if (!response.ok) {
-      throw new Error("Failed to load housing bookings.");
+      throw new Error(
+        `Failed to load housing bookings (${response.status}).`
+      );
     }
 
     const trip = await response.json();
     return trip.housingBookings ?? [];
   }
 
-  async add(housing) {
-    const response = await fetch(`${API_URL}/housing`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(serializeHousing(housing)),
-    });
+  async add(housing, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(serializeHousing(housing)),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
@@ -69,18 +82,21 @@ class HousingAPI {
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
-  async update(id, housing) {
-    const response = await fetch(`${API_URL}/housing/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...serializeHousing(housing),
-        id,
-      }),
-    });
+  async update(id, housing, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing/${id}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...serializeHousing(housing),
+          id,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
@@ -89,16 +105,19 @@ class HousingAPI {
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
-  async remove(id) {
-    const response = await fetch(`${API_URL}/housing/${id}`, {
-      method: "DELETE",
-    });
+  async remove(id, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing/${id}`,
+      { method: "DELETE" }
+    );
 
     if (!response.ok) {
-      throw new Error("Failed to remove housing.");
+      throw new Error(
+        `Failed to remove housing (${response.status}).`
+      );
     }
   }
 }

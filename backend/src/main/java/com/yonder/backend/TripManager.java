@@ -19,10 +19,10 @@ import java.util.Map;
 @Component
 public class TripManager {
 
-    // Original sample trip, retained for existing API compatibility.
+    // Original sample trip, retained for backward compatibility.
     private final Trip trip;
 
-    // Stores all trips in memory, indexed by their unique IDs.
+    // All trips stored in memory, indexed by trip ID.
     private final Map<Integer, Trip> trips = new LinkedHashMap<>();
 
     public TripManager() {
@@ -30,11 +30,8 @@ public class TripManager {
         trips.put(trip.getId(), trip);
     }
 
-    /**
-     * Creates the sample trip used by the existing application.
-     *
-     * @return the sample Japan trip
-     */
+    // ---------- Sample trip ----------
+
     private Trip createSampleTrip() {
         Trip newTrip = new Trip(
             1,
@@ -69,10 +66,7 @@ public class TripManager {
     }
 
     /**
-     * Returns the original sample trip.
-     * Retained for compatibility with /api/trip.
-     *
-     * @return the original trip
+     * Original single-trip endpoint support.
      */
     public Trip getTrip() {
         return trip;
@@ -81,30 +75,21 @@ public class TripManager {
     // ---------- Multiple-trip management ----------
 
     /**
-     * Returns all trips stored in memory.
-     *
-     * @return a list of trips
+     * Returns all trips currently stored in memory.
      */
     public synchronized List<Trip> getTrips() {
         return new ArrayList<>(trips.values());
     }
 
     /**
-     * Retrieves a trip by its ID.
-     *
-     * @param id the trip ID
-     * @return the matching trip, or null if not found
+     * Returns a trip by ID, or null if it does not exist.
      */
     public synchronized Trip getTripById(int id) {
         return trips.get(id);
     }
 
     /**
-     * Creates a new trip and assigns a unique ID.
-     *
-     * @param requested the requested trip information
-     * @return the newly created trip
-     * @throws IllegalArgumentException if trip details are invalid
+     * Creates a trip and automatically assigns a unique ID.
      */
     public synchronized Trip createTrip(Trip requested) {
         if (requested == null ||
@@ -148,7 +133,7 @@ public class TripManager {
         return newTrip;
     }
 
-    // ---------- Activities ----------
+    // ---------- Original activities (backward compatibility) ----------
 
     public Activity addActivity(Activity activity) {
         activity.setId(nextActivityId());
@@ -171,7 +156,9 @@ public class TripManager {
 
     public boolean removeActivity(int id) {
         int previousSize = trip.getActivities().size();
+
         trip.removeActivity(id);
+
         return trip.getActivities().size() < previousSize;
     }
 
@@ -182,7 +169,7 @@ public class TripManager {
             .orElse(0) + 1;
     }
 
-    // ---------- Housing bookings ----------
+    // ---------- Original housing (backward compatibility) ----------
 
     public HousingBooking addHousingBooking(HousingBooking housing) {
         housing.setId(nextHousingId());
@@ -208,7 +195,9 @@ public class TripManager {
 
     public boolean removeHousingBooking(int id) {
         int previousSize = trip.getHousingBookings().size();
+
         trip.removeHousingBooking(id);
+
         return trip.getHousingBookings().size() < previousSize;
     }
 
@@ -219,7 +208,7 @@ public class TripManager {
             .orElse(0) + 1;
     }
 
-    // ---------- Budget items ----------
+    // ---------- Original budget (backward compatibility) ----------
 
     public BudgetItem addBudgetItem(BudgetItem item) {
         item.setId(nextBudgetItemId());
@@ -241,7 +230,9 @@ public class TripManager {
 
     public boolean removeBudgetItem(int id) {
         int previousSize = trip.getBudgetItems().size();
+
         trip.removeBudgetItem(id);
+
         return trip.getBudgetItems().size() < previousSize;
     }
 
@@ -250,5 +241,223 @@ public class TripManager {
             .mapToInt(BudgetItem::getId)
             .max()
             .orElse(0) + 1;
+    }
+
+    // ---------- Trip-specific activities ----------
+
+    /**
+     * Adds an activity to a specific trip.
+     */
+    public synchronized Activity addActivity(
+        int tripId,
+        Activity activity
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int nextId = selectedTrip.getActivities().stream()
+            .mapToInt(Activity::getId)
+            .max()
+            .orElse(0) + 1;
+
+        activity.setId(nextId);
+        selectedTrip.addActivity(activity);
+
+        return activity;
+    }
+
+    /**
+     * Updates an activity belonging to a specific trip.
+     */
+    public synchronized Activity updateActivity(
+        int tripId,
+        int activityId,
+        Activity updated
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        for (int i = 0; i < selectedTrip.getActivities().size(); i++) {
+            Activity existing =
+                selectedTrip.getActivities().get(i);
+
+            if (existing.getId() == activityId) {
+                updated.setId(activityId);
+                updated.attachToTrip(selectedTrip.getStartDate());
+
+                selectedTrip.getActivities().set(i, updated);
+
+                return updated;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Deletes an activity from a specific trip.
+     */
+    public synchronized boolean removeActivity(
+        int tripId,
+        int activityId
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int previousSize =
+            selectedTrip.getActivities().size();
+
+        selectedTrip.removeActivity(activityId);
+
+        return selectedTrip.getActivities().size()
+            < previousSize;
+    }
+
+    // ---------- Trip-specific housing ----------
+
+    /**
+     * Adds a housing booking to a specific trip.
+     */
+    public synchronized HousingBooking addHousingBooking(
+        int tripId,
+        HousingBooking housing
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int nextId = selectedTrip.getHousingBookings().stream()
+            .mapToInt(HousingBooking::getId)
+            .max()
+            .orElse(0) + 1;
+
+        housing.setId(nextId);
+        selectedTrip.addHousingBooking(housing);
+
+        return housing;
+    }
+
+    /**
+     * Updates a housing booking belonging to a specific trip.
+     */
+    public synchronized HousingBooking updateHousingBooking(
+        int tripId,
+        int housingId,
+        HousingBooking updated
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        for (int i = 0; i < selectedTrip.getHousingBookings().size(); i++) {
+            HousingBooking existing =
+                selectedTrip.getHousingBookings().get(i);
+
+            if (existing.getId() == housingId) {
+                updated.setId(housingId);
+                updated.attachToTrip(selectedTrip.getStartDate());
+
+                selectedTrip.getHousingBookings().set(i, updated);
+
+                return updated;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Deletes a housing booking from a specific trip.
+     */
+    public synchronized boolean removeHousingBooking(
+        int tripId,
+        int housingId
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int previousSize =
+            selectedTrip.getHousingBookings().size();
+
+        selectedTrip.removeHousingBooking(housingId);
+
+        return selectedTrip.getHousingBookings().size()
+            < previousSize;
+    }
+
+    // ---------- Trip-specific budget items ----------
+
+    /**
+     * Adds a budget item to the selected trip.
+     */
+    public synchronized BudgetItem addBudgetItem(
+        int tripId,
+        BudgetItem item
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int nextId = selectedTrip.getBudgetItems().stream()
+            .mapToInt(BudgetItem::getId)
+            .max()
+            .orElse(0) + 1;
+
+        item.setId(nextId);
+        selectedTrip.addBudgetItem(item);
+
+        return item;
+    }
+
+    /**
+     * Updates a budget item belonging to the selected trip.
+     */
+    public synchronized BudgetItem updateBudgetItem(
+        int tripId,
+        int itemId,
+        BudgetItem updated
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        for (int i = 0; i < selectedTrip.getBudgetItems().size(); i++) {
+            BudgetItem existing =
+                selectedTrip.getBudgetItems().get(i);
+
+            if (existing.getId() == itemId) {
+                updated.setId(itemId);
+
+                selectedTrip.getBudgetItems().set(i, updated);
+
+                return updated;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Deletes a budget item from the selected trip.
+     */
+    public synchronized boolean removeBudgetItem(
+        int tripId,
+        int itemId
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        int previousSize =
+            selectedTrip.getBudgetItems().size();
+
+        selectedTrip.removeBudgetItem(itemId);
+
+        return selectedTrip.getBudgetItems().size()
+            < previousSize;
+    }
+
+    // ---------- Shared trip lookup ----------
+
+    /**
+     * Returns the requested trip or throws an exception
+     * if the trip does not exist.
+     */
+    private Trip requireTrip(int tripId) {
+        Trip selectedTrip = trips.get(tripId);
+
+        if (selectedTrip == null) {
+            throw new IllegalArgumentException(
+                "Trip not found: " + tripId
+            );
+        }
+
+        return selectedTrip;
     }
 }

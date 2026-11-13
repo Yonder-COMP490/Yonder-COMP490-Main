@@ -1,3 +1,4 @@
+
 import {
   createContext,
   useContext,
@@ -9,29 +10,45 @@ import HousingAPI from "../api/HousingAPI";
 
 const HousingContext = createContext();
 
-export function HousingProvider({ children }) {
+export function HousingProvider({ children, tripId = 1 }) {
   const [housing, setHousing] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function loadHousing() {
+      setLoading(true);
+      setHousing([]);
+      setError("");
+
       try {
-        setError("");
-        const data = await HousingAPI.getAll();
-        setHousing(data);
+        const data = await HousingAPI.getAll(tripId);
+
+        if (!cancelled) {
+          setHousing(data);
+        }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) {
+          setError(err.message);
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadHousing();
-  }, []);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
 
   async function addHousing(housingItem) {
-    const created = await HousingAPI.add(housingItem);
+    const created = await HousingAPI.add(housingItem, tripId);
 
     setHousing((current) => [...current, created]);
 
@@ -41,14 +58,13 @@ export function HousingProvider({ children }) {
   async function updateHousing(updatedHousing) {
     const updated = await HousingAPI.update(
       updatedHousing.id,
-      updatedHousing
+      updatedHousing,
+      tripId
     );
 
     setHousing((current) =>
       current.map((housingItem) =>
-        housingItem.id === updated.id
-          ? updated
-          : housingItem
+        housingItem.id === updated.id ? updated : housingItem
       )
     );
 
@@ -56,7 +72,7 @@ export function HousingProvider({ children }) {
   }
 
   async function removeHousing(id) {
-    await HousingAPI.remove(id);
+    await HousingAPI.remove(id, tripId);
 
     setHousing((current) =>
       current.filter((housingItem) => housingItem.id !== id)
@@ -66,6 +82,7 @@ export function HousingProvider({ children }) {
   return (
     <HousingContext.Provider
       value={{
+        tripId,
         housing,
         loading,
         error,
