@@ -6,10 +6,12 @@ import "./Budget.css";
 
 // Format a Cost object returned by the Java backend.
 /**
- * Formats a backend Cost value as a localized amount or cost range.
+ * Formats a backend Cost value as a currency amount or range.
+ * Supports fixed amounts and lower/upper estimates, falling back to USD.
  *
- * @param {Object} cost - Cost with currency and lower/upper amounts.
- * @returns {string} The formatted monetary amount or range.
+ * @param {{lowerEnd?: number, upperEnd?: number, amount?: number, currency?: string} | null} cost
+ *   Cost supplied by the backend.
+ * @returns {string} Localized monetary amount or range.
  */
 function formatCost(cost) {
   if (!cost) return "$0";
@@ -34,15 +36,18 @@ function formatCost(cost) {
 }
 
 /**
- * Displays the selected trip's budget and supports daily expense management.
+ * Displays the selected trip's budget summary and expense categories.
  *
- * Reads the selected trip ID from the dashboard's outlet context, displays
- * category totals, and creates, updates, or deletes daily budget items.
+ * Gets the trip ID and currency preference from the dashboard's Outlet
+ * context, retrieves the matching budget, and supports creating, editing,
+ * and deleting daily budget items. Activity, housing, and travel expenses
+ * are displayed using the aggregated backend summary.
  *
+ * @component
+ * @returns {JSX.Element} The trip's budget overview and daily-item editor.
  * @author R. Sommerhauser
  * @author A. Garcia
  * @version 1.0
- * @returns {JSX.Element} The trip budget page.
  */
 function Budget() {
   // Provided by TripDashboard through React Router's Outlet.
@@ -69,6 +74,12 @@ function Budget() {
   const [saving, setSaving] = useState(false);
 
   // Reload the budget after adding, updating, or deleting an item.
+  /**
+   * Refreshes the current trip's summary after a budget item changes.
+   * Reports request errors without clearing the existing summary.
+   *
+   * @returns {Promise<void>}
+   */
   async function refreshBudget() {
     try {
       setError("");
@@ -83,6 +94,11 @@ function Budget() {
 
   // Load the selected trip's budget.
   // Reload automatically when the trip ID changes.
+  /**
+   * Loads the selected trip's budget whenever its ID changes.
+   * Clears previous-trip state and prevents stale asynchronous responses
+   * from updating state after cleanup or navigation to another trip.
+   */
   useEffect(() => {
     let cancelled = false;
 
@@ -146,6 +162,15 @@ function Budget() {
 
   // BudgetEntry uses sourceId/sourceType, not the
   // original budget item's id.
+  /**
+   * Populates the daily-expense editor from a summary entry.
+   *
+   * Summary entries reference the underlying budget item through
+   * sourceId rather than a generic entry ID.
+   *
+   * @param {{name?: string, unitCost?: {lowerEnd?: number}, quantity?: number, sourceId: number}} entry
+   *   Budget summary entry to edit.
+   */
   function startEditingDailyItem(entry) {
     setDailyName(entry.name || "");
     setDailyCost(
@@ -159,6 +184,15 @@ function Budget() {
     setAddingDailyItem(false);
   }
 
+  /**
+   * Validates and creates or updates a daily budget item for this trip.
+   *
+   * Requires a nonempty name, nonnegative finite cost, and a positive
+   * whole-number day count. Uses the trip's preferred currency when
+   * available, then reloads the budget after a successful API request.
+   *
+   * @returns {Promise<void>}
+   */
   async function handleSaveDailyItem() {
     const name = dailyName.trim();
     const cost = Number(dailyCost);
@@ -227,6 +261,13 @@ function Budget() {
     }
   }
 
+  /**
+   * Confirms and deletes a daily budget item from the selected trip.
+   * Refreshes the summary and clears the editor if its item was deleted.
+   *
+   * @param {number} itemId - Source ID of the budget item to remove.
+   * @returns {Promise<void>}
+   */
   async function handleDeleteDailyItem(itemId) {
     if (
       !window.confirm(

@@ -346,9 +346,12 @@ public class TripController {
     // ============================================================
 
     /**
-     * Retrieves all available trips.
+     * Returns all trips currently held by the trip manager.
      *
-     * @return list of trips
+     * This collection includes the original sample trip and trips created
+     * through the multi-trip API.
+     *
+     * @return the available trips in insertion order
      */
     @GetMapping("/api/trips")
     public List<Trip> getTrips() {
@@ -356,10 +359,11 @@ public class TripController {
     }
 
     /**
-     * Retrieves a specific trip.
+     * Retrieves one trip using its unique identifier.
      *
-     * @param tripId unique trip identifier
-     * @return selected trip
+     * @param tripId the ID of the requested trip
+     * @return the matching trip
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     @GetMapping("/api/trips/{tripId}")
     public Trip getTripById(
@@ -369,14 +373,16 @@ public class TripController {
     }
 
     /**
-     * Creates a trip using its requested start and end dates.
+     * Creates a trip from the submitted name, dates, and currency.
      *
-     * The updated Trip model stores duration in days
-     * instead of an end date. Both the start and end
-     * dates are included when calculating that duration.
+     * Converts the inclusive start/end date range to a duration in days,
+     * validates the range, and delegates ID assignment and storage to
+     * {@link TripManager#createTrip(Trip)}.
      *
-     * @param request new trip information
-     * @return created trip
+     * @param request the requested trip details
+     * @return the newly created trip
+     * @throws ResponseStatusException if required information is missing,
+     *         the date range is invalid, or trip validation fails (HTTP 400)
      */
     @PostMapping("/api/trips")
     @ResponseStatus(HttpStatus.CREATED)
@@ -445,11 +451,14 @@ public class TripController {
     // ============================================================
 
     /**
-     * Adds an activity to a selected trip.
+     * Adds an activity to the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param activity activity information
-     * @return created activity
+     * The trip manager assigns an activity ID within that trip's collection.
+     *
+     * @param tripId the ID of the trip to modify
+     * @param activity the activity to add
+     * @return the created activity
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     @PostMapping("/api/trips/{tripId}/activities")
     @ResponseStatus(HttpStatus.CREATED)
@@ -466,12 +475,17 @@ public class TripController {
     }
 
     /**
-     * Updates an activity belonging to a selected trip.
+     * Replaces an activity in the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param activityId activity ID
-     * @param activity updated activity information
-     * @return updated activity
+     * The manager retains the activity ID and updates its trip-relative
+     * scheduling against the selected trip's start date.
+     *
+     * @param tripId the ID of the trip containing the activity
+     * @param activityId the ID of the activity to update
+     * @param activity the replacement activity information
+     * @return the updated activity
+     * @throws ResponseStatusException if the trip or activity is not found
+     *         (HTTP 404)
      */
     @PutMapping("/api/trips/{tripId}/activities/{activityId}")
     public Activity updateTripActivity(
@@ -498,10 +512,14 @@ public class TripController {
     }
 
     /**
-     * Removes an activity from a selected trip.
+     * Deletes an activity from the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param activityId activity ID
+     * Returns HTTP 204 when removal succeeds.
+     *
+     * @param tripId the ID of the trip containing the activity
+     * @param activityId the ID of the activity to delete
+     * @throws ResponseStatusException if the trip or activity is not found
+     *         (HTTP 404)
      */
     @DeleteMapping("/api/trips/{tripId}/activities/{activityId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -527,11 +545,14 @@ public class TripController {
     // ============================================================
 
     /**
-     * Adds a housing booking to a selected trip.
+     * Adds a housing booking to the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param housing housing booking information
-     * @return created housing booking
+     * The trip manager assigns a booking ID within that trip's collection.
+     *
+     * @param tripId the ID of the trip to modify
+     * @param housing the housing booking to add
+     * @return the created housing booking
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     @PostMapping("/api/trips/{tripId}/housing")
     @ResponseStatus(HttpStatus.CREATED)
@@ -548,12 +569,17 @@ public class TripController {
     }
 
     /**
-     * Updates a housing booking in a selected trip.
+     * Updates a housing booking within the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param housingId housing booking ID
-     * @param housing updated booking information
-     * @return updated housing booking
+     * Preserves the booking ID and delegates refreshing the trip's housing
+     * collection and section-based schedule to the trip manager.
+     *
+     * @param tripId the ID of the trip containing the booking
+     * @param housingId the ID of the booking to update
+     * @param housing the replacement booking information
+     * @return the updated housing booking
+     * @throws ResponseStatusException if the trip or booking is not found
+     *         (HTTP 404)
      */
     @PutMapping("/api/trips/{tripId}/housing/{housingId}")
     public HousingBooking updateTripHousingBooking(
@@ -581,10 +607,14 @@ public class TripController {
     }
 
     /**
-     * Removes a housing booking from a selected trip.
+     * Deletes a housing booking from the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param housingId housing booking ID
+     * Returns HTTP 204 when removal succeeds.
+     *
+     * @param tripId the ID of the trip containing the booking
+     * @param housingId the ID of the booking to delete
+     * @throws ResponseStatusException if the trip or booking is not found
+     *         (HTTP 404)
      */
     @DeleteMapping("/api/trips/{tripId}/housing/{housingId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -610,10 +640,14 @@ public class TripController {
     // ============================================================
 
     /**
-     * Retrieves the budget summary for a selected trip.
+     * Retrieves the calculated budget summary for the selected trip.
      *
-     * @param tripId selected trip ID
-     * @return selected trip's budget summary
+     * Passes the selected trip to {@link BudgetService} so that expenses
+     * from another trip are not included in its totals.
+     *
+     * @param tripId the ID of the trip whose budget is requested
+     * @return the selected trip's calculated budget summary
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     @GetMapping("/api/trips/{tripId}/budget")
     public BudgetSummary getTripBudgetSummary(
@@ -627,11 +661,14 @@ public class TripController {
     }
 
     /**
-     * Adds a budget item to a selected trip.
+     * Adds a daily budget item to the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param item budget item
-     * @return created budget item
+     * The trip manager generates an item ID within that trip's budget.
+     *
+     * @param tripId the ID of the trip to modify
+     * @param item the budget item to add
+     * @return the created budget item
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     @PostMapping("/api/trips/{tripId}/budget-items")
     @ResponseStatus(HttpStatus.CREATED)
@@ -648,12 +685,16 @@ public class TripController {
     }
 
     /**
-     * Updates a budget item belonging to a selected trip.
+     * Replaces a budget item within the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param itemId budget item ID
-     * @param item updated budget item
-     * @return updated budget item
+     * Preserves the existing item ID and leaves other trips' budgets unchanged.
+     *
+     * @param tripId the ID of the trip containing the item
+     * @param itemId the ID of the item to update
+     * @param item the replacement budget item
+     * @return the updated budget item
+     * @throws ResponseStatusException if the trip or item is not found
+     *         (HTTP 404)
      */
     @PutMapping("/api/trips/{tripId}/budget-items/{itemId}")
     public BudgetItem updateTripBudgetItem(
@@ -680,10 +721,14 @@ public class TripController {
     }
 
     /**
-     * Removes a budget item from a selected trip.
+     * Deletes a budget item from the specified trip.
      *
-     * @param tripId selected trip ID
-     * @param itemId budget item ID
+     * Returns HTTP 204 when removal succeeds.
+     *
+     * @param tripId the ID of the trip containing the item
+     * @param itemId the ID of the item to delete
+     * @throws ResponseStatusException if the trip or item is not found
+     *         (HTTP 404)
      */
     @DeleteMapping("/api/trips/{tripId}/budget-items/{itemId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -709,10 +754,13 @@ public class TripController {
     // ============================================================
 
     /**
-     * Retrieves a trip or returns HTTP 404 if it does not exist.
+     * Resolves a trip ID to an existing trip for use by multi-trip endpoints.
      *
-     * @param tripId requested trip ID
-     * @return matching trip
+     * Centralizes the HTTP 404 response when the requested trip is missing.
+     *
+     * @param tripId the ID of the requested trip
+     * @return the matching trip
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
      */
     private Trip requireExistingTrip(int tripId) {
         Trip selectedTrip = tripManager.getTripById(tripId);

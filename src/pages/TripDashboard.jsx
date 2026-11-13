@@ -1,11 +1,4 @@
-/**
- * Component name: TripDashboard
- * Date: 10/26/2026
- * Programmer: Andrew Garcia
- * Description: Provides the main trip dashboard layout, including navigation,
- * page content, and the itinerary sidebar. Loads trip information from the API
- * and shares trip data and date-selection functions with child routes.
- */
+
 import { useEffect, useState } from "react";
 import {
   NavLink,
@@ -27,9 +20,12 @@ const tabs = [
 ];
 
 /**
- * Gets the current local date formatted as YYYY-MM-DD.
+ * Returns the current local date in YYYY-MM-DD format.
  *
- * @returns {string} The current date in YYYY-MM-DD format.
+ * Uses the device's local date instead of UTC to prevent
+ * the selected calendar day from shifting across time zones.
+ *
+ * @returns {string} Current local date.
  */
 function getTodayString() {
   const today = new Date();
@@ -41,13 +37,22 @@ function getTodayString() {
 }
 
 /**
- * Renders the main trip dashboard and manages shared trip state. Loads trip
- * information when the component mounts, initializes the selected date from
- * the trip's start date when available, and provides trip data through the
- * router outlet context. Hides the itinerary sidebar when viewing the
- * expanded itinerary page.
+ * Displays the dashboard for a selected trip in Yonder.
  *
- * @returns {JSX.Element} The dashboard layout with navigation and page content.
+ * Retrieves the trip ID from the URL and loads the corresponding
+ * trip information from the backend. Maintains the selected
+ * calendar date and shares trip-specific data with nested pages
+ * through React Router's Outlet context.
+ *
+ * Preserves the selected trip ID when navigating between
+ * dashboard tabs and displays the itinerary sidebar except
+ * when viewing the full-width Itinerary page.
+ *
+ * @component
+ * @returns {JSX.Element} The trip dashboard interface.
+ *
+ * @author A. Garcia
+ * @version 1.0
  */
 export default function TripDashboard() {
   const location = useLocation();
@@ -80,8 +85,13 @@ export default function TripDashboard() {
   /**
    * Loads the selected trip whenever its ID changes.
    *
-   * Clears the previous trip to prevent displaying
-   * outdated data while loading another trip.
+   * Clears the previous trip before retrieving updated data
+   * from GET /api/trips/{tripId}. Initializes the calendar
+   * to the trip's start date after a successful response.
+   *
+   * Uses a cancellation flag to prevent outdated asynchronous
+   * responses from updating state after the component unmounts
+   * or the selected trip changes.
    */
   useEffect(() => {
     let cancelled = false;
@@ -142,7 +152,11 @@ export default function TripDashboard() {
   }, [tripId]);
 
   /**
-   * Updates the currently selected calendar date.
+   * Updates the date shared by the dashboard's nested pages
+   * and itinerary sidebar.
+   *
+   * @param {string} date - Selected date in YYYY-MM-DD format.
+   * @returns {void}
    */
   function selectDate(date) {
     setSelectedDate(date);

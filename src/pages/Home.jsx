@@ -1,11 +1,4 @@
-/**
- * Component name: Home
- * Date: 11/02/2026
- * Programmer: Andrew Garcia
- * Description: Displays the Yonder home page, including user information,
- * the current trip dashboard link, and suggested travel destinations.
- * Retrieves user and trip information from the backend.
- */
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import CreateTripForm from "../components/CreateTripForm";
@@ -13,6 +6,12 @@ import "./Home.css";
 
 const API_BASE = "http://localhost:8080/api";
 
+/**
+ * Curated destinations displayed in the homepage inspiration section.
+ * Each entry provides a title, category, location, and image URL.
+ *
+ * @type {Array<{id: string, name: string, category: string, location: string, image: string}>}
+ */
 const suggestions = [
   {
     id: "lisbon",
@@ -49,10 +48,11 @@ const suggestions = [
 ];
 
 /**
- * Selects a destination image based on the trip name.
+ * Chooses a trip card image using keywords in the trip name.
+ * Falls back to a general travel image when no destination matches.
  *
- * @param {Object} trip - The trip used to determine the destination image.
- * @returns {string} The URL of the selected trip image.
+ * @param {{name: string}} trip - Trip whose card image is needed.
+ * @returns {string} URL of the image to display.
  */
 function getTripImage(trip) {
   const name = (trip.name || "").toLowerCase();
@@ -69,11 +69,12 @@ function getTripImage(trip) {
 }
 
 /**
- * Formats a trip's start and end dates into a readable date range.
+ * Formats a trip's start date or date range for display.
+ * Appending local midnight avoids interpreting date-only strings as UTC.
  *
- * @param {string} startDate - The trip's starting date.
- * @param {?string} endDate - The trip's ending date.
- * @returns {string} The formatted date range, or a message if dates are unset.
+ * @param {string} startDate - Start date in YYYY-MM-DD format.
+ * @param {string} [endDate] - Optional end date in YYYY-MM-DD format.
+ * @returns {string} Formatted date range or a missing-date message.
  */
 function formatTripDates(startDate, endDate) {
   if (!startDate) return "Dates not set";
@@ -91,13 +92,15 @@ function formatTripDates(startDate, endDate) {
 }
 
 /**
- * Component name: Home
- * Description: Renders the main Yonder landing page. Loads the user's
- * information and current trip from the backend, displays trip details,
- * provides navigation to the dashboard and profile, and showcases
- * suggested travel destinations.
+ * Displays the Yonder homepage and manages trip navigation.
  *
- * @returns {JSX.Element} The Yonder home page.
+ * Retrieves user information and trips from the backend,
+ * displays destination suggestions, and controls the
+ * trip creation dialog.
+ *
+ * @component
+ * @author A. Garcia
+ * @version 1.0
  */
 function Home() {
   const [username, setUsername] = useState("");
@@ -107,6 +110,10 @@ function Home() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [createTripOpen, setCreateTripOpen] = useState(false);
 
+  /**
+   * Loads user information and trips when the homepage mounts.
+   * The cancellation flag prevents state updates after unmounting.
+   */
   useEffect(() => {
     let cancelled = false;
 
@@ -186,6 +193,12 @@ function Home() {
     };
   }, [createTripOpen]);
 
+  /**
+   * Adds a newly created trip to the displayed list without refetching.
+   * Clears any prior trip error and closes the creation dialog.
+   *
+   * @param {Object} newTrip - Trip returned by the creation form.
+   */
   function handleTripCreated(newTrip) {
     setTrips((previousTrips) => [...previousTrips, newTrip]);
     setTripError("");

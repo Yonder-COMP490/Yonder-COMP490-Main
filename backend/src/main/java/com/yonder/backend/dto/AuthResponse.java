@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
  * Programmer: Christian Bartle
  *
  * Description: Data transfer object (DTO) containing the result information
- * returned by the backend after a successful login or registration. Once the 
- * Authservice.java has processed the login or registration request, it creates an 
- * AuthResponse object with a message, the user's ID, and the account creation 
- * timestamp(for testing). This object is converted to a JSON response prior to 
+ * returned by the backend after a successful login or registration. Once the
+ * Authservice.java has processed the login or registration request, it creates an
+ * AuthResponse object with a message, the user's ID, and the account creation
+ * timestamp(for testing). This object is converted to a JSON response prior to
  * sending it to the front end.
  *
  * Important functions:
@@ -19,14 +19,14 @@ import java.time.LocalDateTime;
  *   a message, the user's ID, and the account creation timestamp.
  * - getMessage(), getUserId(), and getCreatedAt() return those values.
  *
- * Data structures: 
+ * Data structures:
  *  - String message, Long userId, and LocalDateTime createdAt.
- * 
- * 
- * Note, this folder(DTO) which this file is under is simply used to store java 
- * classes that create objects that convert JSON data to objects for the 
- * java backend (Requests), and then convert objects to JSON data to send back to 
- * the front end(Responses). hence, the name, DTO for Data Transfer Object. 
+ *
+ *
+ * Note, this folder(DTO) which this file is under is simply used to store java
+ * classes that create objects that convert JSON data to objects for the
+ * java backend (Requests), and then convert objects to JSON data to send back to
+ * the front end(Responses). hence, the name, DTO for Data Transfer Object.
  * It is NOT used to store data in the database, that is what the models folder is for.
  */
 

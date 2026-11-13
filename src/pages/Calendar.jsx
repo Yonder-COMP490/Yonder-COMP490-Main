@@ -357,7 +357,7 @@ function Calendar() {
    *
    * @param {Array<Object>} updatedSections - The updated trip sections.
    * @returns {Promise<void>} A promise that resolves after the save operation finishes.
-   */   
+   */
   async function saveTripSections(updatedSections) {
     if (isSaving) return;
 

@@ -11,25 +11,25 @@ import org.springframework.stereotype.Repository;
  * Date: 11/12/2026
  * Programmer: Christian Bartle
  *
- * Description: Handles database access for profile related records using 
- * JdbcTemplate. It maps database rows to profile objects and saves profiles(created 
+ * Description: Handles database access for profile related records using
+ * JdbcTemplate. It maps database rows to profile objects and saves profiles(created
  * when an user is saved) to the profile table.
- * 
+ *
  * Functions:
  * - findByUserId(Long): Looks up a profile by its user ID and returns an
  *   Optional<Profile>. The Optional is empty if no matching profile is found.
- * 
+ *
  * - save(Profile): Inserts a profile into the profiles table and returns the
  *   Profile object.
  *
- * - Update(profile): not yet implemented, but the idea is that it should allow us 
- *   to update the profile, as once the user is created, a profile is also create 
- *   but with most fields blank. The user may also want to update their profile at a 
+ * - Update(profile): not yet implemented, but the idea is that it should allow us
+ *   to update the profile, as once the user is created, a profile is also create
+ *   but with most fields blank. The user may also want to update their profile at a
  *   later date, so a update functionality should exist.
- * 
+ *
  * Data structures:
  * - Uses Profile to represent a profile row from the database.
- * - Uses List<Profile> to hold query results. Note: List is the return type that 
+ * - Uses List<Profile> to hold query results. Note: List is the return type that
  *   JDBC uses, even if its only one return, its returned in a list.
  * - Uses Optional<Profile> to represent a profile that may not be found.
  *
@@ -77,7 +77,7 @@ public class ProfileRepository {
     //Update profile not yet implemented. Profiles need to be able to be changed latter on, as they are created mostly empty since it doesnt promp the user to create a profile right after registering. depending on how we want to implement it the function changes, as a user may not want to change everythinmg at once, maybe just one thing in the profile, thus, it could be one single update, or several update functions, each for one field in the profile.
 
     //public boolean update(Profile profile) {
-    //    
+    //
     //}
 
 }

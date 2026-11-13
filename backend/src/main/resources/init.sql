@@ -6,9 +6,9 @@
  *
  * Description: Defines the PostgreSQL tables used by the Yonder backend:
  * users, contact_info, profiles, costs, trips, activities, budgetItem,
- * pointOfInterest, and housingBooking. This script is intended to be run once to 
- * create the tables for the database. If the database is lost, this script can be 
- * used to set it up again (tables only, not contents, that would requiere a 
+ * pointOfInterest, and housingBooking. This script is intended to be run once to
+ * create the tables for the database. If the database is lost, this script can be
+ * used to set it up again (tables only, not contents, that would requiere a
  * separate backup).
  *
  * Important operations:
@@ -18,7 +18,7 @@
  * - Uses ON DELETE CASCADE on selected relationships so dependent records
  *   are deleted when their referenced parent is deleted.
  *
- * Data structures: 
+ * Data structures:
  * - Defines relational tables and columns for user accounts,
  *   profiles, trips, activities, costs, budget items, points of interest,
  *   housing bookings, and contact information.
@@ -33,21 +33,21 @@ CREATE TABLE IF NOT EXISTS users ( -- if not exists prevents that running the se
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-    --updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    --updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
 );
 
 -- 2. Create the ContactInfo table (Linked to Users via Foreign Key)
 CREATE TABLE IF NOT EXISTS contact_info (
-    contact_id SERIAL PRIMARY KEY, 
+    contact_id SERIAL PRIMARY KEY,
     phone_number VARCHAR(15),
     user_id INT NOT NULL, --User id, as a foreign key. One-to-many relationship, one user can have many contact info entries, but each contact info entry belongs to one user.
-    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 );
 
 -- 3. Create Profiles Table (Linked to Users via Foreign Key)
 CREATE TABLE IF NOT EXISTS profiles (
-    user_id INT PRIMARY KEY, 
+    user_id INT PRIMARY KEY,
     first_name VARCHAR(100),
     last_name VARCHAR(100),
     bio TEXT,
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS trips (
     --private List<Activity> activities;  --Own tables, Groups of items
     --private List<HousingBooking> housingBookings;
     --private List<BudgetItem> budgetItems;
-    
+
 );
 
 -- 5 Create Activities Table
@@ -95,15 +95,15 @@ CREATE TABLE IF NOT EXISTS activities (
     activity_status BOOLEAN NOT NULL DEFAULT FALSE,
     tripDay INT,
     activityDate DATE, -- NOT NULL,
-    
+
     startTime TIME,
     endTime TIME,
-    
+
     trip_id INT NOT NULL,
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE,
 
 
-    cost_id BIGINT NOT NULL UNIQUE, 
+    cost_id BIGINT NOT NULL UNIQUE,
     CONSTRAINT fk_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
     activityNotes TEXT,
@@ -121,8 +121,8 @@ CREATE TABLE IF NOT EXISTS budgetItem(
     trip_id INT NOT NULL,
     CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE,
 
-    
-    cost_id BIGINT NOT NULL UNIQUE, 
+
+    cost_id BIGINT NOT NULL UNIQUE,
     CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
     budgetItem_days INT
@@ -137,15 +137,15 @@ CREATE TABLE IF NOT EXISTS pointOfInterest(
     point_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     trip_id INT NOT NULL,
 
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE,
 
     poi_Name VARCHAR(100),
     poi_picture_url VARCHAR(512),
 
-    cost_id BIGINT NOT NULL UNIQUE, 
+    cost_id BIGINT NOT NULL UNIQUE,
     CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
-    --- Might be its own table, I see repetion. 
+    --- Might be its own table, I see repetion.
     poi_notes TEXT,
     location_address TEXT,
     activity_latitude DOUBLE PRECISION,
@@ -157,11 +157,11 @@ CREATE TABLE IF NOT EXISTS housingBooking(
     housingBooking_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     trip_id INT NOT NULL,
-    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE, 
+    CONSTRAINT fk_trip FOREIGN KEY (trip_id) REFERENCES trips(trip_id) ON DELETE CASCADE,
 
     hB_Name VARCHAR(100),
     hB_picture_url VARCHAR(512),
-    
+
     active BOOLEAN NOT NULL DEFAULT TRUE,
     trip_day INTEGER,
     fixed_check_in_date DATE,
@@ -169,7 +169,7 @@ CREATE TABLE IF NOT EXISTS housingBooking(
     check_out_time TIME,
     nights INTEGER NOT NULL CHECK (nights >= 0),
 
-    cost_id BIGINT NOT NULL UNIQUE, 
+    cost_id BIGINT NOT NULL UNIQUE,
     CONSTRAINT fk_activity_cost FOREIGN KEY (cost_id) REFERENCES costs(cost_id),
 
     --private Cost costPerDay;

@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
  * Date: 10/21/2026
  * Programmer: Christian Bartle
  * Description: Represents a user account and corresponds to a row in the
- * database's users table. User objects are used by the UserRepository.java to map the 
- * database User table to User objects and to save User objects to the datatabase User 
- * table. 
+ * database's users table. User objects are used by the UserRepository.java to map the
+ * database User table to User objects and to save User objects to the datatabase User
+ * table.
  *
  * Functions:
  * - User(): Creates an empty User object.
@@ -20,7 +20,7 @@ import java.time.LocalDateTime;
  *
  * Data structures: Stores the user ID as Long, email and password hash as
  * String, and creation timestamp as LocalDateTime. Should be pretty self-explanatory.
- * This class is used to create simple objects to act as data containers for user account 
+ * This class is used to create simple objects to act as data containers for user account
  * information.
  */
 

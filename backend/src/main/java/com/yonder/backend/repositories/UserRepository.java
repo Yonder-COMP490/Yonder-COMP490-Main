@@ -22,23 +22,23 @@ import org.springframework.stereotype.Repository;
  *   returns the User populated with the database-generated ID and creation
  *   timestamp.
  *
- * Data structures: 
- *  - Uses User to represent a database record(row). 
- *  - List<User> to hold query results. 
+ * Data structures:
+ *  - Uses User to represent a database record(row).
+ *  - List<User> to hold query results.
  *  - Optional<User> to represent a (possibly missing) user.
  *
- * Algorithm: 
+ * Algorithm:
  *  - Runs parameterized SQL queries through JdbcTemplate. The query
  *    parameter is bound separately from the SQL text, and each result row is
  *    mapped into a User object.
  */
 
 
-@Repository 
+@Repository
 
 public class UserRepository {
     private final JdbcTemplate jdbcTemplate;
-    
+
     public UserRepository(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
