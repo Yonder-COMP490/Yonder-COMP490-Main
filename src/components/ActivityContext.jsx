@@ -1,50 +1,99 @@
-import { createContext, useContext, useEffect, useState } from "react";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+
 import ActivityAPI from "../api/ActivityAPI";
 
 const ActivityContext = createContext();
 
-export function ActivityProvider({ children }) {
+export function ActivityProvider({ children, tripId = 1 }) {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  /**
+   * Reloads activities belonging to the selected trip.
+   */
   async function refreshActivities() {
     try {
-      const data = await ActivityAPI.getAll();
+      const data = await ActivityAPI.getAll(tripId);
+
       setActivities(data);
       setError("");
+
       return data;
     } catch (err) {
-      setError(err.message);
+      setError(err.message || "Failed to load activities.");
       throw err;
     }
   }
 
+  /**
+   * Loads the correct activities whenever the trip changes.
+   */
   useEffect(() => {
+    let cancelled = false;
+
     async function loadActivities() {
+      setLoading(true);
+      setActivities([]);
+      setError("");
+
       try {
-        setError("");
-        await refreshActivities();
+        const data = await ActivityAPI.getAll(tripId);
+
+        if (!cancelled) {
+          setActivities(data);
+        }
       } catch (err) {
-        setError(err.message);
+        if (!cancelled) {
+          setError(
+            err.message || "Failed to load activities."
+          );
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     }
 
     loadActivities();
-  }, []);
 
+    return () => {
+      cancelled = true;
+    };
+  }, [tripId]);
+
+  /**
+   * Creates an activity for the selected trip.
+   */
   async function addActivity(activity) {
-    const created = await ActivityAPI.add(activity);
-    setActivities((current) => [...current, created]);
+    const created = await ActivityAPI.add(
+      activity,
+      tripId
+    );
+
+    setActivities((current) => [
+      ...current,
+      created,
+    ]);
+
     return created;
   }
 
+  /**
+   * Updates an activity belonging to the selected trip.
+   */
   async function updateActivity(updatedActivity) {
     const updated = await ActivityAPI.update(
       updatedActivity.id,
-      updatedActivity
+      updatedActivity,
+      tripId
     );
 
     setActivities((current) =>
@@ -56,8 +105,18 @@ export function ActivityProvider({ children }) {
     return updated;
   }
 
+  /**
+   * Changes the activity's scheduling mode.
+   *
+   * The current backend supports this operation
+   * through the legacy endpoint for trip 1.
+   */
   async function switchScheduleType(id, useFixedDate) {
-    const updated = await ActivityAPI.switchScheduleType(id, useFixedDate);
+    const updated = await ActivityAPI.switchScheduleType(
+      id,
+      useFixedDate,
+      tripId
+    );
 
     setActivities((current) =>
       current.map((activity) =>
@@ -68,33 +127,55 @@ export function ActivityProvider({ children }) {
     return updated;
   }
 
+  /**
+   * Deletes an activity from the selected trip.
+   */
   async function removeActivity(id) {
-    await ActivityAPI.remove(id);
+    await ActivityAPI.remove(id, tripId);
 
     setActivities((current) =>
       current.filter((activity) => activity.id !== id)
     );
   }
 
+  /**
+   * Converts activities with coordinates into map markers.
+   */
   function getMapMarkers() {
     return activities
-      .filter(
-        (activity) =>
-          activity.latitude != null &&
-          activity.longitude != null
-      )
+      .filter((activity) => {
+        const latitude =
+          activity.location?.latitude ??
+          activity.latitude;
+
+        const longitude =
+          activity.location?.longitude ??
+          activity.longitude;
+
+        return latitude != null && longitude != null;
+      })
       .map((activity) => ({
         id: activity.id,
         type: "activity",
-        name: activity.name,
-        latitude: Number(activity.latitude),
-        longitude: Number(activity.longitude),
+        name:
+          activity.description?.name ??
+          activity.name ??
+          "Activity",
+        latitude: Number(
+          activity.location?.latitude ??
+          activity.latitude
+        ),
+        longitude: Number(
+          activity.location?.longitude ??
+          activity.longitude
+        ),
       }));
   }
 
   return (
     <ActivityContext.Provider
       value={{
+        tripId,
         activities,
         loading,
         error,
