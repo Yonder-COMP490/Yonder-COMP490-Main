@@ -6,19 +6,32 @@
  * and deleting trip activities. Also supports switching an activity
  * between trip-day and fixed-date scheduling.
  */
-const API_URL = "http://localhost:8080/api/trip";
+const API_BASE = "http://localhost:8080/api/trips";
+
+// Legacy endpoint retained for existing scheduling functionality.
+const LEGACY_API_URL = "http://localhost:8080/api/trip";
+
+function tripUrl(tripId) {
+  const id = Number(tripId);
+
+  if (!Number.isInteger(id) || id < 1) {
+    throw new Error("A valid trip ID is required.");
+  }
+
+  return `${API_BASE}/${id}`;
+}
 
 /**
- * Converts an activity object into the format expected by the backend.
- *
- * Handles nested description and location objects, scheduling information,
- * and cost values. Supplies defaults for missing optional properties.
- *
- * @param {Object} activity - The activity to serialize.
- * @returns {Object} The formatted activity data.
+ * Converts frontend activity data into the structure
+ * expected by the Java backend.
  */
 function serializeActivity(activity) {
-  const description = activity.description ?? {};
+  const description =
+    activity.description &&
+    typeof activity.description === "object"
+      ? activity.description
+      : {};
+
   const location = activity.location ?? {};
 
   return {
@@ -28,19 +41,30 @@ function serializeActivity(activity) {
       name: description.name ?? activity.name ?? "",
       description:
         description.description ??
-        (typeof activity.description === "string" ? activity.description : ""),
+        (typeof activity.description === "string"
+          ? activity.description
+          : ""),
       notes: description.notes ?? activity.notes ?? "",
       picture: description.picture ?? activity.picture ?? null,
     },
 
     location: {
       readableAddress:
-        location.readableAddress ?? activity.readableAddress ?? null,
-      latitude: location.latitude ?? activity.latitude ?? null,
-      longitude: location.longitude ?? activity.longitude ?? null,
+        location.readableAddress ??
+        activity.readableAddress ??
+        null,
+      latitude:
+        location.latitude ??
+        activity.latitude ??
+        null,
+      longitude:
+        location.longitude ??
+        activity.longitude ??
+        null,
     },
 
     active: activity.active ?? true,
+
     tripDay: activity.tripDay ?? null,
     date: activity.date ?? null,
 
@@ -60,16 +84,15 @@ function serializeActivity(activity) {
 
 class ActivityAPI {
   /**
-   * Retrieves all activities associated with the current trip.
-   *
-   * @returns {Promise<Array>} A promise containing the trip activities.
-   * @throws {Error} If the request fails.
+   * Retrieves activities belonging to a selected trip.
    */
-  async getAll() {
-    const response = await fetch(API_URL);
+  async getAll(tripId = 1) {
+    const response = await fetch(tripUrl(tripId));
 
     if (!response.ok) {
-      throw new Error("Failed to load trip activities.");
+      throw new Error(
+        `Failed to load activities (${response.status}).`
+      );
     }
 
     const trip = await response.json();
@@ -77,90 +100,96 @@ class ActivityAPI {
   }
 
   /**
-   * Creates a new activity in the backend.
-   *
-   * Serializes the supplied activity before sending it.
-   *
-   * @param {Object} activity - The activity to create.
-   * @returns {Promise<Object>} A promise containing the created activity.
-   * @throws {Error} If the creation request fails.
+   * Adds an activity to a selected trip.
    */
-  async add(activity) {
-    const response = await fetch(`${API_URL}/activities`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(serializeActivity(activity)),
-    });
+  async add(activity, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/activities`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(serializeActivity(activity)),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to add activity (${response.status}): ${details}`
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
   /**
-   * Updates an existing activity.
-   *
-   * @param {number} id - The ID of the activity to update.
-   * @param {Object} activity - The updated activity data.
-   * @returns {Promise<Object>} A promise containing the updated activity.
-   * @throws {Error} If the update request fails.
+   * Updates an activity belonging to a selected trip.
    */
-  async update(id, activity) {
-    const response = await fetch(`${API_URL}/activities/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...serializeActivity(activity),
-        id,
-      }),
-    });
+  async update(id, activity, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/activities/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...serializeActivity(activity),
+          id,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to update activity (${response.status}): ${details}`
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
   /**
-   * Deletes an activity from the backend.
-   *
-   * @param {number} id - The ID of the activity to delete.
-   * @returns {Promise<void>} A promise that resolves when deletion succeeds.
-   * @throws {Error} If the deletion request fails.
+   * Deletes an activity from a selected trip.
    */
-  async remove(id) {
-    const response = await fetch(`${API_URL}/activities/${id}`, {
-      method: "DELETE",
-    });
+  async remove(id, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/activities/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Failed to remove activity.");
+      const details = await response.text();
+
+      throw new Error(
+        `Failed to remove activity (${response.status}): ${details}`
+      );
     }
   }
 
   /**
-   * Switches an activity between trip-day and fixed-date scheduling.
+   * Changes an activity's scheduling mode.
    *
-   * The backend preserves the activity's effective date while changing
-   * its scheduling type.
-   *
-   * @param {number} id - The ID of the activity to modify.
-   * @param {boolean} useFixedDate - Whether the activity should use a fixed date.
-   * @returns {Promise<Object>} A promise containing the updated activity.
-   * @throws {Error} If the schedule cannot be switched.
+   * This legacy endpoint currently applies to the
+   * original sample trip only.
    */
-  async switchScheduleType(id, useFixedDate) {
+  async switchScheduleType(id, useFixedDate, tripId = 1) {
+    if (Number(tripId) !== 1) {
+      throw new Error(
+        "Switching activity schedule types is not yet supported for additional trips."
+      );
+    }
+
     const response = await fetch(
-      `${API_URL}/activities/${id}/schedule?useFixedDate=${useFixedDate}`,
+      `${LEGACY_API_URL}/activities/${id}/schedule` +
+        `?useFixedDate=${useFixedDate}`,
       {
         method: "PATCH",
       }
@@ -168,12 +197,13 @@ class ActivityAPI {
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to switch activity schedule (${response.status}): ${details}`
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 }
 

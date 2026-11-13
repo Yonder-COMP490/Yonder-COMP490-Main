@@ -6,21 +6,26 @@
  * and deleting housing bookings. Serializes housing data to match the
  * backend model and supports both trip-section and fixed-date scheduling.
  */
-const API_URL = "http://localhost:8080/api/trip";
+const API_BASE = "http://localhost:8080/api/trips";
+
+function tripUrl(tripId) {
+  const id = Number(tripId);
+
+  if (!Number.isInteger(id) || id < 1) {
+    throw new Error("A valid trip ID is required.");
+  }
+
+  return `${API_BASE}/${id}`;
+}
 
 /**
- * Converts a housing booking into the format expected by the backend.
- *
- * Handles nested description and location objects, determines the
- * appropriate scheduling fields, calculates nights for fixed-date
- * bookings when necessary, and supplies default cost values.
- *
- * @param {Object} housing - The housing booking to serialize.
- * @returns {Object} The formatted housing booking data.
+ * Converts frontend housing data into the structure
+ * expected by the updated Java HousingBooking model.
  */
 function serializeHousing(housing) {
   const description =
-    housing.description && typeof housing.description === "object"
+    housing.description &&
+    typeof housing.description === "object"
       ? housing.description
       : {};
 
@@ -31,7 +36,9 @@ function serializeHousing(housing) {
 
   const fixedCheckInDate = usesTripSection
     ? null
-    : housing.fixedCheckInDate ?? housing.checkInDate ?? null;
+    : housing.fixedCheckInDate ??
+      housing.checkInDate ??
+      null;
 
   const checkOutDate = housing.checkOutDate ?? null;
 
@@ -58,14 +65,25 @@ function serializeHousing(housing) {
           ? housing.description
           : ""),
       notes: description.notes ?? housing.notes ?? "",
-      picture: description.picture ?? housing.picture ?? null,
+      picture:
+        description.picture ??
+        housing.picture ??
+        null,
     },
 
     location: {
       readableAddress:
-        location.readableAddress ?? housing.readableAddress ?? null,
-      latitude: location.latitude ?? housing.latitude ?? null,
-      longitude: location.longitude ?? housing.longitude ?? null,
+        location.readableAddress ??
+        housing.readableAddress ??
+        null,
+      latitude:
+        location.latitude ??
+        housing.latitude ??
+        null,
+      longitude:
+        location.longitude ??
+        housing.longitude ??
+        null,
     },
 
     active: housing.active ?? true,
@@ -76,7 +94,9 @@ function serializeHousing(housing) {
     checkInTime: housing.checkInTime ?? null,
     checkOutTime: housing.checkOutTime ?? null,
 
-    // Only fixed-date bookings store their own nights.
+    // Fixed-date bookings store their own duration.
+    // Section-based bookings calculate their duration
+    // from the assigned TripSection.
     ...(usesTripSection
       ? {}
       : {
@@ -96,16 +116,15 @@ function serializeHousing(housing) {
 
 class HousingAPI {
   /**
-   * Retrieves all housing bookings associated with the current trip.
-   *
-   * @returns {Promise<Array>} A promise containing the housing bookings.
-   * @throws {Error} If the request fails.
+   * Retrieves housing bookings for a selected trip.
    */
-  async getAll() {
-    const response = await fetch(API_URL);
+  async getAll(tripId = 1) {
+    const response = await fetch(tripUrl(tripId));
 
     if (!response.ok) {
-      throw new Error("Failed to load housing bookings.");
+      throw new Error(
+        `Failed to load housing bookings (${response.status}).`
+      );
     }
 
     const trip = await response.json();
@@ -113,80 +132,77 @@ class HousingAPI {
   }
 
   /**
-   * Creates a new housing booking in the backend.
-   *
-   * Serializes the supplied booking before sending it.
-   *
-   * @param {Object} housing - The housing booking to create.
-   * @returns {Promise<Object>} A promise containing the created booking.
-   * @throws {Error} If the creation request fails.
+   * Adds a housing booking to a selected trip.
    */
-  async add(housing) {
-    const response = await fetch(`${API_URL}/housing`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(serializeHousing(housing)),
-    });
+  async add(housing, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(serializeHousing(housing)),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to add housing (${response.status}): ${details}`
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
   /**
-   * Updates an existing housing booking.
-   *
-   * Uses the supplied ID to identify the booking and serializes
-   * the updated booking data before sending it.
-   *
-   * @param {number} id - The ID of the housing booking to update.
-   * @param {Object} housing - The updated housing booking data.
-   * @returns {Promise<Object>} A promise containing the updated booking.
-   * @throws {Error} If the update request fails.
+   * Updates a housing booking in a selected trip.
    */
-  async update(id, housing) {
-    const response = await fetch(`${API_URL}/housing/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        ...serializeHousing(housing),
-        id,
-      }),
-    });
+  async update(id, housing, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing/${id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...serializeHousing(housing),
+          id,
+        }),
+      }
+    );
 
     if (!response.ok) {
       const details = await response.text();
+
       throw new Error(
         `Failed to update housing (${response.status}): ${details}`
       );
     }
 
-    return await response.json();
+    return response.json();
   }
 
   /**
-   * Deletes a housing booking from the backend.
-   *
-   * @param {number} id - The ID of the housing booking to delete.
-   * @returns {Promise<void>} A promise that resolves when deletion succeeds.
-   * @throws {Error} If the deletion request fails.
+   * Deletes a housing booking from a selected trip.
    */
-  async remove(id) {
-    const response = await fetch(`${API_URL}/housing/${id}`, {
-      method: "DELETE",
-    });
+  async remove(id, tripId = 1) {
+    const response = await fetch(
+      `${tripUrl(tripId)}/housing/${id}`,
+      {
+        method: "DELETE",
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Failed to remove housing.");
+      const details = await response.text();
+
+      throw new Error(
+        `Failed to remove housing (${response.status}).`
+      );
     }
   }
 }
