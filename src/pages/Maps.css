@@ -12,7 +12,7 @@
 }
 
 .map {
-  width: 60%;
+  width: 100%;
   height: 100%;
   border-radius: 12px;
 }
@@ -71,5 +71,152 @@
 .city-search button {
   padding: 8px 16px;
   border-radius: 8px;
+  cursor: pointer;
+}
+
+/* max price and min rating boxes */
+.hotel-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.hotel-filters label {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+  min-width: 90px;
+  font-size: 14px;
+}
+
+.hotel-filters input,
+.hotel-filters select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+/* small note at the top of the map */
+.map-note {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* white price bubble on the map */
+.price-pin {
+  padding: 4px 8px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+  font-weight: bold;
+  font-size: 14px;
+  color: #222;
+  cursor: pointer;
+}
+
+/* hotels you already clicked: grey bubble */
+.price-pin.visited {
+  background: #e0e0e0;
+  color: #888;
+}
+
+/* the picked hotel: dark bubble on the map */
+.price-pin.selected {
+  background: #222;
+  color: white;
+}
+
+/* the picked hotel: blue outline around its card */
+.place-card.selected {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px #1a73e8;
+}
+
+/* holds the map, takes the old map width */
+.map-area {
+  position: relative;
+  width: 60%;
+  height: 100%;
+}
+
+.place-card {
+  cursor: pointer;
+}
+
+/* popup card on the map, like airbnb */
+.map-popup {
+  position: relative;
+  width: 220px;
+  overflow: hidden; /* keeps the photo inside the rounded corners */
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.map-popup img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.popup-info {
+  padding: 6px 10px 10px;
+  font-size: 14px;
+}
+
+.popup-info h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.popup-info p {
+  margin: 2px 0;
+}
+
+.popup-info .price {
+  font-size: 1.1em;
+}
+
+/* the dates and total on the popup */
+.popup-info .popup-stay {
+  font-size: 13px;
+  color: #555;
+}
+
+/* blue Check availability button */
+.popup-book {
+  display: block;
+  margin-top: 8px;
+  padding: 8px;
+  background: #1a73e8;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
+/* round X button in the corner of the popup */
+.popup-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 50%;
+  background: white;
   cursor: pointer;
 }

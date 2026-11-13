@@ -1,15 +1,23 @@
+
+/* =========================================================
+   Calendar Layout
+   ========================================================= */
+
 .calendar-page {
-  display: grid;
-  grid-template-columns: 1fr 350px;
-  gap: 20px;
+  display: block;
   padding: 30px;
   min-height: 80vh;
   box-sizing: border-box;
 }
 
 .calendar-section {
+  width: 100%;
   min-width: 0;
 }
+
+/* =========================================================
+   Month Navigation
+   ========================================================= */
 
 .month-header {
   display: flex;
@@ -22,12 +30,21 @@
   margin: 0;
 }
 
-.month-header button,
-.itinerary-header button {
+.month-header button {
   width: 40px;
   height: 40px;
   font-size: 20px;
+  cursor: pointer;
 }
+
+.month-header button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+/* =========================================================
+   Weekday Header
+   ========================================================= */
 
 .weekday-header {
   display: grid;
@@ -38,15 +55,20 @@
   font-weight: bold;
 }
 
+/* =========================================================
+   Calendar Grid
+   ========================================================= */
+
 .calendar-grid {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 5px;
 }
 
 .calendar-day {
   min-height: 90px;
   border: 1px solid #ccc;
+  border-radius: 3px;
   background: white;
   font-size: 18px;
   cursor: pointer;
@@ -54,19 +76,11 @@
   padding: 10px;
   position: relative;
   box-sizing: border-box;
+  color: inherit;
 }
 
 .calendar-day:hover {
   background: #f0f0f0;
-}
-
-.calendar-day.has-activity {
-  background: #d9eaff;
-  border: 2px solid #4285f4;
-}
-
-.calendar-day.selected {
-  outline: 3px solid #333;
 }
 
 .calendar-day.empty {
@@ -80,208 +94,247 @@
   z-index: 2;
 }
 
-/* Housing line */
+/* =========================================================
+   Trip Dates
+   ========================================================= */
 
-.housing-line {
+.calendar-day.trip-day {
+  background-color: #eef3ff;
+}
+
+.calendar-day.trip-day:hover {
+  background-color: #e0eaff;
+}
+
+.calendar-day.selected {
+  outline: 3px solid #333;
+  outline-offset: -3px;
+}
+
+/* =========================================================
+   Activity Indicator
+   ========================================================= */
+
+.calendar-day.has-activity {
+  background-color: #d9eaff;
+  border: 2px solid #4285f4;
+}
+
+/* =========================================================
+   Trip Section Color Indicator
+   ========================================================= */
+
+.trip-section-line {
   position: absolute;
   left: 5px;
   right: 5px;
   bottom: 5px;
-  height: 5px;
-  background: #777;
+  height: 6px;
   border-radius: 3px;
-}
-
-/* Normal Itinerary */
-
-.itinerary {
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  overflow: hidden;
-  background: white;
-  min-width: 0;
-}
-
-.itinerary-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 15px;
-  border-bottom: 1px solid #ccc;
-}
-
-.itinerary-header h2 {
-  margin: 0;
-  text-align: center;
-}
-
-.itinerary-header p {
-  margin: 5px 0 0;
-  text-align: center;
-}
-
-.expand-itinerary-button {
-  width: calc(100% - 30px);
-  margin: 15px;
-  padding: 10px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.itinerary-body {
-  padding: 20px;
-}
-
-/* Housing itinerary item */
-
-.itinerary-housing {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 10px;
-  margin-bottom: 20px;
-  align-items: stretch;
-}
-
-.housing-time {
-  font-size: 13px;
-  padding-top: 10px;
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.housing-time strong {
-  font-size: 12px;
-}
-
-.housing-block {
-  background: #e5e5e5;
-  border-radius: 6px;
-  padding: 10px;
-  min-height: 35px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.housing-block span {
-  font-size: 13px;
-  color: #666;
-}
-
-/* Activity itinerary item */
-
-.itinerary-activity {
-  display: grid;
-  grid-template-columns: 80px 1fr;
-  gap: 10px;
-  margin-bottom: 15px;
-  align-items: stretch;
-}
-
-.activity-time {
-  font-size: 13px;
-  padding-top: 10px;
-  text-align: right;
-}
-
-.activity-block {
-  background: #e5e5e5;
-  border-radius: 6px;
-  padding: 10px;
-  min-height: 35px;
-}
-
-.no-activities {
-  text-align: center;
-  color: #777;
+  z-index: 1;
 }
 
 /* =========================================================
-   Expanded Itinerary
+   Trip Start Date Handle
    ========================================================= */
 
-.calendar-page.itinerary-expanded {
-  display: block;
-  padding: 30px;
-  min-height: 80vh;
-}
-
-.expanded-itinerary {
-  width: 100%;
-  min-width: 0;
-}
-
-.expanded-itinerary-header {
+.trip-start-handle {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 23px;
+  height: 23px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  justify-content: center;
+  background: #333;
+  color: white;
+  border-radius: 5px;
+  font-size: 15px;
+  cursor: grab;
+  z-index: 5;
+  user-select: none;
+  touch-action: none;
 }
 
-.expanded-itinerary-header h1 {
-  margin: 0;
+.trip-start-handle:hover {
+  background: #555;
 }
 
-.expanded-itinerary-header button {
-  padding: 10px 15px;
-  font-size: 14px;
-  cursor: pointer;
+.trip-start-handle:active {
+  cursor: grabbing;
 }
 
-/*
- * The individual day "pages" sit next to each other.
- * Horizontal scrolling lets the user move through the trip.
- */
+.trip-start-handle-icon {
+  line-height: 1;
+}
 
-.expanded-itinerary-pages {
+.calendar-day.drag-target {
+  background-color: #c9dcff;
+  border: 2px dashed #2864c7;
+}
+
+.calendar-grid-dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+/* =========================================================
+   Trip End Day Handle
+   ========================================================= */
+
+.trip-end-handle {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  bottom: auto;
+  z-index: 3;
+  width: 25px;
+  height: 25px;
   display: flex;
-  gap: 20px;
-  overflow-x: auto;
-  padding: 10px 5px 25px;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
+  background: #4285f4;
+  color: white;
+  border-radius: 5px;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
 }
 
-/* Individual day */
+.trip-end-handle:active {
+  cursor: grabbing;
+}
 
-.itinerary-page {
-  flex: 0 0 360px;
-  min-height: 550px;
+.trip-end-handle-icon {
+  font-size: 17px;
+  line-height: 1;
+}
 
-  border: 1px solid #ccc;
-  border-radius: 10px;
+.calendar-grid-resizing {
+  user-select: none;
+}
+
+/* =========================================================
+   Trip Section Add Button
+   ========================================================= */
+
+.trip-section-add-button {
+  position: absolute;
+  right: 2px;
+  bottom: 0;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
   background: white;
-  overflow: hidden;
+  border: 1px solid #777;
+  color: #333;
+  font-size: 15px;
+  font-weight: bold;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
 }
 
-/* Highlight the date that was selected before expanding */
-
-.itinerary-page.current-itinerary-page {
-  border: 2px solid #333;
+.trip-section-add-button:hover {
+  background: #e8e8e8;
+  transform: scale(1.1);
 }
 
-.itinerary-page-header {
-  padding: 20px;
-  text-align: center;
-  border-bottom: 1px solid #ccc;
-  background: #f7f7f7;
+/* =========================================================
+   Draggable Trip Section Boundary
+   ========================================================= */
+
+.trip-section-boundary-handle {
+  position: absolute;
+  left: 0;
+  bottom: 1px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 16px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #555;
+  color: #222;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: ew-resize;
+  user-select: none;
+  touch-action: none;
 }
 
-.itinerary-page-header h2 {
-  margin: 0;
+.trip-section-boundary-handle:hover {
+  background: #e8e8e8;
+  transform: scale(1.1);
 }
 
-.itinerary-page-header p {
-  margin: 5px 0 0;
+.calendar-grid-section-dragging {
+  cursor: ew-resize;
 }
 
-.itinerary-page-body {
-  padding: 20px;
+/* =========================================================
+   Status Messages
+   ========================================================= */
+
+.calendar-error {
+  padding: 10px;
+  margin: 0 0 15px;
+  color: #a12626;
+  background: #fff0f0;
+  border: 1px solid #e6b5b5;
+  border-radius: 5px;
 }
 
-/* Home */
+.calendar-status {
+  margin: 0 0 15px;
+  color: #555;
+  font-size: 14px;
+}
+
+/* =========================================================
+   Home Link
+   ========================================================= */
 
 .home-button {
-  grid-column: 1 / -1;
+  display: inline-block;
+  margin-top: 20px;
+}
+
+/* =========================================================
+   Responsive Layout
+   ========================================================= */
+
+@media (max-width: 650px) {
+  .calendar-page {
+    padding: 15px;
+  }
+
+  .calendar-day {
+    min-height: 65px;
+    padding: 7px;
+    font-size: 15px;
+  }
+
+  .trip-start-handle {
+    width: 20px;
+    height: 20px;
+    font-size: 13px;
+  }
+
+  .trip-end-handle {
+    width: 22px;
+    height: 22px;
+  }
+
+  .weekday-header,
+  .calendar-grid {
+    gap: 3px;
+  }
 }

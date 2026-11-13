@@ -22,7 +22,7 @@ function AIAssistant() {
     setMessages([...messages, newMessage, yoniReply]);
     setMessage("");
   };
-  console.log("messages: ", messages);
+//   console.log("messages: ", messages);
 
   return (
     <>
@@ -45,6 +45,11 @@ function AIAssistant() {
               placeholder="Ask Yoni anything ..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleSend();
+                }
+              }}
             />
             <button onClick={handleSend}>Send</button>
           </div>
