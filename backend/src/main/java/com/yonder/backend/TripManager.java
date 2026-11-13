@@ -15,6 +15,16 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+
+/**
+ * Class name: TripManager
+ * Date: 10/12/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Manages the trip and its associated data, including activities,
+ * housing bookings, and budget items. Handles creating, updating, and removing
+ * trip objects, as well as generating unique identifiers for newly added
+ * objects. Acts as the primary interface between the trip data and controller.
+ */
 @Component
 public class TripManager {
 
@@ -23,7 +33,12 @@ public class TripManager {
     public TripManager() {
         trip = createSampleTrip();
     }
-
+    /**
+     * Creates and initializes a sample trip with example activities and
+     * housing bookings for development and testing purposes.
+     *
+     * @return the newly created sample trip
+     */
     private Trip createSampleTrip() {
         Trip newTrip = new Trip(
             1,
@@ -78,7 +93,14 @@ public class TripManager {
     public Trip getTrip() {
         return trip;
     }
-
+    /**
+     * Updates the current trip's basic information, duration, and trip sections.
+     * Preserves the existing trip object and its associated activities,
+     * housing bookings, and budget items.
+     *
+     * @param updated the trip containing the updated information
+     * @return the updated trip
+     */
     public Trip updateTrip(Trip updated) {
         trip.setName(updated.getName());
         trip.setStartDate(updated.getStartDate());
@@ -93,13 +115,27 @@ public class TripManager {
     }
 
     // ---------- Activities ----------
-
+    /**
+     * Assigns a unique identifier to an activity and adds it to the trip.
+     *
+     * @param activity the activity to add
+     * @return the newly added activity
+     */
     public Activity addActivity(Activity activity) {
         activity.setId(nextActivityId());
         trip.addActivity(activity);
         return activity;
     }
 
+    /**
+     * Finds and replaces an existing activity with the updated activity.
+     * Preserves the original identifier and attaches the updated activity
+     * to the current trip's starting date.
+     *
+     * @param id the identifier of the activity to update
+     * @param updated the activity containing the updated information
+     * @return the updated activity, or null if no matching activity exists
+     */
     public Activity updateActivity(int id, Activity updated) {
         for (int i = 0; i < trip.getActivities().size(); i++) {
             if (trip.getActivities().get(i).getId() == id) {
@@ -115,6 +151,13 @@ public class TripManager {
         return null;
     }
 
+    /**
+     * Removes the activity with the specified identifier from the trip.
+     *
+     * @param id the identifier of the activity to remove
+     * @return true if an activity was removed, false if no matching activity exists
+     */
+
     public boolean removeActivity(int id) {
         int previousSize = trip.getActivities().size();
 
@@ -123,6 +166,12 @@ public class TripManager {
         return trip.getActivities().size() < previousSize;
     }
 
+    /**
+     * Determines the next available activity identifier based on the
+     * highest identifier currently assigned to an activity.
+     *
+     * @return the next available activity identifier
+     */
     private int nextActivityId() {
         return trip.getActivities().stream()
             .mapToInt(Activity::getId)
@@ -130,6 +179,16 @@ public class TripManager {
             .orElse(0) + 1;
     }
 
+    /**
+     * Finds an activity and switches its scheduling method between
+     * fixed-date scheduling and trip-day scheduling. Uses the current
+     * trip's starting date when converting between scheduling methods.
+     *
+     * @param id the identifier of the activity to update
+     * @param useFixedDate true to use fixed-date scheduling,
+     * false to use trip-day scheduling
+     * @return the updated activity, or null if no matching activity exists
+     */
     public Activity switchActivityScheduleType(
         int id,
         boolean useFixedDate
@@ -151,7 +210,12 @@ public class TripManager {
     }
 
     // ---------- Housing bookings ----------
-
+    /**
+     * Assigns a unique identifier to a housing booking and adds it to the trip.
+     *
+     * @param housing the housing booking to add
+     * @return the newly added housing booking
+     */
     public HousingBooking addHousingBooking(HousingBooking housing) {
         housing.setId(nextHousingId());
         trip.addHousingBooking(housing);
@@ -159,6 +223,15 @@ public class TripManager {
         return housing;
     }
 
+    /**
+     * Finds and replaces an existing housing booking with the updated booking.
+     * Preserves the original identifier and refreshes its calculated schedule
+     * using the booking's assigned trip section.
+     *
+     * @param id the identifier of the housing booking to update
+     * @param updated the housing booking containing the updated information
+     * @return the updated housing booking, or null if no matching booking exists
+     */
     public HousingBooking updateHousingBooking(
         int id,
         HousingBooking updated
@@ -183,6 +256,12 @@ public class TripManager {
         return null;
     }
 
+    /**
+     * Removes the housing booking with the specified identifier from the trip.
+     *
+     * @param id the identifier of the housing booking to remove
+     * @return true if a booking was removed, false if no matching booking exists
+     */
     public boolean removeHousingBooking(int id) {
         int previousSize = trip.getHousingBookings().size();
 
@@ -191,6 +270,12 @@ public class TripManager {
         return trip.getHousingBookings().size() < previousSize;
     }
 
+    /**
+     * Determines the next available housing booking identifier based on
+     * the highest identifier currently assigned to a booking.
+     *
+     * @return the next available housing booking identifier
+     */
     private int nextHousingId() {
         return trip.getHousingBookings().stream()
             .mapToInt(HousingBooking::getId)
@@ -199,7 +284,12 @@ public class TripManager {
     }
 
     // ---------- Budget items ----------
-
+    /**
+     * Assigns a unique identifier to a budget item and adds it to the trip.
+     *
+     * @param item the budget item to add
+     * @return the newly added budget item
+     */
     public BudgetItem addBudgetItem(BudgetItem item) {
         item.setId(nextBudgetItemId());
         trip.addBudgetItem(item);
@@ -207,6 +297,14 @@ public class TripManager {
         return item;
     }
 
+    /**
+     * Finds and replaces an existing budget item with the updated item.
+     * Preserves the original identifier.
+     *
+     * @param id the identifier of the budget item to update
+     * @param updated the budget item containing the updated information
+     * @return the updated budget item, or null if no matching item exists
+     */
     public BudgetItem updateBudgetItem(int id, BudgetItem updated) {
         for (int i = 0; i < trip.getBudgetItems().size(); i++) {
             if (trip.getBudgetItems().get(i).getId() == id) {
@@ -221,6 +319,12 @@ public class TripManager {
         return null;
     }
 
+    /**
+     * Removes the budget item with the specified identifier from the trip.
+     *
+     * @param id the identifier of the budget item to remove
+     * @return true if a budget item was removed, false if no matching item exists
+     */
     public boolean removeBudgetItem(int id) {
         int previousSize = trip.getBudgetItems().size();
 
@@ -229,6 +333,12 @@ public class TripManager {
         return trip.getBudgetItems().size() < previousSize;
     }
 
+    /**
+     * Determines the next available budget item identifier based on
+     * the highest identifier currently assigned to a budget item.
+     *
+     * @return the next available budget item identifier
+     */
     private int nextBudgetItemId() {
         return trip.getBudgetItems().stream()
             .mapToInt(BudgetItem::getId)

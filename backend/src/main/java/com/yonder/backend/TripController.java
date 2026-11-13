@@ -10,8 +10,16 @@ import com.yonder.backend.models.BudgetSummary;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
-import org.springframework.web.bind.annotation.RequestMethod;
 
+/**
+ * Class name: TripController
+ * Date: 10/12/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Provides REST API endpoints for managing trip information,
+ * activities, housing bookings, and budget items. Receives HTTP requests
+ * from the frontend, delegates operations to TripManager and BudgetService,
+ * and returns the appropriate data or HTTP response.
+ */
 @RestController
 @CrossOrigin(
     origins = "http://localhost:5173",
@@ -40,6 +48,15 @@ public class TripController {
         return tripManager.getTrip();
     }
 
+    /**
+     * Updates the current trip using the provided trip information.
+     * Validates the trip duration and starting date before applying changes.
+     *
+     * @param trip the trip containing the updated information
+     * @return the updated trip
+     * @throws ResponseStatusException with BAD_REQUEST if the trip duration
+     * is less than one day or the starting date is missing
+     */
     @PutMapping("/api/trip")
     public Trip updateTrip(@RequestBody Trip trip) {
         if (trip.getDays() < 1) {
@@ -59,12 +76,27 @@ public class TripController {
 
     // ---------- Activities ----------
 
+    /**
+     * Creates a new activity and adds it to the current trip.
+     *
+     * @param activity the activity to add
+     * @return the newly created activity
+     */
     @PostMapping("/api/trip/activities")
     @ResponseStatus(HttpStatus.CREATED)
     public Activity addActivity(@RequestBody Activity activity) {
         return tripManager.addActivity(activity);
     }
 
+    /**
+     * Updates an existing activity using the provided activity information.
+     *
+     * @param id the identifier of the activity to update
+     * @param activity the updated activity information
+     * @return the updated activity
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
+     */
     @PutMapping("/api/trip/activities/{id}")
     public Activity updateActivity(
         @PathVariable int id,
@@ -81,6 +113,13 @@ public class TripController {
         return result;
     }
 
+    /**
+     * Removes an activity from the current trip.
+     *
+     * @param id the identifier of the activity to remove
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
+     */
     @DeleteMapping("/api/trip/activities/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeActivity(@PathVariable int id) {
@@ -90,6 +129,17 @@ public class TripController {
             );
         }
     }
+
+    /**
+     * Switches an activity between fixed-date scheduling and trip-day scheduling.
+     *
+     * @param id the identifier of the activity to update
+     * @param useFixedDate true to use fixed-date scheduling,
+     * false to use trip-day scheduling
+     * @return the updated activity
+     * @throws ResponseStatusException with NOT_FOUND if the activity
+     * does not exist
+     */
     @PatchMapping("/api/trip/activities/{id}/schedule")
     public Activity switchActivityScheduleType(
         @PathVariable int id,
@@ -111,6 +161,12 @@ public class TripController {
 
     // ---------- Housing bookings ----------
 
+    /**
+     * Creates a new housing booking and adds it to the current trip.
+     *
+     * @param housing the housing booking to add
+     * @return the newly created housing booking
+     */
     @PostMapping("/api/trip/housing")
     @ResponseStatus(HttpStatus.CREATED)
     public HousingBooking addHousingBooking(
@@ -119,6 +175,15 @@ public class TripController {
         return tripManager.addHousingBooking(housing);
     }
 
+    /**
+     * Updates an existing housing booking using the provided booking information.
+     *
+     * @param id the identifier of the housing booking to update
+     * @param housing the updated housing booking information
+     * @return the updated housing booking
+     * @throws ResponseStatusException with NOT_FOUND if the housing booking
+     * does not exist
+     */
     @PutMapping("/api/trip/housing/{id}")
     public HousingBooking updateHousingBooking(
         @PathVariable int id,
@@ -136,6 +201,13 @@ public class TripController {
         return result;
     }
 
+    /**
+     * Removes a housing booking from the current trip.
+     *
+     * @param id the identifier of the housing booking to remove
+     * @throws ResponseStatusException with NOT_FOUND if the housing booking
+     * does not exist
+     */
     @DeleteMapping("/api/trip/housing/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeHousingBooking(@PathVariable int id) {
@@ -148,12 +220,27 @@ public class TripController {
 
     // ---------- Budget items ----------
 
+    /**
+     * Creates a new budget item and adds it to the current trip.
+     *
+     * @param item the budget item to add
+     * @return the newly created budget item
+    */
     @PostMapping("/api/trip/budget-items")
     @ResponseStatus(HttpStatus.CREATED)
     public BudgetItem addBudgetItem(@RequestBody BudgetItem item) {
         return tripManager.addBudgetItem(item);
     }
 
+    /**
+     * Updates an existing budget item using the provided item information.
+     *
+     * @param id the identifier of the budget item to update
+     * @param item the updated budget item information
+     * @return the updated budget item
+     * @throws ResponseStatusException with NOT_FOUND if the budget item
+     * does not exist
+     */
     @PutMapping("/api/trip/budget-items/{id}")
     public BudgetItem updateBudgetItem(
         @PathVariable int id,
@@ -170,6 +257,13 @@ public class TripController {
         return result;
     }
 
+    /**
+     * Removes a budget item from the current trip.
+     *
+     * @param id the identifier of the budget item to remove
+     * @throws ResponseStatusException with NOT_FOUND if the budget item
+     * does not exist
+     */
     @DeleteMapping("/api/trip/budget-items/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void removeBudgetItem(@PathVariable int id) {
@@ -182,6 +276,13 @@ public class TripController {
 
     // ---------- Budget summary ----------
 
+    /**
+     * Generates and retrieves a budget summary for the current trip.
+     * Delegates the calculation of expense totals and budget entries
+     * to the BudgetService.
+     *
+     * @return the calculated budget summary
+     */
     @GetMapping("/api/trip/budget")
     public BudgetSummary getBudgetSummary() {
         return budgetService.getBudgetSummary(tripManager.getTrip());
