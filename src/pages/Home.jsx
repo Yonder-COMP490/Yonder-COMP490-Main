@@ -1,4 +1,11 @@
-
+/**
+ * Component name: Home
+ * Date: 11/02/2026
+ * Programmer: Andrew Garcia
+ * Description: Displays the Yonder home page, including user information,
+ * the current trip dashboard link, and suggested travel destinations.
+ * Retrieves user and trip information from the backend.
+ */
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./Home.css";
@@ -40,6 +47,12 @@ const suggestions = [
   },
 ];
 
+/**
+ * Selects a destination image based on the trip name.
+ *
+ * @param {Object} trip - The trip used to determine the destination image.
+ * @returns {string} The URL of the selected trip image.
+ */
 function getTripImage(trip) {
   const name = (trip.name || "").toLowerCase();
 
@@ -54,6 +67,13 @@ function getTripImage(trip) {
   return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=85";
 }
 
+/**
+ * Formats a trip's start and end dates into a readable date range.
+ *
+ * @param {string} startDate - The trip's starting date.
+ * @param {?string} endDate - The trip's ending date.
+ * @returns {string} The formatted date range, or a message if dates are unset.
+ */
 function formatTripDates(startDate, endDate) {
   if (!startDate) return "Dates not set";
 
@@ -69,6 +89,15 @@ function formatTripDates(startDate, endDate) {
     : format(startDate);
 }
 
+/**
+ * Component name: Home
+ * Description: Renders the main Yonder landing page. Loads the user's
+ * information and current trip from the backend, displays trip details,
+ * provides navigation to the dashboard and profile, and showcases
+ * suggested travel destinations.
+ *
+ * @returns {JSX.Element} The Yonder home page.
+ */
 function Home() {
   const [username, setUsername] = useState("");
   const [trip, setTrip] = useState(null);

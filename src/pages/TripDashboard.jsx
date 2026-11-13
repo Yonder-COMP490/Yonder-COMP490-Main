@@ -1,3 +1,11 @@
+/**
+ * Component name: TripDashboard
+ * Date: 10/26/2026
+ * Programmer: Andrew Garcia
+ * Description: Provides the main trip dashboard layout, including navigation,
+ * page content, and the itinerary sidebar. Loads trip information from the API
+ * and shares trip data and date-selection functions with child routes.
+ */
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import ItinerarySidebar from "../components/ItinerarySidebar";
@@ -12,6 +20,11 @@ const tabs = [
   { label: "Maps", path: "/maps" },
 ];
 
+/**
+ * Gets the current local date formatted as YYYY-MM-DD.
+ *
+ * @returns {string} The current date in YYYY-MM-DD format.
+ */
 function getTodayString() {
   const today = new Date();
   const year = today.getFullYear();
@@ -21,6 +34,15 @@ function getTodayString() {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Renders the main trip dashboard and manages shared trip state. Loads trip
+ * information when the component mounts, initializes the selected date from
+ * the trip's start date when available, and provides trip data through the
+ * router outlet context. Hides the itinerary sidebar when viewing the
+ * expanded itinerary page.
+ *
+ * @returns {JSX.Element} The dashboard layout with navigation and page content.
+ */
 export default function TripDashboard() {
   const [trip, setTrip] = useState(null);
   const [selectedDate, setSelectedDate] = useState(getTodayString);
