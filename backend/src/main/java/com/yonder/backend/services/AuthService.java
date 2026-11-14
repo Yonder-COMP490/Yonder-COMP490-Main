@@ -19,48 +19,48 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * Description: Handles user registration and login, including checking
  * credentials and encoding passwords. Uses UserRepository.java to access user
- * records in the database, and it uses profileRepository.java to create a profile
- * entry in the profile table when creating an user.
+ * records in the database, and it uses ProfileRepository.java to create a profile
+ * entry in the profile table when creating a user.
  *
  * Functions:
  * - register(RegisterRequest): Accepts registration details, checks that the
  *   email is present and not already registered, encodes the password, saves
  *   the user, and returns an AuthResponse with the result, user ID, and
  *   creation timestamp. It also creates an entry in the profile table, as each user
- *   has its own profile. It Throws IllegalArgumentException for a missing or
+ *   has their own profile. Throws IllegalArgumentException for a missing or
  *   already-used email. We will most likely remove the creation timestamp from the
- *   response, as it is not needed by the front end, it was just for testing.
+ *   response, as it is not needed by the front end; it was just for testing.
  *
  * - login(LoginRequest): Accepts an email and password, looks up the user,
  *   verifies the password against its stored hash, and returns an
- *   AuthResponse(on success). Throws IllegalArgumentException if the user
- *   is not in User table(No existing user with the email)
+ *   AuthResponse on success. Throws IllegalArgumentException if the user
+ *   is not in the User table (no existing user with the email)
  *   or if the password does not match with the stored hash.
  *
- * Data structures: Uses RegisterRequest and LoginRequest, DTOs(Data transfer
+ * Data structures: Uses RegisterRequest and LoginRequest, DTOs (Data Transfer
  * Objects) for input, User for user data, and AuthResponse for output.
- * userRepository returns an Optional<User> when searching by email.
+ * userRepository returns an {@code Optional<User>} when searching by email.
  *
  * Algorithm:
- * - Registration checks if an user inputed an email(not empty) and if it did put an
- *  email if it is a duplicate email(if it already exists in the database). If its a
- *  valid email and not in the database, it then creates a new User object, sets the
- *  email and password hash, and then saves it to the database, returning an
- *  AuthResponse with the result. The password is encoded using hashing before
- *  saving it to the database, so no original password is stored.
- *  When creating an User, we also create a profile, even tough most fields are
- *  empty as it doesnt ask the user to create his profile yet. The point of doing so
- *  its so each user in the database has its own corresponding profile row in the
- *  database, linked by using the users ID as a foreign ket.
+ * - Registration checks if a user entered an email and whether it is a duplicate
+ *   (if it already exists in the database). If the email is valid and not in the
+ *   database, it then creates a new User object, sets the email and password hash,
+ *   and saves it to the database, returning an AuthResponse with the result.
+ *   The password is encoded using hashing before saving it to the database,
+ *   so the original password is not stored.
+ *   When creating a User, we also create a profile, even though most fields are
+ *   empty because the user is not asked to create their profile yet. This ensures
+ *   each user in the database has a corresponding profile row, linked using the
+ *   user's ID as a foreign key.
  *
- * - Login retrieves the user and asks PasswordEncoder
- *  to compare the submitted password with the stored hash;
- *  the password is never compared or stored as plaintext.
- *  Currently it returns an AuthResponse with the result, user ID, and creation
- *  timestamp, but idealy it should only return the result, User ID and a
- *  auuthentication token, as the creation timestamp is not needed by the front end
- *  and as mentioned before, it was just for testing. The authentication tokens are
- *  yet to be implemented.
+ * - Login retrieves the user and asks PasswordEncoder to compare the submitted
+ *   password with the stored hash; the password is never compared or stored
+ *   as plaintext.
+ *   Currently, it returns an AuthResponse with the result, user ID, and creation
+ *   timestamp, but ideally it should only return the result, user ID, and an
+ *   authentication token. The creation timestamp is not needed by the front end
+ *   and was only included for testing. Authentication tokens are yet to be
+ *   implemented.
  */
 
 @Service
