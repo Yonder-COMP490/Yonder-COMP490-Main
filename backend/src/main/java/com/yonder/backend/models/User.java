@@ -7,9 +7,9 @@ import java.time.LocalDateTime;
  * Date: 10/21/2026
  * Programmer: Christian Bartle
  * Description: Represents a user account and corresponds to a row in the
- * database's users table. User objects are used by the UserRepository.java to map the 
- * database User table to User objects and to save User objects to the datatabase User 
- * table. 
+ * database's users table. User objects are used by the UserRepository.java to map the
+ * database User table to User objects and to save User objects to the datatabase User
+ * table.
  *
  * Functions:
  * - User(): Creates an empty User object.

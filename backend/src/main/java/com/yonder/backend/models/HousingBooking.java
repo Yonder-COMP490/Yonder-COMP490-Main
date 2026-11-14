@@ -5,6 +5,16 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 
+/**
+ * Class name: HousingBooking
+ * Date: 10/11/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Represents a housing reservation associated with a trip.
+ * Stores booking details, check-in and check-out times, location, and daily
+ * cost. Supports both fixed-date scheduling and scheduling based on an
+ * assigned trip section. Calculates booking dates and total costs based
+ * on the selected scheduling method.
+ */
 public class HousingBooking {
     private int id;
 
@@ -104,7 +114,14 @@ public class HousingBooking {
     public Integer getTripSectionId() {
         return tripSectionId;
     }
-
+    /**
+     * Assigns the booking to a trip section and switches its scheduling
+     * method from a fixed check-in date to section-based scheduling.
+     * Clears any previously calculated section schedule.
+     *
+     * @param tripSectionId the identifier of the assigned trip section,
+     * or null to remove the section assignment
+     */
     public void setTripSectionId(Integer tripSectionId) {
         this.tripSectionId = tripSectionId;
 
@@ -117,7 +134,13 @@ public class HousingBooking {
     public LocalDate getFixedCheckInDate() {
         return fixedCheckInDate;
     }
-
+    /**
+     * Assigns a fixed check-in date and switches the booking from
+     * section-based scheduling to fixed-date scheduling.
+     * Clears any previously calculated section schedule.
+     *
+     * @param fixedCheckInDate the fixed check-in date, or null if not assigned
+     */
     public void setFixedCheckInDate(LocalDate fixedCheckInDate) {
         this.fixedCheckInDate = fixedCheckInDate;
 
@@ -127,6 +150,14 @@ public class HousingBooking {
         }
     }
 
+    /**
+     * Returns the effective check-in date based on the booking's scheduling
+     * method. Uses the assigned section's calculated date when section-based
+     * scheduling is active.
+     *
+     * @return the calculated section check-in date or fixed check-in date,
+     * depending on the scheduling method
+     */
     public LocalDate getCheckInDate() {
         if (tripSectionId != null) {
             return sectionCheckInDate;
@@ -139,6 +170,13 @@ public class HousingBooking {
         setFixedCheckInDate(date);
     }
 
+    /**
+     * Calculates the check-out date by adding the booking duration to
+     * its effective check-in date.
+     *
+     * @return the calculated check-out date, or null if no check-in date
+     * is available
+     */
     public LocalDate getCheckOutDate() {
         LocalDate checkInDate = getCheckInDate();
 
@@ -149,8 +187,15 @@ public class HousingBooking {
         return checkInDate.plusDays(getNights());
     }
 
-    // Compatibility with existing React requests.
-    // Section-based bookings always use their section's duration.
+    /**
+     * Updates the number of nights based on the difference between the
+     * check-in and check-out dates. Does not modify section-based bookings,
+     * since their duration is determined by the assigned trip section.
+     *
+     * @param checkOutDate the desired check-out date
+     * @throws IllegalArgumentException if the check-out date precedes
+     * the check-in date or the calculated duration exceeds the integer range
+     */
     public void setCheckOutDate(LocalDate checkOutDate) {
         if (tripSectionId != null) {
             return;
@@ -172,6 +217,13 @@ public class HousingBooking {
         }
     }
 
+    /**
+     * Returns the booking duration based on its scheduling method.
+     * Section-based bookings use the assigned section's duration, while
+     * fixed-date bookings use their individually stored number of nights.
+     *
+     * @return the number of nights for the booking
+     */
     public int getNights() {
         if (tripSectionId != null) {
             return sectionNights != null ? sectionNights : 0;
@@ -180,6 +232,13 @@ public class HousingBooking {
         return nights;
     }
 
+    /**
+     * Updates the number of nights for a fixed-date booking.
+     * Section-based bookings retain the duration of their assigned section.
+     *
+     * @param nights the number of nights for the booking
+     * @throws IllegalArgumentException if the number of nights is negative
+     */
     public void setNights(int nights) {
         if (nights < 0) {
             throw new IllegalArgumentException(
@@ -194,7 +253,13 @@ public class HousingBooking {
     }
 
     /**
-     * Called by Trip to provide the current schedule of this booking's section.
+     * Attaches the booking to its assigned trip section by supplying the
+     * section's current check-in date and duration. Called by Trip when
+     * trip section schedules are refreshed.
+     *
+     * @param sectionCheckInDate the calculated starting date of the section
+     * @param sectionDays the duration of the section in days
+     * @throws IllegalArgumentException if the section duration is negative
      */
     public void attachToTrip(LocalDate sectionCheckInDate, int sectionDays) {
         if (tripSectionId == null) {
@@ -212,6 +277,11 @@ public class HousingBooking {
         this.sectionNights = sectionDays;
     }
 
+    /**
+     * Clears the calculated section check-in date and duration.
+     * Used when switching to fixed-date scheduling or removing a
+     * section assignment.
+     */
     private void clearSectionSchedule() {
         this.sectionCheckInDate = null;
         this.sectionNights = null;
@@ -249,6 +319,13 @@ public class HousingBooking {
         this.costPerDay = costPerDay != null ? costPerDay : new Cost();
     }
 
+    /**
+     * Calculates the total booking cost by multiplying the daily cost
+     * by the effective number of nights.
+     *
+     * @return the calculated total cost, or zero USD if the daily cost
+     * has not been initialized
+     */
     public Cost getTotalCost() {
         if (costPerDay == null) {
             return new Cost(0.0, "USD");

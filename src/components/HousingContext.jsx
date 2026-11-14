@@ -1,4 +1,11 @@
-
+/**
+ * Component name: HousingProvider
+ * Date: 09/26/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Manages shared housing booking data throughout the application.
+ * Provides housing state, loading and error information, and functions for
+ * creating, updating, deleting, and refreshing housing bookings.
+ */
 import {
   createContext,
   useContext,
@@ -138,6 +145,12 @@ export function HousingProvider({ children, tripId = 1 }) {
   );
 }
 
+/**
+ * Provides access to the shared housing context.
+ *
+ * @returns {Object} The housing context containing booking data,
+ * loading and error states, and housing management functions.
+ */
 export function useHousing() {
   return useContext(HousingContext);
 }

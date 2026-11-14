@@ -1,4 +1,11 @@
-
+/**
+ * Class name: HousingAPI
+ * Date: 10/14/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Handles API requests for retrieving, creating, updating,
+ * and deleting housing bookings. Serializes housing data to match the
+ * backend model and supports both trip-section and fixed-date scheduling.
+ */
 const API_BASE = "http://localhost:8080/api/trips";
 
 function tripUrl(tripId) {

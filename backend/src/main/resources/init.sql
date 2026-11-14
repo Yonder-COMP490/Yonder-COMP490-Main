@@ -6,9 +6,9 @@
  *
  * Description: Defines the PostgreSQL tables used by the Yonder backend:
  * users, contact_info, profiles, costs, trips, activities, budgetItem,
- * pointOfInterest, and housingBooking. This script is intended to be run once to 
- * create the tables for the database. If the database is lost, this script can be 
- * used to set it up again (tables only, not contents, that would requiere a 
+ * pointOfInterest, and housingBooking. This script is intended to be run once to
+ * create the tables for the database. If the database is lost, this script can be
+ * used to set it up again (tables only, not contents, that would requiere a
  * separate backup).
  *
  * Important operations:
@@ -18,7 +18,7 @@
  * - Uses ON DELETE CASCADE on selected relationships so dependent records
  *   are deleted when their referenced parent is deleted.
  *
- * Data structures: 
+ * Data structures:
  * - Defines relational tables and columns for user accounts,
  *   profiles, trips, activities, costs, budget items, points of interest,
  *   housing bookings, and contact information.

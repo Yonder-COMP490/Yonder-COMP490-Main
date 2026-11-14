@@ -1,4 +1,3 @@
-
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -18,6 +17,15 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Manages the original sample trip and a collection of independently
+ * identified trips, including their activities, housing, and budget items.
+ * Stores trips in a LinkedHashMap for keyed lookup and insertion order.
+ *
+ * @author R. Sommerhauser
+ * @author A. Garcia
+ * @version 1.0
+ */
 @Component
 public class TripManager {
 
@@ -37,10 +45,10 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Creates the original Japan sample trip using the updated
-     * Description, Location, and Trip models.
+     * Creates and initializes a sample trip with example activities and
+     * housing bookings for development and testing purposes.
      *
-     * @return the sample trip
+     * @return the newly created sample trip
      */
     private Trip createSampleTrip() {
         Trip newTrip = new Trip(
@@ -107,11 +115,12 @@ public class TripManager {
     }
 
     /**
-     * Updates the original sample trip while preserving
-     * its assigned activities, housing, and budget items.
+     * Updates the current trip's basic information, duration, and trip sections.
+     * Preserves the existing trip object and its associated activities,
+     * housing bookings, and budget items.
      *
-     * @param updated updated trip details
-     * @return the updated sample trip
+     * @param updated the trip containing the updated information
+     * @return the updated trip
      */
     public synchronized Trip updateTrip(Trip updated) {
         trip.setName(updated.getName());
@@ -157,6 +166,7 @@ public class TripManager {
      *
      * @param requested requested trip information
      * @return newly created trip
+     * @throws IllegalArgumentException if the trip name, start date, or duration is invalid
      */
     public synchronized Trip createTrip(Trip requested) {
         if (requested == null ||
@@ -204,7 +214,10 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds an activity to the original sample trip.
+     * Assigns a unique identifier to an activity and adds it to the trip.
+     *
+     * @param activity the activity to add
+     * @return the newly added activity
      */
     public Activity addActivity(Activity activity) {
         activity.setId(nextActivityId());
@@ -213,7 +226,13 @@ public class TripManager {
     }
 
     /**
-     * Updates an activity in the original sample trip.
+     * Finds and replaces an existing activity with the updated activity.
+     * Preserves the original identifier and attaches the updated activity
+     * to the current trip's starting date.
+     *
+     * @param id the identifier of the activity to update
+     * @param updated the activity containing the updated information
+     * @return the updated activity, or null if no matching activity exists
      */
     public Activity updateActivity(int id, Activity updated) {
         for (int i = 0; i < trip.getActivities().size(); i++) {
@@ -230,7 +249,10 @@ public class TripManager {
     }
 
     /**
-     * Removes an activity from the original sample trip.
+     * Removes the activity with the specified identifier from the trip.
+     *
+     * @param id the identifier of the activity to remove
+     * @return true if an activity was removed, false if no matching activity exists
      */
     public boolean removeActivity(int id) {
         int previousSize = trip.getActivities().size();
@@ -249,10 +271,14 @@ public class TripManager {
     }
 
     /**
-     * Changes the scheduling mode of an activity in
-     * the original sample trip.
+     * Finds an activity and switches its scheduling method between
+     * fixed-date scheduling and trip-day scheduling. Uses the current
+     * trip's starting date when converting between scheduling methods.
      *
-     * Preserves the scheduling feature added on main.
+     * @param id the identifier of the activity to update
+     * @param useFixedDate true to use fixed-date scheduling,
+     * false to use trip-day scheduling
+     * @return the updated activity, or null if no matching activity exists
      */
     public Activity switchActivityScheduleType(
         int id,
@@ -279,7 +305,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds an activity to the selected trip.
+     * Adds an activity to the specified trip.
+     * Assigns an identifier unique within that trip's activity collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param activity the activity to add
+     * @return the newly added activity
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized Activity addActivity(
         int tripId,
@@ -300,7 +332,14 @@ public class TripManager {
     }
 
     /**
-     * Updates an activity belonging to the selected trip.
+     * Replaces an activity in the specified trip while preserving its identifier.
+     * Reattaches the updated activity to the selected trip's starting date.
+     *
+     * @param tripId the identifier of the trip
+     * @param activityId the identifier of the activity to update
+     * @param updated the replacement activity
+     * @return the updated activity, or null if the activity does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized Activity updateActivity(
         int tripId,
@@ -328,7 +367,12 @@ public class TripManager {
     }
 
     /**
-     * Removes an activity from the selected trip.
+     * Removes an activity from the specified trip without affecting other trips.
+     *
+     * @param tripId the identifier of the trip
+     * @param activityId the identifier of the activity to remove
+     * @return true if an activity was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeActivity(
         int tripId,
@@ -350,7 +394,10 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a housing booking to the original sample trip.
+     * Assigns a unique identifier to a housing booking and adds it to the trip.
+     *
+     * @param housing the housing booking to add
+     * @return the newly added housing booking
      */
     public HousingBooking addHousingBooking(
         HousingBooking housing
@@ -362,10 +409,13 @@ public class TripManager {
     }
 
     /**
-     * Updates a housing booking in the original sample trip.
+     * Finds and replaces an existing housing booking with the updated booking.
+     * Preserves the original identifier and refreshes its calculated schedule
+     * using the booking's assigned trip section.
      *
-     * Calling setHousingBookings refreshes schedules
-     * based on the assigned TripSection.
+     * @param id the identifier of the housing booking to update
+     * @param updated the housing booking containing the updated information
+     * @return the updated housing booking, or null if no matching booking exists
      */
     public HousingBooking updateHousingBooking(
         int id,
@@ -390,7 +440,10 @@ public class TripManager {
     }
 
     /**
-     * Removes a housing booking from the sample trip.
+     * Removes the housing booking with the specified identifier from the trip.
+     *
+     * @param id the identifier of the housing booking to remove
+     * @return true if a booking was removed, false if no matching booking exists
      */
     public boolean removeHousingBooking(int id) {
         int previousSize =
@@ -415,7 +468,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a housing booking to the selected trip.
+     * Adds a housing booking to the specified trip.
+     * Assigns an identifier unique within that trip's housing collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param housing the housing booking to add
+     * @return the newly added housing booking
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized HousingBooking addHousingBooking(
         int tripId,
@@ -436,10 +495,15 @@ public class TripManager {
     }
 
     /**
-     * Updates a housing booking belonging to a selected trip.
+     * Replaces a housing booking in the specified trip while retaining its ID.
+     * Updates the trip's housing collection through the Trip model, which
+     * recalculates section-based booking dates and durations as applicable.
      *
-     * Uses the updated Trip model to recalculate
-     * section-based check-in dates and durations.
+     * @param tripId the identifier of the trip
+     * @param housingId the identifier of the booking to update
+     * @param updated the replacement housing booking
+     * @return the updated booking, or null if the booking does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized HousingBooking updateHousingBooking(
         int tripId,
@@ -467,7 +531,12 @@ public class TripManager {
     }
 
     /**
-     * Removes a housing booking from the selected trip.
+     * Removes a housing booking from the specified trip.
+     *
+     * @param tripId the identifier of the trip
+     * @param housingId the identifier of the booking to remove
+     * @return true if a booking was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeHousingBooking(
         int tripId,
@@ -489,7 +558,10 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a budget item to the original sample trip.
+     * Assigns a unique identifier to a budget item and adds it to the trip.
+     *
+     * @param item the budget item to add
+     * @return the newly added budget item
      */
     public BudgetItem addBudgetItem(BudgetItem item) {
         item.setId(nextBudgetItemId());
@@ -499,7 +571,12 @@ public class TripManager {
     }
 
     /**
-     * Updates a budget item in the original sample trip.
+     * Finds and replaces an existing budget item with the updated item.
+     * Preserves the original identifier.
+     *
+     * @param id the identifier of the budget item to update
+     * @param updated the budget item containing the updated information
+     * @return the updated budget item, or null if no matching item exists
      */
     public BudgetItem updateBudgetItem(
         int id,
@@ -519,7 +596,10 @@ public class TripManager {
     }
 
     /**
-     * Removes a budget item from the original sample trip.
+     * Removes the budget item with the specified identifier from the trip.
+     *
+     * @param id the identifier of the budget item to remove
+     * @return true if a budget item was removed, false if no matching item exists
      */
     public boolean removeBudgetItem(int id) {
         int previousSize = trip.getBudgetItems().size();
@@ -542,7 +622,13 @@ public class TripManager {
     // ============================================================
 
     /**
-     * Adds a budget item to the selected trip.
+     * Adds a budget item to the specified trip.
+     * Assigns an identifier unique within that trip's budget collection.
+     *
+     * @param tripId the identifier of the trip
+     * @param item the budget item to add
+     * @return the newly added budget item
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized BudgetItem addBudgetItem(
         int tripId,
@@ -563,7 +649,13 @@ public class TripManager {
     }
 
     /**
-     * Updates a budget item belonging to the selected trip.
+     * Replaces a budget item in the specified trip while preserving its ID.
+     *
+     * @param tripId the identifier of the trip
+     * @param itemId the identifier of the budget item to update
+     * @param updated the replacement budget item
+     * @return the updated item, or null if the budget item does not exist
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized BudgetItem updateBudgetItem(
         int tripId,
@@ -589,7 +681,12 @@ public class TripManager {
     }
 
     /**
-     * Removes a budget item from the selected trip.
+     * Removes a budget item from the specified trip.
+     *
+     * @param tripId the identifier of the trip
+     * @param itemId the identifier of the budget item to remove
+     * @return true if the item was removed, otherwise false
+     * @throws IllegalArgumentException if the trip does not exist
      */
     public synchronized boolean removeBudgetItem(
         int tripId,
@@ -615,6 +712,7 @@ public class TripManager {
      *
      * @param tripId selected trip ID
      * @return matching trip
+     * @throws IllegalArgumentException if the trip does not exist
      */
     private Trip requireTrip(int tripId) {
         Trip selectedTrip = trips.get(tripId);

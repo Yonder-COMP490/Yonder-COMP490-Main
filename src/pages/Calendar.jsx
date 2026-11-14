@@ -1,4 +1,11 @@
-
+/**
+ * Component name: Calendar
+ * Date: 09/21/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Displays an interactive monthly calendar for managing trip
+ * dates and trip sections. Supports changing the trip's start date and
+ * duration, adjusting section lengths, and selecting dates.
+ */
 import { useEffect, useState } from "react";
 import { Link, useOutletContext } from "react-router-dom";
 import { useActivities } from "../components/ActivityContext";
@@ -6,6 +13,12 @@ import { useHousing } from "../components/HousingContext";
 import TripAPI from "../api/TripAPI";
 import "./Calendar.css";
 
+/**
+ * Formats a JavaScript Date object into YYYY-MM-DD format.
+ *
+ * @param {Date} date - The date to format.
+ * @returns {string} The formatted date.
+ */
 function formatDate(date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -14,12 +27,26 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
+/**
+ * Adds a specified number of days to a date string.
+ *
+ * @param {string} dateString - The starting date in YYYY-MM-DD format.
+ * @param {number} amount - The number of days to add.
+ * @returns {string} The resulting date in YYYY-MM-DD format.
+ */
 function addDays(dateString, amount) {
   const date = new Date(`${dateString}T00:00:00`);
   date.setDate(date.getDate() + amount);
   return formatDate(date);
 }
 
+/**
+ * Calculates the number of days between two dates.
+ *
+ * @param {string} startDate - The starting date.
+ * @param {string} endDate - The ending date.
+ * @returns {number} The number of days between the dates.
+ */
 function daysBetween(startDate, endDate) {
   const start = new Date(`${startDate}T00:00:00`);
   const end = new Date(`${endDate}T00:00:00`);
@@ -29,6 +56,16 @@ function daysBetween(startDate, endDate) {
   );
 }
 
+/**
+ * Finds the trip section containing a specific date.
+ *
+ * Uses the trip start date and section durations to determine
+ * which section includes the specified date.
+ *
+ * @param {Object} trip - The trip containing its start date, duration, and sections.
+ * @param {string} dateString - The date to find a section for.
+ * @returns {Object|null} The matching trip section, or null if none applies.
+ */
 function getSectionForDate(trip, dateString) {
   if (!trip?.startDate || !dateString || !trip?.tripSections?.length) {
     return null;
@@ -60,6 +97,13 @@ function getSectionForDate(trip, dateString) {
   return null;
 }
 
+/**
+ * Calculates the day offsets where neighboring trip sections meet.
+ *
+ * @param {Array<Object>} sections - The trip sections.
+ * @returns {Array<Object>} Section boundary information containing section indices
+ * and day offsets.
+ */
 function getSectionBoundaryOffsets(sections) {
   const boundaries = [];
   let currentDay = 0;
@@ -78,6 +122,13 @@ function getSectionBoundaryOffsets(sections) {
   return boundaries;
 }
 
+/**
+ * Calculates the ending day offset for each trip section.
+ *
+ * @param {Array<Object>} sections - The trip sections.
+ * @returns {Array<Object>} Section ending information containing section indices
+ * and day offsets.
+ */
 function getSectionEndOffsets(sections) {
   const ends = [];
   let currentDay = 0;
@@ -209,20 +260,45 @@ function Calendar() {
     }
   }
 
+  /**
+   * Changes the displayed calendar month.
+   *
+   * @param {number} amount - The number of months to move forward or backward.
+   */
   function changeMonth(amount) {
     setDisplayedMonth(
       new Date(currentYear, currentMonth + amount, 1)
     );
   }
 
+  /**
+   * Gets the number of days in a specified month.
+   *
+   * @param {number} year - The calendar year.
+   * @param {number} month - The zero-based month index.
+   * @returns {number} The number of days in the month.
+   */
   function getDaysInMonth(year, month) {
     return new Date(year, month + 1, 0).getDate();
   }
 
+  /**
+   * Gets the weekday index of the first day of a specified month.
+   *
+   * @param {number} year - The calendar year.
+   * @param {number} month - The zero-based month index.
+   * @returns {number} The weekday index, where Sunday is 0.
+   */
   function getFirstDayOfMonth(year, month) {
     return new Date(year, month, 1).getDay();
   }
 
+  /**
+   * Creates a date string for a day in the currently displayed month.
+   *
+   * @param {number} day - The day of the month.
+   * @returns {string} The date in YYYY-MM-DD format.
+   */
   function getDateString(day) {
     return (
       `${currentYear}-` +
@@ -231,6 +307,12 @@ function Calendar() {
     );
   }
 
+  /**
+   * Checks whether a date falls within the displayed trip date range.
+   *
+   * @param {string} date - The date to check.
+   * @returns {boolean} Whether the date is part of the trip.
+   */
   function isTripDay(date) {
     return (
       displayedTripStartDate &&
@@ -240,12 +322,25 @@ function Calendar() {
     );
   }
 
+  /**
+   * Checks whether an activity is scheduled for a specific date.
+   *
+   * @param {string} date - The date to check.
+   * @returns {boolean} Whether an activity exists on that date.
+   */
   function hasActivity(date) {
     return activities.some(
       (activity) => activity.date === date
     );
   }
 
+  /**
+   * Finds the calendar date underneath a specified screen position.
+   *
+   * @param {number} x - The horizontal screen coordinate.
+   * @param {number} y - The vertical screen coordinate.
+   * @returns {string|null} The calendar date at that position, or null if none exists.
+   */
   function getDateAtPoint(x, y) {
     const element = document.elementFromPoint(x, y);
     const dayElement = element?.closest("[data-calendar-date]");
@@ -255,7 +350,14 @@ function Calendar() {
     return dayElement.dataset.calendarDate;
   }
 
-  // Save changes to the trip's sections.
+  /**
+   * Saves updated trip sections to the backend and refreshes the trip state.
+   *
+   * Prevents overlapping save operations and displays an error if the update fails.
+   *
+   * @param {Array<Object>} updatedSections - The updated trip sections.
+   * @returns {Promise<void>} A promise that resolves after the save operation finishes.
+   */
   async function saveTripSections(updatedSections) {
     if (isSaving) return;
 
@@ -279,7 +381,15 @@ function Calendar() {
     }
   }
 
-  // Split the selected section into two sections.
+  /**
+   * Splits an existing trip section into two smaller sections.
+   *
+   * Divides the section's days between the original and new section,
+   * then saves the updated section list.
+   *
+   * @param {number} sectionIndex - The index of the section to split.
+   * @returns {Promise<void>} A promise that resolves after the update finishes.
+   */
   async function handleAddSection(sectionIndex) {
     if (
       isSaving ||
@@ -326,7 +436,16 @@ function Calendar() {
     await saveTripSections(updatedSections);
   }
 
-  // Drag the boundary between two neighboring sections.
+  /**
+   * Begins dragging the boundary between two neighboring trip sections.
+   *
+   * Updates a preview while dragging and saves the new section durations
+   * when the pointer is released.
+   *
+   * @param {PointerEvent} event - The pointer event that begins the drag.
+   * @param {number} sectionIndex - The index of the section before the boundary.
+   * @param {number} originalBoundary - The original boundary day offset.
+   */
   function handleSectionBoundaryDragStart(
     event,
     sectionIndex,
@@ -429,7 +548,15 @@ function Calendar() {
     window.addEventListener("pointercancel", handlePointerCancel);
   }
 
-  // Shared function for moving the trip's start date.
+  /**
+   * Updates the trip's starting date.
+   *
+   * Preserves the selected date's relative position within the trip when possible,
+   * then refreshes activities and housing bookings to reflect the new dates.
+   *
+   * @param {string} finalDate - The new trip start date in YYYY-MM-DD format.
+   * @returns {Promise<void>} A promise that resolves after the update finishes.
+   */
   async function updateTripStartDate(finalDate) {
     if (!finalDate || finalDate === tripStartDate || isSaving) {
       return;
@@ -485,7 +612,16 @@ function Calendar() {
     }
   }
 
-  // Update the trip's number of days using its new end date.
+  /**
+   * Updates the trip duration using a new ending date.
+   *
+   * Calculates the new number of trip days, saves the change, and refreshes
+   * activities and housing bookings. Adjusts the selected date if it falls
+   * beyond the new trip end date.
+   *
+   * @param {string} finalDate - The new trip end date in YYYY-MM-DD format.
+   * @returns {Promise<void>} A promise that resolves after the update finishes.
+   */
   async function updateTripDuration(finalDate) {
     if (!finalDate || !tripStartDate || isSaving) {
       return;
@@ -533,7 +669,14 @@ function Calendar() {
     }
   }
 
-  // Start dragging the trip's starting date.
+  /**
+   * Begins dragging the trip's starting-date handle.
+   *
+   * Initializes the drag preview and prevents dragging when another
+   * conflicting operation is active.
+   *
+   * @param {PointerEvent} event - The pointer event that begins the drag.
+   */
   function handleDragStart(event) {
     if (
       event.button !== 0 ||
@@ -552,7 +695,11 @@ function Calendar() {
     setIsDragging(true);
   }
 
-  // Double-click the starting-date handle to enter a date.
+  /**
+   * Opens a prompt for manually entering a new trip start date.
+   *
+   * @param {MouseEvent} event - The double-click event.
+   */
   function handleMoveButtonDoubleClick(event) {
     event.preventDefault();
     event.stopPropagation();
@@ -569,7 +716,11 @@ function Calendar() {
     updateTripStartDate(newDate.trim());
   }
 
-  // Start dragging the trip's ending date.
+  /**
+   * Begins dragging the trip's ending-date handle to change its duration.
+   *
+   * @param {PointerEvent} event - The pointer event that begins the resize.
+   */
   function handleResizeStart(event) {
     if (
       event.button !== 0 ||

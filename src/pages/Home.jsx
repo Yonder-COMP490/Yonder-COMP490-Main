@@ -6,6 +6,12 @@ import "./Home.css";
 
 const API_BASE = "http://localhost:8080/api";
 
+/**
+ * Curated destinations displayed in the homepage inspiration section.
+ * Each entry provides a title, category, location, and image URL.
+ *
+ * @type {Array<{id: string, name: string, category: string, location: string, image: string}>}
+ */
 const suggestions = [
   {
     id: "lisbon",
@@ -41,6 +47,13 @@ const suggestions = [
   },
 ];
 
+/**
+ * Chooses a trip card image using keywords in the trip name.
+ * Falls back to a general travel image when no destination matches.
+ *
+ * @param {{name: string}} trip - Trip whose card image is needed.
+ * @returns {string} URL of the image to display.
+ */
 function getTripImage(trip) {
   const name = (trip.name || "").toLowerCase();
 
@@ -55,6 +68,14 @@ function getTripImage(trip) {
   return "https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&auto=format&fit=crop&q=85";
 }
 
+/**
+ * Formats a trip's start date or date range for display.
+ * Appending local midnight avoids interpreting date-only strings as UTC.
+ *
+ * @param {string} startDate - Start date in YYYY-MM-DD format.
+ * @param {string} [endDate] - Optional end date in YYYY-MM-DD format.
+ * @returns {string} Formatted date range or a missing-date message.
+ */
 function formatTripDates(startDate, endDate) {
   if (!startDate) return "Dates not set";
 
@@ -70,6 +91,17 @@ function formatTripDates(startDate, endDate) {
     : format(startDate);
 }
 
+/**
+ * Displays the Yonder homepage and manages trip navigation.
+ *
+ * Retrieves user information and trips from the backend,
+ * displays destination suggestions, and controls the
+ * trip creation dialog.
+ *
+ * @component
+ * @author A. Garcia
+ * @version 1.0
+ */
 function Home() {
   const [username, setUsername] = useState("");
   const [trips, setTrips] = useState([]);
@@ -78,6 +110,10 @@ function Home() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [createTripOpen, setCreateTripOpen] = useState(false);
 
+  /**
+   * Loads user information and trips when the homepage mounts.
+   * The cancellation flag prevents state updates after unmounting.
+   */
   useEffect(() => {
     let cancelled = false;
 
@@ -157,6 +193,12 @@ function Home() {
     };
   }, [createTripOpen]);
 
+  /**
+   * Adds a newly created trip to the displayed list without refetching.
+   * Clears any prior trip error and closes the creation dialog.
+   *
+   * @param {Object} newTrip - Trip returned by the creation form.
+   */
   function handleTripCreated(newTrip) {
     setTrips((previousTrips) => [...previousTrips, newTrip]);
     setTripError("");

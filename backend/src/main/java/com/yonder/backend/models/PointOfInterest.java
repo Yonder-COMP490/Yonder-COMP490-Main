@@ -1,5 +1,13 @@
 package com.yonder.backend.models;
 
+/**
+ * Class name: PointOfInterest
+ * Date: 10/28/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Represents a point of interest associated with a trip section.
+ * Stores descriptive information, geographic location, and estimated cost for a place
+ * the user may want to visit during their trip but is not a core part of the plan.
+ */
 public class PointOfInterest {
     private int id;
     private TripSection tripSection;

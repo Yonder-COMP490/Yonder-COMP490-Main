@@ -1,6 +1,14 @@
 
 package com.yonder.backend.models;
 
+/**
+ * Class name: TripSection
+ * Date: 11/8/2026
+ * Programmer: Ryan Sommerhauser
+ * Description: Represents a section of a trip with a name, duration, display
+ * color, and optional geographic coordinates. Used to organize a trip into
+ * separate sections based on location or itinerary.
+ */
 public class TripSection {
     private int id;
     private String name;
