@@ -9,7 +9,7 @@ import "./Budget.css";
  * Formats a backend Cost value as a currency amount or range.
  * Supports fixed amounts and lower/upper estimates, falling back to USD.
  *
- * @param {{lowerEnd?: number, upperEnd?: number, amount?: number, currency?: string} | null} cost
+ * @param {Object|null} cost
  *   Cost supplied by the backend.
  * @returns {string} Localized monetary amount or range.
  */
@@ -48,6 +48,7 @@ function formatCost(cost) {
  * @author R. Sommerhauser
  * @author A. Garcia
  * @version 1.0
+ * @since 2026-09-23
  */
 function Budget() {
   // Provided by TripDashboard through React Router's Outlet.
@@ -168,7 +169,7 @@ function Budget() {
    * Summary entries reference the underlying budget item through
    * sourceId rather than a generic entry ID.
    *
-   * @param {{name?: string, unitCost?: {lowerEnd?: number}, quantity?: number, sourceId: number}} entry
+   * @param {Object} entry
    *   Budget summary entry to edit.
    */
   function startEditingDailyItem(entry) {
