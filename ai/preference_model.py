@@ -1,10 +1,58 @@
-import pandas as pd
+"""
+Module Name: AI Preference Recommendation Model
+File: ai/preference_model.py
+Date: November 2026
+Programmer: Tatiana Cherbaeva
 
-# loading Data
+Description:
+    Implements user-based collaborative filtering to predict
+    user ratings for travel-related place categories.
+
+Important Functions:
+    calculate_distance(user_a, user_b):
+        Input: Two pandas Series containing user ratings.
+        Output: Mean absolute difference between ratings
+        in shared categories, or None if fewer than three
+        categories overlap.
+
+    predict_rating(test_user, category, k=5):
+        Input: User ratings, target category, and number
+        of nearest neighbors.
+        Output: Predicted rating or None if no suitable
+        neighbors are found.
+
+Important Data Structures:
+    pandas DataFrame:
+        Stores ratings for 24 place categories.
+
+    pandas Series:
+        Represents individual user ratings and category
+        averages used by the baseline model.
+
+    list of tuples:
+        Stores reference user indices and rating distances
+        used to identify the nearest neighbors.
+
+Algorithm:
+    User-based Collaborative Filtering with K-Nearest
+    Neighbors (KNN).
+
+    The model finds similar users by comparing ratings
+    in shared categories. It predicts missing ratings
+    using the average ratings of the nearest neighbors.
+
+    This approach was selected because it uses existing
+    user preference data and does not require labeled
+    recommendation outcomes.
+"""
+
+import pandas as pd 
+# -------- Loading Data and preprocessing --------
 data = pd.read_csv("ai/google_review_ratings_data.csv")
 
 # removing empty column
 data = data.drop(columns=["Unnamed: 25"])
+
 # creating proper names for categories
 data = data.rename(columns={
 	"User": "user_id",
@@ -45,40 +93,56 @@ valid_ratings = ratings.where(
 	(ratings >=1) & (ratings <=5)
 )
 
-# Users with all ratings completed
+# Users with all ratings completed for testing and other profiles as reference users
 complete_mask = valid_ratings.notna().all(axis=1)
 
 # reference group
 reference_users = valid_ratings.loc[~complete_mask].copy()
-
 # test group
 test_users = valid_ratings.loc[complete_mask].copy()
 
-# _______________
-# Baseline Model - average rating per category
-
-# calculate average for each category
+# Baseline: mean reference rating for each category
 baseline_ratings = reference_users.mean()
 
-print("\nBaseline average ratings: ")
-print(baseline_ratings.round(2))
-# _______________
+# -------- Collaborative filtering --------
 
 def calculate_distance(user_a, user_b):
+	"""Calculate mean absolute rating difference on shared categories.
+
+	Args:
+		user_a (pd.Series): Ratings for the first user.
+		user_b (pd.Series): Ratings for the second user.
+
+	Returns:
+		float or None: Average absolute difference, or None when fewer
+		than three categories have ratings from both users.
+	"""
+
 	# finding categories rated by both users
 	common = user_a.notna() & user_b.notna()
 	if common.sum() < 3:
-		return None 
-
+		return None
+	 
 	difference = (user_a[common] - user_b[common]).abs().mean()
-
 	return difference
 
 def predict_rating(test_user, category, k=5):
+	"""Predict a category rating from the k closest reference users.
+
+	The target category is hidden before comparing user profiles.
+
+	Args:
+		test_user (pd.Series): Known ratings for the target user.
+		category (str): Category whose rating should be predicted.
+		k (int): Maximum number of nearest neighbors; defaults to 5.
+
+	Returns:
+		float or None: Average neighbor rating, or None if no eligible
+		reference users are found.
+	"""
 	user = test_user.copy()
 	# hide the actual rating
 	user[category] = float("nan")
-
 	distances = []
 
 	# comparing test user & reference user
@@ -97,11 +161,9 @@ def predict_rating(test_user, category, k=5):
 	nearest_neighbors = distances[:k]
 	# predict hidden rating using similar users
 	neighbor_ratings = []
-
 	for user_index, distance in nearest_neighbors:
 		#get the category rating from each neighbor
 		rating = reference_users.loc[user_index, category]
-
 		# ignore missing ratings
 		if pd.notna(rating):
 			neighbor_ratings.append(float(rating))
@@ -111,94 +173,97 @@ def predict_rating(test_user, category, k=5):
 		return None
 	# calculate predicted rating
 	predicted_rating = sum(neighbor_ratings) / len(neighbor_ratings)
-
 	return predicted_rating
 
-# Collaborative Filtering Evaluation
-# k = 5
-# Test users: 129
-# Total predictions: 3096
-# Overall MAE: 0.55
 
-# Baseline Evaluation
-# Total predictions: 3096
-# Baseline MAE: 1.02
-	
-# test our prediction function
-# errors = []
-# # test all 129 users
-# for user_index, test_user in test_users.iterrows():
-# # for user_index, test_user in test_users.head(3).iterrows():
-# # test all 24 categories for each user
-# 	for category in test_users.columns:
-# 		actual = test_user[category]
-# 		predicted = predict_rating(test_user, category)
+# -------- Optional evaluation experiments(not run automatically) ------
 
-# 		if predicted is not None:
-# 			error = abs(actual - predicted)
-# 			errors.append(error)
-# 			# print(category, "Error: ", round(error, 2))
-# 		# else:
-# 		# 	print(category, "Prediction unavailable")
+def evaluate_baseline():
+	"""Evaluate mean-category baseline predictions on complete test users.
 
-# if errors:
-# 	mae = sum(errors) / len(errors)
-# 	print("\nOverall MAE: ", round(mae, 2))
-# 	print("Total predictions:", len(errors))
+	Returns:
+		dict: MAE and number of predictions.
+	"""
 
-# _______
-# Evaluate baseline model
+	errors = []
+	# compare baseline predictions with actual test ratings
+	for _, test_user in test_users.iterrows():
+		for category in test_users.columns:
+			# actual rating from test user
+			actual = test_user[category]
+			# baseline prediction: avg category rating
+			predicted = baseline_ratings[category]
+			errors.append(abs(actual - predicted))
 
-baseline_errors=[]
-# compare baseline predictions with actual test ratings
-for user_index, test_user in test_users.iterrows():
+	return {
+		"mae": sum(errors) / len(errors) if errors else None,
+		"total_predictions": len(errors),
+	}
 
-	for category in test_users.columns:
-		# actual rating from test user
-		actual = test_user[category]
+def evaluate_collaborative_filtering(k=5):
+	"""Evaluate CF by hiding each rating in otherwise complete profiles.
 
-		# baseline prediction: avg category rating
-		predicted = baseline_ratings[category]
+	Args:
+		k (int): Maximum number of neighbors; defaults to 5.
 
-		# calculate absolute error
-		error = abs(actual - predicted)
-		baseline_errors.append(error)
+	Returns:
+		dict: MAE and number of successful predictions.
+	"""
 
-baseline_mae = sum(baseline_errors) / len(baseline_errors)
+	errors = []
+	for _, test_user in test_users.iterrows():
+		for category in test_users.columns:
+			predicted = predict_rating(test_user, category, k=k)
+			if predicted is not None:
+				errors.append(abs(test_user[category] - predicted))
 
-print("\nBaseline MAE: ", round(baseline_mae, 2))
-print("Total predictions: ", len(baseline_errors))
-# _______
+	return {
+		"mae": sum(errors) / len(errors) if errors else None,
+		"total_predictions": len(errors),
+	}
 
-# Experiment: simulate a new user with 5 known preferences
-test_user = test_users.iloc[0].copy()
+def evaluate_sparse_references(num_known=5, seed=100):
+	"""Evaluate CF with a limited number of randomly known categories.
 
-# Select 5 categories to keep
-known_categories = [
-	"beaches",
-	"museums",
-	"parks",
-	"restaurants",
-	"dance_clubs"
-]
+	Args:
+		num_known (int): Number of known categories for each test user.
+		seed (int): Base random seed used for reproducible selections.
 
-# Create a new user profile with unknown ratings
-new_user = pd.Series(float("nan"), index=test_users.columns)
+	Returns:
+		dict: MAE, test user count, total possible and successful
+		predictions, and prediction coverage percentage.
+	"""
 
-# Copy only the known ratings
-print("test_user type:", type(test_user))
-print("test_user value:", test_user)
-for category in known_categories:
-	new_user[category] = test_user[category]
+	errors = []
+	total_predictions = 0
+	total_possible = 0
+	for user_index, test_user in test_users.iterrows():
+		# Randomly select the specified number of  known categories
+		known_categories = test_users.columns.to_series().sample(n=num_known, random_state=seed + user_index).tolist()
+		# Create a new user profile
+		new_user = pd.Series(float("nan"), index=test_users.columns)
+		for category in known_categories:
+			new_user[category] = test_user[category]
 
-print("\nKnown user preferences: ")
-print(new_user.dropna())
+		# Predict all unknown categories
+		for category in test_users.columns:
+			if category in known_categories:
+				continue
 
-# Predict one unknown category
-category = "art_galleries"
+			total_possible += 1
+			predicted = predict_rating(new_user, category)
+			actual = test_user[category]
+			if predicted is not None:
+				errors.append(abs(actual - predicted))
+				total_predictions += 1
 
-predicted = predict_rating(new_user, category)
-actual = test_user[category]
+	return {
+		"known_preferences": num_known,
+		"test_users": len(test_users),
+		"mae": sum(errors) / len(errors) if errors else None,
+		"total_possible": total_possible,
+		"total_predictions": total_predictions,
+		"coverage": total_predictions / total_possible * 100 if total_possible else 0,
+	}
 
-print("\nPredicted rating for", category, ":", predicted)
-print("Actual rating: ", actual)
+# Run evaluations manually when needed; normal imports do not run experiments.
