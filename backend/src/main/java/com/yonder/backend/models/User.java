@@ -20,7 +20,8 @@ import java.time.LocalDateTime;
  *
  * Data structures: Stores the user ID as Long, email and password hash as
  * String, and creation timestamp as LocalDateTime. Should be pretty self-explanatory.
- * This class is used to create simple objects to act as data containers for user account
+ * 
+ * This class is used to create simple objects to act as data containers for user account 
  * information.
  */
 
