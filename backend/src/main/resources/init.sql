@@ -182,4 +182,10 @@ CREATE TABLE IF NOT EXISTS housingBooking(
 
 );
 
+--10 Junction table for many-to-many trips-user relationship.
+CREATE TABLE IF NOT EXISTS junctionUserTrip (
+    user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    trip_id INT NOT NULL REFERENCES trips(trip_id) ON DELETE CASCADE,
+    PRIMARY KEY (user_id, trip_id) --this is known as a COMPOSITE key, both primary keys together form a unique key.
+)
 
