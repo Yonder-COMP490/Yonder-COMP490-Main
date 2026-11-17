@@ -373,6 +373,30 @@ public class TripController {
     }
 
     /**
+     * Updates a specific trip without affecting other trips.
+     *
+     * @param tripId the ID of the trip to update
+     * @param updated the updated trip information
+     * @return the updated trip
+     */
+    @PutMapping("/api/trips/{tripId}")
+    public Trip updateTripById(
+        @PathVariable int tripId,
+        @RequestBody Trip updated
+    ) {
+        requireExistingTrip(tripId);
+
+        try {
+            return tripManager.updateTrip(tripId, updated);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                ex.getMessage(),
+                ex
+            );
+        }
+    }
+    /**
      * Creates a trip from the submitted name, dates, and currency.
      *
      * Converts the inclusive start/end date range to a duration in days,

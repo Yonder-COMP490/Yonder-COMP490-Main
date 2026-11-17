@@ -1,3 +1,4 @@
+
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -156,6 +157,49 @@ public class TripManager {
      */
     public synchronized Trip getTripById(int id) {
         return trips.get(id);
+    }
+
+    /**
+     * Updates the selected trip without changing other trips.
+     * Preserves the trip object and its activities, housing, and budget items.
+     *
+     * @param tripId the identifier of the trip to update
+     * @param updated the updated trip information
+     * @return the updated trip
+     * @throws IllegalArgumentException if the update is invalid
+     */
+    public synchronized Trip updateTrip(int tripId, Trip updated) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        if (updated == null || updated.getId() != tripId) {
+            throw new IllegalArgumentException(
+                "Trip ID does not match the requested trip."
+            );
+        }
+
+        if (updated.getName() == null || updated.getName().isBlank()) {
+            throw new IllegalArgumentException("Trip name is required.");
+        }
+
+        if (updated.getStartDate() == null) {
+            throw new IllegalArgumentException("Trip start date is required.");
+        }
+
+        if (updated.getDays() < 1) {
+            throw new IllegalArgumentException(
+                "Trip must be at least one day long."
+            );
+        }
+
+        selectedTrip.setName(updated.getName());
+        selectedTrip.setStartDate(updated.getStartDate());
+        selectedTrip.setPreferredCurrency(updated.getPreferredCurrency());
+        selectedTrip.setDaysAndTripSections(
+            updated.getDays(),
+            updated.getTripSections()
+        );
+
+        return selectedTrip;
     }
 
     /**
