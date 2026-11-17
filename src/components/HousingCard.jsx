@@ -48,9 +48,13 @@ function calculateNights(checkInDate, checkOutDate) {
 function formatDate(date) {
   if (!date || date === "Not set") return "Not set";
 
-  const [, month, day] = date.match(/^(\d{4})-(\d{2})-(\d{2})$/) || [];
+  const parts = String(date).split("-");
 
-  return month && day ? `${month}-${day}` : date;
+  if (parts.length < 2) return date;
+
+  const [, month, day] = parts;
+
+  return day ? `${month}-${day}` : month;
 }
 
 /**
