@@ -10,6 +10,7 @@ import com.yonder.backend.models.Profile;
 import com.yonder.backend.models.User;
 import com.yonder.backend.repositories.ProfileRepository;
 import com.yonder.backend.repositories.UserRepository;
+import com.yonder.backend.repositories.CategorieRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -68,12 +69,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final PasswordEncoder encryptPassword;
+    private final CategorieRepository categorieRepository;
 
     public AuthService(UserRepository userRepository, ProfileRepository profileRepository,
-            PasswordEncoder encryptPassword) {
+            PasswordEncoder encryptPassword, CategorieRepository categorieRepository) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.encryptPassword = encryptPassword;
+        this.categorieRepository = categorieRepository;
     }
 
     @Transactional
@@ -96,6 +99,16 @@ public class AuthService {
         //When a user is created, a profile should also be created for that user and introduced into the database profile table. Since the registration doesnt ask for any profile related information, the profile object is created with most fields null exept for the UserId.
         Profile profile = new Profile(user.getUserId(), null, null, null, null);
         profileRepository.save(profile);
+        
+        // -- 1-5 rating (to be added in JSON) CATEGORIES. -- Modify DTO, Service, create Repository(table) for it.
+        //user_id (fk pk)
+        //museums
+        //restaurants
+        //beaches
+        //parks
+        //malls 
+
+        //Create model for Categorie
 
         return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt()); //Created at on the return is just for testing purposes
     }

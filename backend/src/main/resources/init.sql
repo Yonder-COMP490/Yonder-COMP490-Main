@@ -189,3 +189,14 @@ CREATE TABLE IF NOT EXISTS junctionUserTrip (
     PRIMARY KEY (user_id, trip_id) --this is known as a COMPOSITE key, both primary keys together form a unique key.
 )
 
+--11 Category tables
+CREATE TABLE IF NOT EXISTS categories (
+    user_id INT PRIMARY KEY,
+    
+    museums INT,
+    restaurants INT,
+    beaches INT,
+    parks INT,
+    malls INT,
+    CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
+);

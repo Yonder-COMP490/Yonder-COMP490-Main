@@ -23,6 +23,12 @@ package com.yonder.backend.dto;
 public class RegisterRequest {
     private String email;
     private String password;
+    //Categories values
+    private int museums;
+    private int restaurants;
+    private int beaches;
+    private int parks;
+    private int malls; 
 
     public String getEmail() {
         return email;
@@ -38,5 +44,46 @@ public class RegisterRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+        
+    //Categories valus below:
+    public int getCatMuseum() {
+        return museums;
+    }
+
+    public void setCatMuseum(int museums) {
+        this.museums = museums;
+    }
+
+    public int getCatRestaurants() {
+        return restaurants;
+    }
+
+    public void setCatRestaurants(int restaurants) {
+        this.restaurants = restaurants;
+    }
+
+    public int getCatBeaches() {
+        return beaches;
+    }
+
+    public void setCatBeaches(int beaches) {
+        this.beaches = beaches;
+    }
+
+    public int getCatParks() {
+        return parks;
+    }
+
+    public void setCatParks(int parks) {
+        this.parks = parks;
+    }
+
+    public int getCatMalls() {
+        return malls;
+    }
+
+    public void setCatMalls(int malls) {
+        this.malls = malls;
     }
 }

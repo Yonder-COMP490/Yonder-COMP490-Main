@@ -14,8 +14,8 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <maven.compiler.source>25</maven.compiler.source> <!-- Default was java 7 (1.7), changed it to the version specified in the readme: java 25-->
-    <maven.compiler.target>25</maven.compiler.target>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
   </properties>
 
   <dependencies>
@@ -35,7 +35,6 @@
       <artifactId>dotenv-java</artifactId>
       <version>3.1.0</version>
     </dependency>
-
   </dependencies>
 
   <build>

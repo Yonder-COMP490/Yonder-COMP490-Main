@@ -91,3 +91,7 @@ In another terminal run: npm.cmd run dev
 
 
 SELECT current_database(), inet_server_addr(); --> run in the SQL query in the PostgreSQL extention query editor to verify connection to online database if needed.
+
+
+------------
+In case of 
