@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -197,6 +199,44 @@ public class TripController {
         }
 
         return result;
+    }
+
+    /**
+     * Moves or resizes an activity while preserving its scheduling mode.
+     *
+     * @param tripId the ID of the trip
+     * @param activityId the ID of the activity
+     * @param date the new calendar date
+     * @param startTime the new starting time
+     * @param endTime the new ending time
+     * @return the updated activity
+     */
+    @PatchMapping("/api/trips/{tripId}/activities/{activityId}/schedule")
+    public Activity moveTripActivity(
+        @PathVariable int tripId,
+        @PathVariable int activityId,
+        @RequestParam LocalDate date,
+        @RequestParam LocalTime startTime,
+        @RequestParam LocalTime endTime
+    ) {
+        requireExistingTrip(tripId);
+
+        Activity updated = tripManager.moveActivity(
+            tripId,
+            activityId,
+            date,
+            startTime,
+            endTime
+        );
+
+        if (updated == null) {
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "Activity not found"
+            );
+        }
+
+        return updated;
     }
 
     // ============================================================

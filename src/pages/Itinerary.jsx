@@ -1,3 +1,4 @@
+
 /**
  * Component name: Itinerary
  * Date: 11/05/2026
@@ -244,6 +245,7 @@ function assignLanes(events) {
 
   return sorted;
 }
+
 /**
  * Component name: HourLabels
  * Description: Renders the hourly labels displayed alongside the weekly
@@ -278,7 +280,7 @@ export default function Itinerary() {
     activities,
     loading,
     error,
-    updateActivity,
+    moveActivity,
   } = useActivities();
 
   const { housing } = useHousing();
@@ -532,14 +534,12 @@ export default function Itinerary() {
 
     if (drag.changed) {
       try {
-        await updateActivity({
-          ...drag.activity,
-          tripDay: null,
-          date: targetDate,
-          active: true,
-          startTime: minutesToTime(drag.previewStart),
-          endTime: minutesToTime(drag.previewEnd),
-        });
+        await moveActivity(
+          drag.activity.id,
+          targetDate,
+          minutesToTime(drag.previewStart),
+          minutesToTime(drag.previewEnd)
+        );
 
         setDropError("");
       } catch {
@@ -617,14 +617,12 @@ export default function Itinerary() {
     const end = Math.min(start + 60, MAX_TIME_MINUTES);
 
     try {
-      await updateActivity({
-        ...activity,
-        tripDay: null,
+      await moveActivity(
+        activity.id,
         date,
-        active: true,
-        startTime: minutesToTime(start),
-        endTime: minutesToTime(end),
-      });
+        minutesToTime(start),
+        minutesToTime(end)
+      );
 
       setDropError("");
     } catch {

@@ -344,6 +344,41 @@ public class TripManager {
         return null;
     }
 
+    /**
+     * Moves or resizes an activity while preserving its scheduling mode.
+     *
+     * @param tripId the ID of the trip containing the activity
+     * @param activityId the ID of the activity to move
+     * @param newDate the new calendar date
+     * @param newStartTime the new starting time
+     * @param newEndTime the new ending time
+     * @return the updated activity, or null if it does not exist
+     */
+    public synchronized Activity moveActivity(
+        int tripId,
+        int activityId,
+        LocalDate newDate,
+        LocalTime newStartTime,
+        LocalTime newEndTime
+    ) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        for (Activity activity : selectedTrip.getActivities()) {
+            if (activity.getId() == activityId) {
+                activity.moveDateTime(
+                    newDate,
+                    newStartTime,
+                    newEndTime,
+                    selectedTrip.getStartDate()
+                );
+
+                return activity;
+            }
+        }
+
+        return null;
+    }
+
     // ============================================================
     // TRIP-SPECIFIC ACTIVITY METHODS
     // ============================================================
