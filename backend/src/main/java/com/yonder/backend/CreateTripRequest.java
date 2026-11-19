@@ -12,6 +12,7 @@ import java.time.LocalDate;
  * and end dates, and preferred currency.
  *
  * @param name the name of the new trip
+ * @param location the trip destination
  * @param startDate the trip's starting date
  * @param endDate the trip's ending date
  * @param preferredCurrency the currency used for trip expenses
@@ -22,6 +23,7 @@ import java.time.LocalDate;
  */
 public record CreateTripRequest(
     String name,
+    String location,
     LocalDate startDate,
     LocalDate endDate,
     String preferredCurrency

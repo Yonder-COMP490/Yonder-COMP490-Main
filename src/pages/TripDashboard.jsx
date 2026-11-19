@@ -17,6 +17,7 @@ const tabs = [
   { label: "Housing", path: "/Housing" },
   { label: "Budget", path: "/Budget" },
   { label: "Maps", path: "/maps" },
+  { label: "Trip Settings", path: "/TripSettings" },
 ];
 
 /**

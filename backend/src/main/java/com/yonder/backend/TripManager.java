@@ -127,6 +127,9 @@ public class TripManager {
         trip.setName(updated.getName());
         trip.setStartDate(updated.getStartDate());
         trip.setPreferredCurrency(updated.getPreferredCurrency());
+        trip.setLocation(updated.getLocation());
+        trip.setNumberOfTravelers(updated.getNumberOfTravelers());
+        trip.setTargetBudget(updated.getTargetBudget());
 
         trip.setDaysAndTripSections(
             updated.getDays(),
@@ -157,6 +160,26 @@ public class TripManager {
      */
     public synchronized Trip getTripById(int id) {
         return trips.get(id);
+    }
+
+    /**
+     * Deletes a trip and its associated in-memory data.
+     *
+     * The legacy sample trip is protected until the
+     * remaining legacy endpoints are migrated.
+     *
+     * @param tripId ID of the trip to delete
+     * @return true if the trip was deleted
+     * @throws IllegalArgumentException if deleting the sample trip
+     */
+    public synchronized boolean deleteTrip(int tripId) {
+        if (tripId == trip.getId()) {
+            throw new IllegalArgumentException(
+                "The original sample trip cannot be deleted yet."
+            );
+        }
+
+        return trips.remove(tripId) != null;
     }
 
     /**
@@ -194,6 +217,9 @@ public class TripManager {
         selectedTrip.setName(updated.getName());
         selectedTrip.setStartDate(updated.getStartDate());
         selectedTrip.setPreferredCurrency(updated.getPreferredCurrency());
+        selectedTrip.setLocation(updated.getLocation());
+        selectedTrip.setNumberOfTravelers(updated.getNumberOfTravelers());
+        selectedTrip.setTargetBudget(updated.getTargetBudget());
         selectedTrip.setDaysAndTripSections(
             updated.getDays(),
             updated.getTripSections()
@@ -247,6 +273,10 @@ public class TripManager {
             requested.getDays(),
             requested.getPreferredCurrency()
         );
+
+        newTrip.setLocation(requested.getLocation());
+        newTrip.setNumberOfTravelers(requested.getNumberOfTravelers());
+        newTrip.setTargetBudget(requested.getTargetBudget());
 
         trips.put(newTrip.getId(), newTrip);
 
