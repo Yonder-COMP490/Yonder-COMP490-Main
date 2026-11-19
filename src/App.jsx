@@ -18,6 +18,7 @@ import {
 
 import Home from "./pages/Home";
 import TripDashboard from "./pages/TripDashboard";
+import TripSettings from "./pages/TripSettings";
 import Activities from "./pages/Activities";
 import Housing from "./pages/Housing";
 import Calendar from "./pages/Calendar";
@@ -118,6 +119,7 @@ function AppRoutes() {
           <Route path="/Housing" element={<Housing />} />
           <Route path="/Budget" element={<Budget />} />
           <Route path="/maps" element={<Maps />} />
+          <Route path="/TripSettings" element={<TripSettings />} />
           <Route path="/Itinerary" element={<Itinerary />} />
         </Route>
 
