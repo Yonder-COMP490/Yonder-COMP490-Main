@@ -13,7 +13,8 @@ public class BackendApplication {
 				.load()
 				.entries()
 				.stream()
-				.filter(entry -> entry.getKey().startsWith("DB_"))
+				.filter(entry -> entry.getKey().startsWith("DB_")
+						|| entry.getKey().equals("SERPAPI_KEY")) // hotel search key for the Maps page
 				.forEach(entry -> {
 					if (System.getProperty(entry.getKey()) == null) {
 						System.setProperty(entry.getKey(), entry.getValue());

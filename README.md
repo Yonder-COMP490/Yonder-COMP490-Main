@@ -22,12 +22,16 @@ The Maps page needs two keys.
 
 1. In the top folder, on `.env`, add your Google Maps key:
 ```
-VITE_GOOGLE_MAPS_API_KEY=AIzaSyDQLMfypzSCBYgbiGSCMM3AZq5Slcc9zMc
+VITE_GOOGLE_MAPS_API_KEY=your-key-here
 ```
 
-2. In `backend/yonder-backend/.env`, add your SerpApi key:
+2. In `backend/.env`, add your SerpApi key:
 ```
-SERPAPI_KEY=394cbd6c21bd1495dcaeb7b1180fdaeaeb5c8fa776faed42a72760e7e63bd3aa
+SERPAPI_KEY=your-key-here
 ```
 
-3. Run `npm run dev`, then open http://localhost:5173/maps
+3. Start the backend (`cd backend`, then `.\mvnw.cmd spring-boot:run`).
+
+4. Run `npm run dev`, then open http://localhost:5173/maps
+
+Never commit your real keys. The `.env` files are ignored by git.

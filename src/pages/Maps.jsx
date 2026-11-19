@@ -353,7 +353,7 @@ function Maps() {
         setMessage(hotels.length === 0 ? "No hotels found for " + city : "");
       } catch {
         if (ignore) return;
-        setMessage("Could not reach the hotel server. Is HotelServer running?");
+        setMessage("Could not reach the hotel server. Is the backend running?");
       }
     }
 
