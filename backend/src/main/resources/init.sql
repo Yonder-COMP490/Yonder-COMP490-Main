@@ -187,9 +187,9 @@ CREATE TABLE IF NOT EXISTS junctionUserTrip (
     user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     trip_id INT NOT NULL REFERENCES trips(trip_id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, trip_id) --this is known as a COMPOSITE key, both primary keys together form a unique key.
-)
+);
 
---11 Category tables
+--11 Category tables  // I still need to add a constrain so they cant be outside of 0-5 value.
 CREATE TABLE IF NOT EXISTS categories (
     user_id INT PRIMARY KEY,
     
@@ -200,3 +200,4 @@ CREATE TABLE IF NOT EXISTS categories (
     malls INT,
     CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE 
 );
+

@@ -8,6 +8,7 @@ import com.yonder.backend.dto.LoginRequest;
 import com.yonder.backend.dto.RegisterRequest;
 import com.yonder.backend.models.Profile;
 import com.yonder.backend.models.User;
+import com.yonder.backend.models.Categorie;
 import com.yonder.backend.repositories.ProfileRepository;
 import com.yonder.backend.repositories.UserRepository;
 import com.yonder.backend.repositories.CategorieRepository;
@@ -100,7 +101,7 @@ public class AuthService {
         Profile profile = new Profile(user.getUserId(), null, null, null, null);
         profileRepository.save(profile);
         
-        // -- 1-5 rating (to be added in JSON) CATEGORIES. -- Modify DTO, Service, create Repository(table) for it.
+        // -- 1-5 rating (to be added in JSON) CATEGORIES. -- 
         //user_id (fk pk)
         //museums
         //restaurants
@@ -108,7 +109,9 @@ public class AuthService {
         //parks
         //malls 
 
-        //Create model for Categorie
+        //When a user is created, they are promped to select from 1-5 on these 5 categories, which then get saved to the Categories table.
+        Categorie categorie = new Categorie(user.getUserId(), request.getCatMuseum(), request.getCatRestaurants(), request.getCatBeaches(), request.getCatParks(), request.getCatMalls());
+        categorieRepository.save(categorie);
 
         return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt()); //Created at on the return is just for testing purposes
     }
