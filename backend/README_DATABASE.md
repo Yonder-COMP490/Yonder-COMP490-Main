@@ -55,9 +55,11 @@ Create a `backend/.env` file with your local database credentials. This file is 
 DB_URL=jdbc:postgresql://localhost:5432/yonder
 DB_USER=postgres
 DB_PASSWORD=your_local_password
+JWT_ENABLED=true
+JWT_SECRET_KEY=your_base64_encoded_random_secret
 ```
 
-The backend loads these values at startup and configures Spring's datasource. You can also supply `DB_URL`, `DB_USER`, and `DB_PASSWORD` as environment variables instead of using a `.env` file.
+Generate a fresh Base64-encoded JWT secret with at least 32 random bytes; do not use the example text above as the actual key. Keep the `.env` file private and do not commit it. JWT is disabled by default; setting `JWT_ENABLED=true` enables it. The backend loads `DB_` and `JWT_` values from `.env` at startup. These can also be supplied as environment variables.
 
 ## Initialize the database
 
@@ -91,3 +93,7 @@ In another terminal run: npm.cmd run dev
 
 
 SELECT current_database(), inet_server_addr(); --> run in the SQL query in the PostgreSQL extention query editor to verify connection to online database if needed.
+
+
+------------
+In case of 

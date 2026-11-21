@@ -8,8 +8,10 @@ import com.yonder.backend.dto.LoginRequest;
 import com.yonder.backend.dto.RegisterRequest;
 import com.yonder.backend.models.Profile;
 import com.yonder.backend.models.User;
+import com.yonder.backend.models.Categorie;
 import com.yonder.backend.repositories.ProfileRepository;
 import com.yonder.backend.repositories.UserRepository;
+import com.yonder.backend.repositories.CategorieRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -53,14 +55,14 @@ import org.springframework.transaction.annotation.Transactional;
  *   each user in the database has a corresponding profile row, linked using the
  *   user's ID as a foreign key.
  *
- * - Login retrieves the user and asks PasswordEncoder to compare the submitted
- *   password with the stored hash; the password is never compared or stored
- *   as plaintext.
- *   Currently, it returns an AuthResponse with the result, user ID, and creation
- *   timestamp, but ideally it should only return the result, user ID, and an
- *   authentication token. The creation timestamp is not needed by the front end
- *   and was only included for testing. Authentication tokens are yet to be
- *   implemented.
+ * - Login retrieves the user and asks PasswordEncoder
+ *  to compare the submitted password with the stored hash;
+ *  the password is never compared or stored as plaintext.
+ *  Currently it returns an AuthResponse with the result, user ID, and creation
+ *  timestamp, but idealy it should only return the result, User ID and a
+ *  auuthentication token, as the creation timestamp is not needed by the front end
+ *  and as mentioned before, this was just for testing. The authentication tokens are
+ *  yet to be implemented.
  */
 
 @Service
@@ -68,12 +70,16 @@ public class AuthService {
     private final UserRepository userRepository;
     private final ProfileRepository profileRepository;
     private final PasswordEncoder encryptPassword;
+    private final CategorieRepository categorieRepository;
+    private final JwtService jwtService;
 
     public AuthService(UserRepository userRepository, ProfileRepository profileRepository,
-            PasswordEncoder encryptPassword) {
+            PasswordEncoder encryptPassword, CategorieRepository categorieRepository, JwtService jwtService) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.encryptPassword = encryptPassword;
+        this.categorieRepository = categorieRepository;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -96,8 +102,20 @@ public class AuthService {
         //When a user is created, a profile should also be created for that user and introduced into the database profile table. Since the registration doesnt ask for any profile related information, the profile object is created with most fields null exept for the UserId.
         Profile profile = new Profile(user.getUserId(), null, null, null, null);
         profileRepository.save(profile);
+        
+        // -- 1-5 rating (to be added in JSON) CATEGORIES. -- 
+        //user_id (fk pk)
+        //museums
+        //restaurants
+        //beaches
+        //parks
+        //malls 
 
-        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt()); //Created at on the return is just for testing purposes
+        //When a user is created, they are promped to select from 1-5 on these 5 categories, which then get saved to the Categories table.
+        Categorie categorie = new Categorie(user.getUserId(), request.getCatMuseum(), request.getCatRestaurants(), request.getCatBeaches(), request.getCatParks(), request.getCatMalls());
+        categorieRepository.save(categorie);
+
+        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt(), jwtService.generateToken(user.getEmail())); //Returns a JWT authentication token when created. Lasts 1 hour. If we dont want to log-in after user registration but have them log in manually, then replace last term with a null return.
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -106,7 +124,9 @@ public class AuthService {
         if(!encryptPassword.matches(request.getPassword(), user.getPasswordHash())){
             throw new IllegalArgumentException("Invalid password and/or username");
         }
-        return new AuthResponse("Login successfull", user.getUserId(), user.getCreatedAt());
+        //Added JWT access token. 
+        String accessToken = jwtService.generateToken(user.getEmail());
+        return new AuthResponse("Login successfull", user.getUserId(), user.getCreatedAt(), accessToken);
 
     }
 }

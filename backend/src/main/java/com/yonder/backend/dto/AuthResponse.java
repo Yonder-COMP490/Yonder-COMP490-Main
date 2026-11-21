@@ -34,11 +34,13 @@ public class AuthResponse {
     private String message;
     private Long userId;
     private LocalDateTime createdAt;
+    private String accessToken;
 
-    public AuthResponse(String message, Long userId, LocalDateTime createdAt) {
+    public AuthResponse(String message, Long userId, LocalDateTime createdAt, String accessToken) {
         this.message = message;
         this.userId = userId;
         this.createdAt = createdAt;
+        this.accessToken = accessToken;
     }
 
     public String getMessage() {
@@ -51,5 +53,9 @@ public class AuthResponse {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public String getAccessToken(){
+        return accessToken;
     }
 }
