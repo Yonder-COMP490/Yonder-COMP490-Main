@@ -16,7 +16,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 //https://blog.tericcabrel.com/jwt-authentication-springboot-spring-security/ 
-//This JwtService is a modified vercion of the one showed in this guide, as our set up is different.
+//This JwtService is a modified vercion of the one showed in this guide, as our set up is different. We are not using spring.security nor spring.data. Altough, implementing both wouldnt be a bad idea in a refarctoring.
 
 @Service
 @ConditionalOnProperty(name = "security.jwt.enabled", havingValue = "true")

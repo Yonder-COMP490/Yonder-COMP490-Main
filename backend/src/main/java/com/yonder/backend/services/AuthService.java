@@ -61,7 +61,7 @@ import org.springframework.transaction.annotation.Transactional;
  *  Currently it returns an AuthResponse with the result, user ID, and creation
  *  timestamp, but idealy it should only return the result, User ID and a
  *  auuthentication token, as the creation timestamp is not needed by the front end
- *  and as mentioned before, it was just for testing. The authentication tokens are
+ *  and as mentioned before, this was just for testing. The authentication tokens are
  *  yet to be implemented.
  */
 

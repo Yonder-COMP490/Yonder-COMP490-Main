@@ -13,12 +13,12 @@ public class BackendApplication {
 				.load()
 				.entries()
 				.stream()
-				.filter(entry -> entry.getKey().startsWith("DB_"))
+				.filter(entry -> entry.getKey().startsWith("DB_") || entry.getKey().startsWith("JWT_"))
 				.forEach(entry -> {
 					if (System.getProperty(entry.getKey()) == null) {
 						System.setProperty(entry.getKey(), entry.getValue());
 					}
-				});
+				});//Added so the springboot loads the JWT as well when booting up.
 
 		SpringApplication.run(BackendApplication.class, args);
 	}
