@@ -71,13 +71,15 @@ public class AuthService {
     private final ProfileRepository profileRepository;
     private final PasswordEncoder encryptPassword;
     private final CategorieRepository categorieRepository;
+    private final JwtService jwtService;
 
     public AuthService(UserRepository userRepository, ProfileRepository profileRepository,
-            PasswordEncoder encryptPassword, CategorieRepository categorieRepository) {
+            PasswordEncoder encryptPassword, CategorieRepository categorieRepository, JwtService jwtService) {
         this.userRepository = userRepository;
         this.profileRepository = profileRepository;
         this.encryptPassword = encryptPassword;
         this.categorieRepository = categorieRepository;
+        this.jwtService = jwtService;
     }
 
     @Transactional
@@ -113,7 +115,7 @@ public class AuthService {
         Categorie categorie = new Categorie(user.getUserId(), request.getCatMuseum(), request.getCatRestaurants(), request.getCatBeaches(), request.getCatParks(), request.getCatMalls());
         categorieRepository.save(categorie);
 
-        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt()); //Created at on the return is just for testing purposes
+        return new AuthResponse("User Successfully registered", user.getUserId(), user.getCreatedAt(), jwtService.generateToken(user.getEmail())); //Returns a JWT authentication token when created. Lasts 1 hour. If we dont want to log-in after user registration but have them log in manually, then replace last term with a null return.
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -122,7 +124,9 @@ public class AuthService {
         if(!encryptPassword.matches(request.getPassword(), user.getPasswordHash())){
             throw new IllegalArgumentException("Invalid password and/or username");
         }
-        return new AuthResponse("Login successfull", user.getUserId(), user.getCreatedAt());
+        //Added JWT access token. 
+        String accessToken = jwtService.generateToken(user.getEmail());
+        return new AuthResponse("Login successfull", user.getUserId(), user.getCreatedAt(), accessToken);
 
     }
 }
