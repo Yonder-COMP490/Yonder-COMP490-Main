@@ -1,3 +1,4 @@
+
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -126,6 +127,9 @@ public class TripManager {
         trip.setName(updated.getName());
         trip.setStartDate(updated.getStartDate());
         trip.setPreferredCurrency(updated.getPreferredCurrency());
+        trip.setLocation(updated.getLocation());
+        trip.setNumberOfTravelers(updated.getNumberOfTravelers());
+        trip.setTargetBudget(updated.getTargetBudget());
 
         trip.setDaysAndTripSections(
             updated.getDays(),
@@ -156,6 +160,72 @@ public class TripManager {
      */
     public synchronized Trip getTripById(int id) {
         return trips.get(id);
+    }
+
+    /**
+     * Deletes a trip and its associated in-memory data.
+     *
+     * The legacy sample trip is protected until the
+     * remaining legacy endpoints are migrated.
+     *
+     * @param tripId ID of the trip to delete
+     * @return true if the trip was deleted
+     * @throws IllegalArgumentException if deleting the sample trip
+     */
+    public synchronized boolean deleteTrip(int tripId) {
+        if (tripId == trip.getId()) {
+            throw new IllegalArgumentException(
+                "The original sample trip cannot be deleted yet."
+            );
+        }
+
+        return trips.remove(tripId) != null;
+    }
+
+    /**
+     * Updates the selected trip without changing other trips.
+     * Preserves the trip object and its activities, housing, and budget items.
+     *
+     * @param tripId the identifier of the trip to update
+     * @param updated the updated trip information
+     * @return the updated trip
+     * @throws IllegalArgumentException if the update is invalid
+     */
+    public synchronized Trip updateTrip(int tripId, Trip updated) {
+        Trip selectedTrip = requireTrip(tripId);
+
+        if (updated == null || updated.getId() != tripId) {
+            throw new IllegalArgumentException(
+                "Trip ID does not match the requested trip."
+            );
+        }
+
+        if (updated.getName() == null || updated.getName().isBlank()) {
+            throw new IllegalArgumentException("Trip name is required.");
+        }
+
+        if (updated.getStartDate() == null) {
+            throw new IllegalArgumentException("Trip start date is required.");
+        }
+
+        if (updated.getDays() < 1) {
+            throw new IllegalArgumentException(
+                "Trip must be at least one day long."
+            );
+        }
+
+        selectedTrip.setName(updated.getName());
+        selectedTrip.setStartDate(updated.getStartDate());
+        selectedTrip.setPreferredCurrency(updated.getPreferredCurrency());
+        selectedTrip.setLocation(updated.getLocation());
+        selectedTrip.setNumberOfTravelers(updated.getNumberOfTravelers());
+        selectedTrip.setTargetBudget(updated.getTargetBudget());
+        selectedTrip.setDaysAndTripSections(
+            updated.getDays(),
+            updated.getTripSections()
+        );
+
+        return selectedTrip;
     }
 
     /**
@@ -203,6 +273,10 @@ public class TripManager {
             requested.getDays(),
             requested.getPreferredCurrency()
         );
+
+        newTrip.setLocation(requested.getLocation());
+        newTrip.setNumberOfTravelers(requested.getNumberOfTravelers());
+        newTrip.setTargetBudget(requested.getTargetBudget());
 
         trips.put(newTrip.getId(), newTrip);
 

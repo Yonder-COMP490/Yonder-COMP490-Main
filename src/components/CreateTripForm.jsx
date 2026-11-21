@@ -24,6 +24,7 @@ const API_BASE = "http://localhost:8080/api";
  */
 export default function CreateTripForm({ onCreated, onCancel }) {
   const [name, setName] = useState("");
+  const [location, setLocation] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [currency, setCurrency] = useState("USD");
@@ -54,6 +55,11 @@ export default function CreateTripForm({ onCreated, onCancel }) {
       return;
     }
 
+    if (!location.trim()) {
+      setError("Please enter a trip location.");
+      return;
+    }
+
     if (!startDate || !endDate) {
       setError("Please select both dates.");
       return;
@@ -74,6 +80,7 @@ export default function CreateTripForm({ onCreated, onCancel }) {
         },
         body: JSON.stringify({
           name: name.trim(),
+          location: location.trim(),
           startDate,
           endDate,
           preferredCurrency: currency,
@@ -105,6 +112,16 @@ export default function CreateTripForm({ onCreated, onCancel }) {
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder="e.g. Italy Trip"
+        required
+      />
+
+      <label htmlFor="trip-location">Location</label>
+      <input
+        id="trip-location"
+        type="text"
+        value={location}
+        onChange={(event) => setLocation(event.target.value)}
+        placeholder="e.g. Rome, Italy"
         required
       />
 

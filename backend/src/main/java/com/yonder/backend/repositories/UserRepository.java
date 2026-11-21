@@ -17,22 +17,21 @@ import org.springframework.stereotype.Repository;
  *
  * Functions:
  * - findByEmail(String): Accepts an email, queries the users table, and returns
- *   an Optional<User>. The Optional is empty if no matching user is found.
+ *   an {@code Optional<User>}. The Optional is empty if no matching user is found.
  * - save(User): Accepts a User, inserts its email and password hash, and
  *   returns the User populated with the database-generated ID and creation
  *   timestamp.
  *
  * Data structures:
- *  - Uses User to represent a database record(row).
- *  - List<User> to hold query results.
- *  - Optional<User> to represent a (possibly missing) user.
+ * - Uses User to represent a database record (row).
+ * - {@code List<User>} to hold query results.
+ * - {@code Optional<User>} to represent a (possibly missing) user.
  *
  * Algorithm:
- *  - Runs parameterized SQL queries through JdbcTemplate. The query
- *    parameter is bound separately from the SQL text, and each result row is
- *    mapped into a User object.
+ * - Runs parameterized SQL queries through JdbcTemplate. The query
+ *   parameter is bound separately from the SQL text, and each result row is
+ *   mapped into a User object.
  */
-
 
 @Repository
 
