@@ -21,6 +21,7 @@ package com.yonder.backend.dto;
 */
 
 public class RegisterRequest {
+    
     private String email;
     private String password;
     //Categories values
@@ -33,7 +34,7 @@ public class RegisterRequest {
     public String getEmail() {
         return email;
     }
-
+    
     public void setEmail(String email) {
         this.email = email;
     }
@@ -47,6 +48,7 @@ public class RegisterRequest {
     }
         
     //Categories valus below:
+    
     public int getCatMuseum() {
         return museums;
     }
