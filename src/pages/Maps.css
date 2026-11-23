@@ -220,3 +220,31 @@
   background: white;
   cursor: pointer;
 }
+
+/* Add to trip button, under Check availability */
+.popup-add {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px;
+  background: white;
+  border: 2px solid #1a73e8;
+  border-radius: 8px;
+  color: #1a73e8;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.popup-added {
+  margin: 6px 0 0;
+  color: #188038;
+  font-weight: bold;
+  text-align: center;
+}
+
+.popup-add-note {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #5f6368;
+  text-align: center;
+}
