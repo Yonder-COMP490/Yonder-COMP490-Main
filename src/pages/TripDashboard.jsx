@@ -163,7 +163,11 @@ export default function TripDashboard() {
   }
 
   return (
-    <div className="trip-dashboard">
+    <div
+      className={`trip-dashboard ${
+        isItineraryPage ? "dashboard-layout-no-sidebar" : ""
+      }`}
+    >
       {/* Dashboard header */}
       <header className="dashboard-header">
         <h1>Yonder</h1>
@@ -212,27 +216,26 @@ export default function TripDashboard() {
           </main>
         </div>
       )}
-
       {/* Trip dashboard content */}
       {!tripLoading && trip && (
-        <div
-          className={`dashboard-body ${
-            isItineraryPage
-              ? "dashboard-body-full"
-              : ""
-          }`}
-        >
-          <main className="dashboard-content">
-            <Outlet
-              context={{
-                selectedDate,
-                selectDate,
-                trip,
-                setTrip,
-                tripId,
-              }}
-            />
-          </main>
+        <>
+          <div
+            className={`dashboard-body ${
+              isItineraryPage ? "dashboard-body-full" : ""
+            }`}
+          >
+            <main className="dashboard-content">
+              <Outlet
+                context={{
+                  selectedDate,
+                  selectDate,
+                  trip,
+                  setTrip,
+                  tripId,
+                }}
+              />
+            </main>
+          </div>
 
           {/* Sidebar hidden on the Itinerary page */}
           {!isItineraryPage && (
@@ -248,7 +251,7 @@ export default function TripDashboard() {
               />
             </aside>
           )}
-        </div>
+        </>
       )}
     </div>
   );

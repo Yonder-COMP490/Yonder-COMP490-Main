@@ -1,4 +1,8 @@
 
+/* =========================================================
+   Main sidebar layout
+   ========================================================= */
+
 .itinerary-sidebar {
   display: flex;
   flex-direction: column;
@@ -6,6 +10,7 @@
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* =========================================================
@@ -17,6 +22,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
+  flex: 0 0 auto;
   padding: 12px;
   border-bottom: 1px solid #ddd;
 }
@@ -70,16 +76,21 @@
 
 .itinerary-section-indicator {
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
-  gap: 9px;
-  flex: 0 0 100%;
+  gap: 8px;
+
+  width: 100%;
   min-width: 0;
   box-sizing: border-box;
+
   margin: 2px 0 0;
   padding: 8px 10px;
+
   border: 1px solid #e5e7eb;
   border-left: 4px solid #6C8EBF;
   border-radius: 5px;
+
   background: #f9fafb;
   font-size: 0.85rem;
 }
@@ -106,6 +117,28 @@
 
 .itinerary-section-name-button:hover {
   text-decoration: underline;
+}
+
+.remove-section-button {
+  flex: 0 0 auto;
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.remove-section-button:hover:not(:disabled) {
+  background: #eee;
+  color: #c0392b;
+}
+
+.remove-section-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* =========================================================
@@ -172,38 +205,12 @@
   font-size: 0.75rem;
 }
 
-.itinerary-section-indicator {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.remove-section-button {
-  margin-left: auto;
-  border: none;
-  background: transparent;
-  color: #888;
-  font-size: 20px;
-  cursor: pointer;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
-
-.remove-section-button:hover:not(:disabled) {
-  background: #eee;
-  color: #c0392b;
-}
-
-.remove-section-button:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
-}
-
 /* =========================================================
    Error and loading messages
    ========================================================= */
 
 .itinerary-drop-error {
+  flex: 0 0 auto;
   color: #b42318;
   padding: 6px 12px;
   margin: 0;
@@ -211,6 +218,7 @@
 }
 
 .itinerary-loading {
+  flex: 0 0 auto;
   padding: 6px 12px;
   margin: 0;
   color: #666;
@@ -222,8 +230,9 @@
    ========================================================= */
 
 .itinerary-timeline-scroll {
-  flex: 1;
+  flex: 1 1 0;
   min-height: 0;
+  width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }

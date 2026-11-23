@@ -1,19 +1,38 @@
-
-/* Main dashboard layout */
+/* =========================================================
+   MAIN DASHBOARD LAYOUT
+   ========================================================= */
 
 .trip-dashboard {
-  min-height: 100vh;
+  display: grid;
+
+  /* Main content gets remaining space; sidebar gets 320px. */
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-rows: auto auto minmax(0, 1fr);
+
+  width: 100%;
+  height: 100vh;
+  min-height: 0;
+
   background: #f5f7fb;
   color: #1f2937;
+
+  overflow: hidden;
 }
 
-/* Header */
+/* =========================================================
+   HEADER
+   ========================================================= */
 
 .dashboard-header {
+  grid-column: 1;
+  grid-row: 1;
+
   display: flex;
   justify-content: space-between;
   align-items: center;
+
   padding: 20px 32px;
+
   background: white;
   border-bottom: 1px solid #e5e7eb;
 }
@@ -23,14 +42,22 @@
   font-size: 28px;
 }
 
-/* Navigation tabs */
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
 
 .dashboard-tabs {
+  grid-column: 1;
+  grid-row: 2;
+
   display: flex;
   gap: 12px;
+
   padding: 14px 32px;
+
   background: white;
   border-bottom: 1px solid #e5e7eb;
+
   overflow-x: auto;
 }
 
@@ -51,92 +78,106 @@
   color: white;
 }
 
-/* Main content and persistent sidebar */
+/* =========================================================
+   MAIN PAGE CONTENT
+   ========================================================= */
 
 .dashboard-body {
-  display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(260px, 1fr);
-  gap: 20px;
+  grid-column: 1;
+  grid-row: 3;
+
+  min-width: 0;
+  min-height: 0;
+
+  overflow: hidden;
+}
+
+.dashboard-content {
+  width: 100%;
+  height: 100%;
+
+  min-width: 0;
+  min-height: 0;
+
   padding: 24px;
-  align-items: start;
-}
+  box-sizing: border-box;
 
-.dashboard-content,
-.dashboard-itinerary {
-  min-width: 0;
   background: white;
-  border-radius: 12px;
-  padding: 20px;
+
+  overflow-y: auto;
+  overflow-x: hidden;
 }
+
+/* =========================================================
+   ITINERARY SIDEBAR
+   ========================================================= */
 
 .dashboard-itinerary {
-  position: sticky;
-  top: 20px;
-}
+  grid-column: 2;
+  grid-row: 1 / 4;
 
-/* Persistent itinerary sidebar */
-
-.itinerary-sidebar h2 {
-  margin: 0 0 4px;
-  font-size: 22px;
-}
-
-.sidebar-subtitle {
-  margin: 0 0 20px;
-  color: #6b7280;
-  font-size: 14px;
-}
-
-.sidebar-empty {
-  color: #6b7280;
-  font-size: 14px;
-  line-height: 1.6;
-}
-
-.sidebar-day {
-  padding: 16px 0;
-  border-top: 1px solid #e5e7eb;
-}
-
-.sidebar-day h3 {
-  margin: 0 0 14px;
-  font-size: 14px;
-  color: #374151;
-}
-
-.sidebar-event {
-  display: flex;
-  gap: 12px;
-  padding: 10px 0;
-}
-
-.sidebar-event-time {
-  flex: 0 0 80px;
-  font-size: 12px;
-  color: #6b7280;
-}
-
-.sidebar-event-details {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
   min-width: 0;
-  overflow-wrap: anywhere;
+  min-height: 0;
+
+  background: white;
+  border-left: 1px solid #e5e7eb;
+
+  overflow: hidden;
 }
 
-.sidebar-event-details strong {
-  font-size: 14px;
+.dashboard-itinerary .itinerary-sidebar {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
 }
 
-.sidebar-event-details span {
-  font-size: 12px;
-  color: #6b7280;
+/* =========================================================
+   SIDEBAR REMOVED
+   ========================================================= */
+
+/*
+   When the sidebar is removed, the grid changes to one column.
+   Header, navigation, and content automatically expand.
+*/
+
+.trip-dashboard.dashboard-layout-no-sidebar {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-/* Calendar integration */
+.dashboard-layout-no-sidebar .dashboard-header,
+.dashboard-layout-no-sidebar .dashboard-tabs,
+.dashboard-layout-no-sidebar .dashboard-body {
+  grid-column: 1;
+}
 
-/* Allow the Calendar to use the available main content width.
-   The old itinerary is now removed from Calendar.jsx. */
+.dashboard-layout-no-sidebar .dashboard-itinerary {
+  display: none;
+}
+
+/* =========================================================
+   EXPANDED ITINERARY PAGE
+   ========================================================= */
+
+.dashboard-body-full {
+  grid-column: 1;
+  grid-row: 3;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-body-full .dashboard-content {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================================================
+   CALENDAR
+   ========================================================= */
 
 .dashboard-content .calendar-page .calendar-section {
   width: 100%;
@@ -145,11 +186,13 @@
   min-width: 0;
 }
 
-/* Responsive layout */
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
 
 @media (max-width: 800px) {
-  .dashboard-body {
-    grid-template-columns: 1fr;
+  .trip-dashboard {
+    grid-template-columns: minmax(0, 1fr) 260px;
   }
 
   .dashboard-header,
@@ -157,115 +200,20 @@
     padding-left: 16px;
     padding-right: 16px;
   }
+}
+
+@media (max-width: 600px) {
+  .trip-dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
   .dashboard-itinerary {
-    position: static;
+    display: none;
   }
-}
 
-
-/* Itinerary view controls */
-
-.sidebar-view-toggle {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.sidebar-view-toggle button {
-  flex: 1;
-  padding: 10px 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  background: white;
-  color: #374151;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.sidebar-view-toggle button.active {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: white;
-}
-
-.sidebar-view-toggle button:hover:not(.active) {
-  background: #f3f4f6;
-}
-
-/* Selected-day navigation */
-
-.sidebar-day-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.sidebar-day-navigation strong {
-  font-size: 12px;
-  text-align: center;
-}
-
-.sidebar-day-navigation button {
-  padding: 6px 10px;
-  background: #f3f4f6;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-.sidebar-day-navigation button:hover {
-  background: #e5e7eb;
-}
-
-/* Itinerary sidebar layout */
-.dashboard-body {
-  align-items: start;
-}
-
-.dashboard-itinerary {
-  position: static;
-  height: auto;
-  min-height: 0;
-  padding: 12px 10px 12px 8px;
-  overflow: visible;
-}
-
-.dashboard-itinerary .itinerary-sidebar {
-  width: 100%;
-  height: auto;
-  min-height: 0;
-}
-
-.dashboard-itinerary .itinerary-timeline-scroll {
-  height: 650px;
-  flex: none;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.dashboard-itinerary .itinerary-hour-labels {
-  flex: 0 0 42px;
-  width: 42px;
-}
-
-.dashboard-itinerary .itinerary-hour-label {
-  padding-right: 4px;
-  font-size: 11px;
-}
-/* Expanded itinerary uses the full dashboard width. */
-
-.dashboard-body-full {
-  display: block;
-  padding: 0;
-}
-
-.dashboard-body-full .dashboard-content {
-  width: 100%;
-  padding: 0;
-  min-width: 0;
-  box-sizing: border-box;
+  .dashboard-header,
+  .dashboard-tabs,
+  .dashboard-body {
+    grid-column: 1;
+  }
 }
