@@ -1,3 +1,4 @@
+
 package com.yonder.backend;
 
 import com.yonder.backend.models.Activity;
@@ -325,7 +326,7 @@ public class TripController {
      *
      * @param item the budget item to add
      * @return the newly created budget item
-    */
+     */
     @PostMapping("/api/trip/budget-items")
     @ResponseStatus(HttpStatus.CREATED)
     public BudgetItem addBudgetItem(
@@ -413,11 +414,13 @@ public class TripController {
     }
 
     /**
-     * Updates a specific trip without affecting other trips.
+     * Updates the selected trip without modifying other trips.
      *
      * @param tripId the ID of the trip to update
      * @param updated the updated trip information
      * @return the updated trip
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
+     *         or the update is invalid (HTTP 400)
      */
     @PutMapping("/api/trips/{tripId}")
     public Trip updateTripById(
@@ -436,6 +439,31 @@ public class TripController {
             );
         }
     }
+
+    /**
+     * Deletes the selected trip and its associated in-memory data.
+     * Protects the original sample trip while legacy endpoints depend on it.
+     *
+     * @param tripId the ID of the trip to delete
+     * @throws ResponseStatusException if the trip does not exist (HTTP 404)
+     *         or is protected (HTTP 409)
+     */
+    @DeleteMapping("/api/trips/{tripId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteTripById(@PathVariable int tripId) {
+        requireExistingTrip(tripId);
+
+        try {
+            tripManager.deleteTrip(tripId);
+        } catch (IllegalArgumentException ex) {
+            throw new ResponseStatusException(
+                HttpStatus.CONFLICT,
+                ex.getMessage(),
+                ex
+            );
+        }
+    }
+
     /**
      * Creates a trip from the submitted name, dates, and currency.
      *
@@ -493,6 +521,7 @@ public class TripController {
 
         newTrip.setId(0);
         newTrip.setName(request.name());
+        newTrip.setLocation(request.location());
         newTrip.setStartDate(request.startDate());
         newTrip.setDays((int) duration);
         newTrip.setPreferredCurrency(

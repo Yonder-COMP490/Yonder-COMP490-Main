@@ -27,6 +27,9 @@ function serializeTrip(trip) {
     startDate: trip.startDate,
     days: trip.days,
     preferredCurrency: trip.preferredCurrency,
+    location: trip.location ?? "",
+    numberOfTravelers: trip.numberOfTravelers ?? 1,
+    targetBudget: trip.targetBudget ?? 0,
 
     tripSections: (trip.tripSections ?? []).map((section) => ({
       id: section.id,
@@ -91,6 +94,28 @@ class TripAPI {
     }
 
     return await response.json();
+  }
+
+  /**
+   * Deletes the selected trip by ID.
+   *
+   * @param {number} tripId - ID of the trip to delete.
+   * @returns {Promise<void>}
+   */
+  async delete(tripId) {
+    if (!Number.isInteger(tripId) || tripId <= 0) {
+      throw new Error("Invalid trip ID.");
+    }
+
+    const response = await fetch(
+      `http://localhost:8080/api/trips/${tripId}`,
+      { method: "DELETE" }
+    );
+
+    if (!response.ok) {
+      const details = await response.text();
+      throw new Error(`Failed to delete trip: ${details}`);
+    }
   }
 }
 

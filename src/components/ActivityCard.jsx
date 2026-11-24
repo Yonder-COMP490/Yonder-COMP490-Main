@@ -7,6 +7,7 @@
  * as expanding activity details and dragging activities into the itinerary.
  */
 import { useEffect, useState } from "react";
+import { getPlacePhoto } from "../api/PlacePhotoAPI";
 import "./ActivityCard.css";
 
 /**
@@ -264,7 +265,23 @@ function ActivityCard({ activity, onSave }) {
     return "Not scheduled";
   }
 
-  const picture = activity.description?.picture ?? null;
+  const [googlePicture, setGooglePicture] = useState(null);
+
+  // If the activity has no picture, use the place's main photo from Google
+  useEffect(() => {
+    if (activity.description?.picture) return;
+
+    const searchText = [
+      activity.description?.name,
+      activity.location?.readableAddress,
+    ].filter(Boolean).join(" ");
+
+    getPlacePhoto(searchText)
+      .then((photoUrl) => setGooglePicture(photoUrl))
+      .catch(() => setGooglePicture(null));
+  }, [activity]);
+
+  const picture = activity.description?.picture || googlePicture;
 
   return (
     <article className="activity-card">

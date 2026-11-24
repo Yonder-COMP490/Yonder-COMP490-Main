@@ -20,6 +20,9 @@ public class Trip {
     private LocalDate startDate;
     private int days;
     private String preferredCurrency;
+    private String location = "";
+    private int numberOfTravelers = 1;
+    private double targetBudget = 0.0;
 
     // private List<Transportation> transportation; (future)
     private List<TripSection> tripSections;
@@ -117,6 +120,36 @@ public class Trip {
         if (preferredCurrency != null) {
             this.preferredCurrency = preferredCurrency;
         }
+    }
+
+    public String getLocation() {
+        return location;
+    }
+
+    public void setLocation(String location) {
+        this.location = location == null ? "" : location.trim();
+    }
+
+    public int getNumberOfTravelers() {
+        return numberOfTravelers;
+    }
+
+    public void setNumberOfTravelers(int numberOfTravelers) {
+        if (numberOfTravelers < 1) {
+            throw new IllegalArgumentException("At least one traveler is required.");
+        }
+        this.numberOfTravelers = numberOfTravelers;
+    }
+
+    public double getTargetBudget() {
+        return targetBudget;
+    }
+
+    public void setTargetBudget(double targetBudget) {
+        if (!Double.isFinite(targetBudget) || targetBudget < 0) {
+            throw new IllegalArgumentException("Target budget must be non-negative.");
+        }
+        this.targetBudget = targetBudget;
     }
 
     // ---------- Trip sections ----------

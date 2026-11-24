@@ -3,7 +3,8 @@
  * b) Date: 9/25/2026
  * c) Programmer: Alejandro Rivera
  * d) Description: Shows hotels on a Google Map as price bubbles. Has a popup card,
- *    price and rating filters, drag-map search and a "Check availability" button.
+ *    price and rating filters, drag-map search, a "Check availability" button and an
+ *    "Add to trip" button that saves the hotel to the Housing page.
  * e) Important functions:
  *    fetchHotels(query, checkIn, checkOut)
  *      Input: search text (like "hotels in San Diego") and trip dates
@@ -17,6 +18,9 @@
  *    bookingLink(place)
  *      Input: one hotel
  *      Output: the hotel's website, or a Google search link if it has none
+ *    makeHousing(place, checkIn, checkOut)
+ *      Input: one hotel and the trip dates
+ *      Output: a housing booking for the Housing page
  * f) Data structures: an array of hotel objects (places), and a Set of hotel ids
  *    the user already clicked (visitedIds) so those pins turn grey.
  * g) Algorithm: distanceKm() uses a simple flat-map distance formula to check if the
@@ -24,8 +28,9 @@
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useOutletContext } from "react-router-dom";
 import PlaceCard from "../components/PlaceCard";
+import { useHousing } from "../components/HousingContext";
 import "./Maps.css";
 
 // api key is in .env so it doesnt end up on github
@@ -53,27 +58,25 @@ const MIN_DRAG_KM = 1.5;
 // how long to wait after a drag before searching, in case you drag again
 const DRAG_WAIT_MS = 800;
 
-// our local java server that has the current trip
-const TRIP_URL = "http://localhost:8080/api/trip";
+// adds days to a date like "2027-04-01"
+function addDays(text, days) {
+  const date = new Date(text + "T00:00:00Z");
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
 
-// gets the dates to search: the trip's dates, or tomorrow for 1 night if the trip can't be used
-async function fetchSearchDates() {
+// gets the dates to search: the trip's dates, or tomorrow for 1 night if the trip already started
+function tripDates(trip) {
   const tomorrow = dateFromToday(1);
-  const nextDay = dateFromToday(2);
 
-  try {
-    const response = await fetch(TRIP_URL);
-    const trip = await response.json();
-
-    // dates look like "2027-04-01", so comparing them as text works
-    if (trip.startDate >= tomorrow && trip.endDate > trip.startDate) {
-      return { checkIn: trip.startDate, checkOut: trip.endDate };
-    }
-  } catch {
-    // no trip to read, so use tomorrow below
+  // dates look like "2027-04-01", so comparing them as text works
+  if (trip.startDate && trip.startDate >= tomorrow) {
+    // a 3 day trip is 2 nights, but always stay at least 1 night
+    const nights = Math.max(trip.days - 1, 1);
+    return { checkIn: trip.startDate, checkOut: addDays(trip.startDate, nights) };
   }
 
-  return { checkIn: tomorrow, checkOut: nextDay };
+  return { checkIn: tomorrow, checkOut: dateFromToday(2) };
 }
 
 // turns "2027-04-01" into "Apr 1"
@@ -88,6 +91,35 @@ function bookingLink(place) {
 
   const words = place.name + " " + place.searchedIn + " book";
   return "https://www.google.com/search?" + new URLSearchParams({ q: words });
+}
+
+// turns "3:00 PM" into "15:00", the way the Housing page saves times
+function to24Hour(text) {
+  const match = text?.match(/(\d+):?(\d*)\s*(AM|PM)/i);
+  if (!match) return null;
+
+  let hours = Number(match[1]) % 12;
+  if (match[3].toUpperCase() === "PM") hours += 12;
+  const minutes = match[2] || "00";
+
+  return String(hours).padStart(2, "0") + ":" + minutes;
+}
+
+// turns a hotel from the map into a housing booking for the Housing page
+function makeHousing(place, checkIn, checkOut) {
+  return {
+    name: place.name,
+    description: place.description || "Hotel in " + place.searchedIn,
+    picture: place.bigImage || place.image || null,
+    readableAddress: place.searchedIn,
+    latitude: place.lat,
+    longitude: place.lng,
+    fixedCheckInDate: checkIn,
+    checkOutDate: checkOut,
+    checkInTime: to24Hour(place.checkInTime),
+    checkOutTime: to24Hour(place.checkOutTime),
+    costPerDay: { lowerEnd: place.priceNumber || 0, currency: "USD" },
+  };
 }
 
 // asks our server for hotels and gives back everything it found
@@ -115,6 +147,12 @@ function pickHotelInfo(data, searchedIn) {
     reviews: hotel.reviews,
     price: hotel.rate_per_night?.lowest, // ?. means if theres no price, just return undefined instead of crashing
     image: hotel.images?.[0]?.thumbnail,
+    // extra info for the Housing page
+    bigImage: hotel.images?.[0]?.original_image,
+    description: hotel.description,
+    checkInTime: hotel.check_in_time, // like "3:00 PM"
+    checkOutTime: hotel.check_out_time,
+    priceNumber: hotel.rate_per_night?.extracted_lowest, // 193 instead of "$193"
     lat: hotel.gps_coordinates?.latitude, // hotel pins
     lng: hotel.gps_coordinates?.longitude,
   }));
@@ -215,6 +253,13 @@ function findPopupShift(hotelId, mapEl, popupDiv) {
 }
 
 function Maps() {
+  // the trip that's open, and its housing list
+  const { trip } = useOutletContext();
+  const { housing, addHousing } = useHousing();
+
+  // "Adding..." or an error under the Add to trip button, and which hotel it's for
+  const [addNote, setAddNote] = useState({ id: null, text: "" });
+
   // the div the map goes in
   const mapDiv = useRef(null);
 
@@ -255,9 +300,10 @@ function Maps() {
   const [maxPrice, setMaxPrice] = useState("");
   const [minRating, setMinRating] = useState("0");
 
-  // the dates we search hotels for (null = not loaded yet)
-  const [checkIn, setCheckIn] = useState(null);
-  const [checkOut, setCheckOut] = useState(null);
+  // the dates we search hotels for (undefined until the trip loads)
+  const dates = trip ? tripDates(trip) : null;
+  const checkIn = dates?.checkIn;
+  const checkOut = dates?.checkOut;
 
   // small note on the map, like "Loading hotels in this area..." ("" = no note)
   const [areaNote, setAreaNote] = useState("");
@@ -313,17 +359,6 @@ function Maps() {
     return () => {
       script.removeEventListener("load", startMap);
     };
-  }, []);
-
-  // find out which dates to search when the page opens
-  useEffect(() => {
-    async function loadDates() {
-      const dates = await fetchSearchDates();
-      setCheckIn(dates.checkIn);
-      setCheckOut(dates.checkOut);
-    }
-
-    loadDates();
   }, []);
 
   // get the hotels from  backend
@@ -572,6 +607,22 @@ function Maps() {
   // the hotel shown in the popup card (undefined if none)
   const openPlace = places.find((place) => place.id === openId);
 
+  // true if the open hotel is already on the Housing page
+  const alreadyAdded =
+    openPlace && housing.some((item) => item.description?.name === openPlace.name);
+
+  // runs when you click Add to trip
+  async function handleAddToTrip() {
+    const id = openPlace.id;
+    setAddNote({ id, text: "Adding..." });
+    try {
+      await addHousing(makeHousing(openPlace, checkIn, checkOut));
+      setAddNote({ id, text: "" });
+    } catch {
+      setAddNote({ id, text: "Could not add this hotel. Is the backend running?" });
+    }
+  }
+
   // only use the shift if it was measured for the hotel that's open now
   const shift = popupShift && popupShift.id === openId ? popupShift : null;
 
@@ -736,6 +787,22 @@ function Maps() {
                 >
                   Check availability
                 </a>
+
+                {/* saves this hotel to the Housing page */}
+                {alreadyAdded ? (
+                  <p className="popup-added">✓ Added to Housing</p>
+                ) : (
+                  <button
+                    className="popup-add"
+                    onClick={handleAddToTrip}
+                    disabled={addNote.id === openId && addNote.text === "Adding..."}
+                  >
+                    Add to trip
+                  </button>
+                )}
+                {addNote.id === openId && addNote.text && (
+                  <p className="popup-add-note">{addNote.text}</p>
+                )}
               </div>
             </div>,
             popupDiv
