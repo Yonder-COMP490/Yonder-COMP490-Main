@@ -156,6 +156,47 @@ public class Activity {
         }
     }
 
+    /**
+     * Moves or resizes the activity while preserving its current scheduling mode.
+     *
+     * @param newDate the new calendar date
+     * @param newStartTime the new starting time
+     * @param newEndTime the new ending time
+     * @param tripStartDate the starting date of the parent trip
+     */
+    public void moveDateTime(
+        LocalDate newDate,
+        LocalTime newStartTime,
+        LocalTime newEndTime,
+        LocalDate tripStartDate
+    ) {
+        if (newDate == null || newStartTime == null || newEndTime == null) {
+            throw new IllegalArgumentException(
+                "Date, start time, and end time are required."
+            );
+        }
+
+        if (tripStartDate == null) {
+            throw new IllegalArgumentException(
+                "Trip start date is required."
+            );
+        }
+
+        // Preserve the activity's existing scheduling mode.
+        if (fixedDate != null) {
+            setFixedDate(newDate);
+        } else {
+            setTripDay(
+                (int) ChronoUnit.DAYS.between(tripStartDate, newDate) + 1
+            );
+        }
+
+        this.startTime = newStartTime;
+        this.endTime = newEndTime;
+
+        attachToTrip(tripStartDate);
+    }
+
     public LocalDate getFixedDate() {
         return fixedDate;
     }

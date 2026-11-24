@@ -1,3 +1,4 @@
+
 /**
  * Component name: ItinerarySidebar
  * Date: 10/26/2026
@@ -309,7 +310,7 @@ function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
     activities,
     loading,
     error,
-    updateActivity,
+    moveActivity,
     switchScheduleType,
   } = useActivities();
 
@@ -627,17 +628,16 @@ function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
 
     if (drag.changed) {
       try {
-        await updateActivity({
-          ...drag.activity,
-          tripDay: null,
-          date: selectedDate,
-          active: true,
-          startTime: minutesToTime(drag.previewStart),
-          endTime: minutesToTime(drag.previewEnd),
-        });
+        await moveActivity(
+          drag.activity.id,
+          selectedDate,
+          minutesToTime(drag.previewStart),
+          minutesToTime(drag.previewEnd)
+        );
 
         setDropError("");
-      } catch {
+      } catch (error) {
+        console.error("Unable to move activity:", error);
         setDropError("Unable to update this activity.");
       }
     }
@@ -718,17 +718,16 @@ function ItinerarySidebar({ selectedDate, onSelectDate, trip, setTrip }) {
     const end = Math.min(start + 60, MAX_TIME_MINUTES);
 
     try {
-      await updateActivity({
-        ...activity,
-        tripDay: null,
-        date: selectedDate,
-        active: true,
-        startTime: minutesToTime(start),
-        endTime: minutesToTime(end),
-      });
+      await moveActivity(
+        activity.id,
+        selectedDate,
+        minutesToTime(start),
+        minutesToTime(end)
+      );
 
       setDropError("");
-    } catch {
+    } catch (error) {
+      console.error("Unable to add activity to itinerary:", error);
       setDropError("Unable to add this activity to the itinerary.");
     }
   }

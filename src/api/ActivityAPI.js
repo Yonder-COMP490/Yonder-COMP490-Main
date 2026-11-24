@@ -205,6 +205,34 @@ class ActivityAPI {
 
     return response.json();
   }
+
+  /**
+   * Moves or resizes an activity while preserving its scheduling mode.
+   */
+  async moveDateTime(id, date, startTime, endTime, tripId = 1) {
+    const params = new URLSearchParams({
+      date,
+      startTime,
+      endTime,
+    });
+
+    const response = await fetch(
+      `${tripUrl(tripId)}/activities/${id}/schedule?${params}`,
+      {
+        method: "PATCH",
+      }
+    );
+
+    if (!response.ok) {
+      const details = await response.text();
+
+      throw new Error(
+        `Failed to move activity (${response.status}): ${details}`
+      );
+    }
+
+    return response.json();
+  }
 }
 
 export default new ActivityAPI();

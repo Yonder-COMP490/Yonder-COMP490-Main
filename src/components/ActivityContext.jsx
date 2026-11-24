@@ -136,6 +136,27 @@ export function ActivityProvider({ children, tripId = 1 }) {
   }
 
   /**
+   * Moves or resizes an activity while preserving its scheduling mode.
+   */
+  async function moveActivity(id, date, startTime, endTime) {
+    const updated = await ActivityAPI.moveDateTime(
+      id,
+      date,
+      startTime,
+      endTime,
+      tripId
+    );
+
+    setActivities((current) =>
+      current.map((activity) =>
+        activity.id === updated.id ? updated : activity
+      )
+    );
+
+    return updated;
+  }
+
+  /**
    * Deletes an activity from the selected trip.
    */
   async function removeActivity(id) {
@@ -189,6 +210,7 @@ export function ActivityProvider({ children, tripId = 1 }) {
         error,
         addActivity,
         updateActivity,
+        moveActivity,
         removeActivity,
         switchScheduleType,
         refreshActivities,
